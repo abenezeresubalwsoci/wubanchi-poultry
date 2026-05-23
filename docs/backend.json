@@ -40,6 +40,14 @@
         "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered"] },
         "createdAt": { "type": "string", "format": "date-time" }
       }
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Site-wide configuration",
+      "type": "object",
+      "properties": {
+        "logoUrl": { "type": "string" }
+      }
     }
   },
   "auth": {
@@ -57,6 +65,10 @@
     "/orders/{orderId}": {
       "schema": "#/entities/Order",
       "description": "Collection of customer orders"
+    },
+    "/settings/{settingId}": {
+      "schema": "#/entities/Settings",
+      "description": "Site-wide configuration settings"
     }
   }
 }

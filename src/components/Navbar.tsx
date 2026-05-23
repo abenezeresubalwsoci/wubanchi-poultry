@@ -3,11 +3,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X, Bird, ShoppingBasket, Info, MessageSquare, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { useFirestore, useDoc } from "@/firebase";
+import { doc } from "firebase/firestore";
 
 const navItems = [
   { name: "Products", href: "/products", icon: ShoppingBasket },
@@ -19,24 +21,31 @@ const navItems = [
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const db = useFirestore();
   const isAdminPage = pathname === "/admin";
-  const logoImg = PlaceHolderImages.find(img => img.id === 'app-logo');
+  
+  const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
+  const { data: settings } = useDoc(settingsRef);
+
+  const fallbackLogo = PlaceHolderImages.find(img => img.id === 'app-logo');
+  const logoUrl = settings?.logoUrl || fallbackLogo?.imageUrl;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 md:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
-            <div className="flex items-center justify-center rounded-full bg-primary overflow-hidden h-10 w-10 text-primary-foreground">
-              {logoImg ? (
-                <Image 
-                  src={logoImg.imageUrl} 
-                  alt="Wubanchi Logo" 
-                  width={40} 
-                  height={40} 
-                  className="object-cover"
-                  data-ai-hint={logoImg.imageHint}
-                />
+            <div className="flex items-center justify-center rounded-full bg-primary overflow-hidden h-10 w-10 text-primary-foreground border-2 border-primary">
+              {logoUrl ? (
+                <div className="relative w-full h-full">
+                  <Image 
+                    src={logoUrl} 
+                    alt="Wubanchi Logo" 
+                    fill
+                    className="object-cover"
+                    data-ai-hint="poultry logo"
+                  />
+                </div>
               ) : (
                 <Bird className="h-6 w-6" />
               )}
