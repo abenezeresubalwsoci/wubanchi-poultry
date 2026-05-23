@@ -1,0 +1,62 @@
+
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "A farm product for sale",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string", "enum": ["Eggs", "Meat", "Feed", "Chicks"] },
+        "price": { "type": "number" },
+        "description": { "type": "string" },
+        "imageId": { "type": "string" },
+        "tag": { "type": "string" },
+        "inStock": { "type": "boolean" }
+      },
+      "required": ["name", "category", "price"]
+    },
+    "NewsItem": {
+      "title": "News Item",
+      "description": "A news update or announcement for the farm",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "desc": { "type": "string" },
+        "date": { "type": "string" },
+        "content": { "type": "string" }
+      },
+      "required": ["title", "date"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "A customer order",
+      "type": "object",
+      "properties": {
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "items": { "type": "array", "items": { "type": "object" } },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["google.com"]
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "#/entities/Product",
+      "description": "Collection of farm products"
+    },
+    "/news/{newsId}": {
+      "schema": "#/entities/NewsItem",
+      "description": "Collection of farm news and updates"
+    },
+    "/orders/{orderId}": {
+      "schema": "#/entities/Order",
+      "description": "Collection of customer orders"
+    }
+  }
+}
