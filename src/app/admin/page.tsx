@@ -3,23 +3,26 @@
 
 import { useState, useMemo } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Edit3, ShoppingBag, Newspaper, Package, CheckCircle, Clock } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Newspaper, Package, Clock, Lock, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AdminDashboard() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  // Queries
+  // Authentication State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+
+  // Data Queries
   const productsQuery = useMemo(() => collection(db, 'products'), [db]);
   const newsQuery = useMemo(() => query(collection(db, 'news'), orderBy('date', 'desc')), [db]);
   const ordersQuery = useMemo(() => query(collection(db, 'orders'), orderBy('createdAt', 'desc')), [db]);
@@ -28,9 +31,28 @@ export default function AdminDashboard() {
   const { data: news } = useCollection(newsQuery);
   const { data: orders } = useCollection(ordersQuery);
 
-  // Form states
+  // Form states for management
   const [newProduct, setNewProduct] = useState({ name: '', price: '', category: 'Eggs', description: '' });
   const [newNews, setNewNews] = useState({ title: '', desc: '', content: '' });
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loginForm.username === 'admin' && loginForm.password === 'admin') {
+      setIsAuthenticated(true);
+      toast({ title: "Login Successful", description: "Welcome back, Admin." });
+    } else {
+      toast({ 
+        variant: "destructive", 
+        title: "Login Failed", 
+        description: "Invalid username or password." 
+      });
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setLoginForm({ username: '', password: '' });
+  };
 
   const handleAddProduct = () => {
     if (!newProduct.name || !newProduct.price) return;
@@ -60,11 +82,58 @@ export default function AdminDashboard() {
     toast({ title: "Deleted", variant: "destructive" });
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-[80vh] items-center justify-center px-4">
+        <Card className="w-full max-w-md border-none shadow-2xl bg-card">
+          <CardHeader className="text-center space-y-2">
+            <div className="mx-auto rounded-full bg-primary/10 p-3 w-fit text-primary">
+              <Lock className="h-6 w-6" />
+            </div>
+            <CardTitle className="text-2xl font-bold">Admin Portal</CardTitle>
+            <CardDescription>Enter credentials to manage Wubanchi Farm</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input 
+                  id="username" 
+                  value={loginForm.username} 
+                  onChange={e => setLoginForm({...loginForm, username: e.target.value})}
+                  placeholder="admin"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input 
+                  id="password" 
+                  type="password"
+                  value={loginForm.password} 
+                  onChange={e => setLoginForm({...loginForm, password: e.target.value})}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full font-bold">Login</Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-12 md:px-8">
-      <div className="mb-8 space-y-2">
-        <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground">Manage your farm operations and content.</p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold">Admin Dashboard</h1>
+          <p className="text-muted-foreground">Manage your farm operations and content.</p>
+        </div>
+        <Button variant="outline" onClick={handleLogout} className="gap-2 rounded-full">
+          <LogOut className="h-4 w-4" /> Sign Out
+        </Button>
       </div>
 
       <Tabs defaultValue="products" className="space-y-6">
@@ -80,10 +149,9 @@ export default function AdminDashboard() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Products Management */}
         <TabsContent value="products" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-3">
-            <Card className="md:col-span-1">
+            <Card className="md:col-span-1 border-none bg-card shadow-sm">
               <CardHeader>
                 <CardTitle>Add Product</CardTitle>
                 <CardDescription>Add new item to your catalog</CardDescription>
@@ -100,7 +168,7 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   <Label>Category</Label>
                   <select 
-                    className="w-full rounded-md border p-2 bg-background text-sm"
+                    className="w-full rounded-md border p-2 bg-background text-sm outline-none focus:ring-2 focus:ring-primary"
                     value={newProduct.category} 
                     onChange={e => setNewProduct({...newProduct, category: e.target.value})}
                   >
@@ -116,7 +184,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="md:col-span-2">
+            <Card className="md:col-span-2 border-none bg-card shadow-sm">
               <CardHeader>
                 <CardTitle>Product Catalog</CardTitle>
               </CardHeader>
@@ -150,10 +218,9 @@ export default function AdminDashboard() {
           </div>
         </TabsContent>
 
-        {/* News Management */}
         <TabsContent value="news" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-3">
-            <Card className="md:col-span-1">
+            <Card className="md:col-span-1 border-none bg-card shadow-sm">
               <CardHeader>
                 <CardTitle>Post News</CardTitle>
                 <CardDescription>Keep your customers updated</CardDescription>
@@ -173,7 +240,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="md:col-span-2">
+            <Card className="md:col-span-2 border-none bg-card shadow-sm">
               <CardHeader>
                 <CardTitle>Recent Updates</CardTitle>
               </CardHeader>
@@ -205,9 +272,8 @@ export default function AdminDashboard() {
           </div>
         </TabsContent>
 
-        {/* Orders Management */}
         <TabsContent value="orders">
-          <Card>
+          <Card className="border-none bg-card shadow-sm">
             <CardHeader>
               <CardTitle>Customer Orders</CardTitle>
               <CardDescription>Track and fulfill orders</CardDescription>
