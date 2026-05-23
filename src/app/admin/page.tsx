@@ -11,8 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, ShoppingBag, Newspaper, Package, Clock, Lock, LogOut } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Newspaper, Package, Clock, Lock, LogOut, Upload, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function AdminDashboard() {
   const db = useFirestore();
@@ -32,7 +33,13 @@ export default function AdminDashboard() {
   const { data: orders } = useCollection(ordersQuery);
 
   // Form states for management
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', category: 'Eggs', description: '' });
+  const [newProduct, setNewProduct] = useState({ 
+    name: '', 
+    price: '', 
+    category: 'Eggs', 
+    description: '',
+    imageId: 'organic-eggs' 
+  });
   const [newNews, setNewNews] = useState({ title: '', desc: '', content: '' });
 
   const handleLogin = (e: React.FormEvent) => {
@@ -62,7 +69,7 @@ export default function AdminDashboard() {
       inStock: true,
       createdAt: serverTimestamp()
     });
-    setNewProduct({ name: '', price: '', category: 'Eggs', description: '' });
+    setNewProduct({ name: '', price: '', category: 'Eggs', description: '', imageId: 'organic-eggs' });
     toast({ title: "Product Added", description: "Successfully added to catalog." });
   };
 
@@ -80,6 +87,20 @@ export default function AdminDashboard() {
   const handleDelete = (col: string, id: string) => {
     deleteDoc(doc(db, col, id));
     toast({ title: "Deleted", variant: "destructive" });
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Simulation: In a real app we would upload to Firebase Storage.
+      // Here we randomly assign one of our placeholder IDs to show how it works.
+      const randomImg = PlaceHolderImages[Math.floor(Math.random() * PlaceHolderImages.length)];
+      setNewProduct({ ...newProduct, imageId: randomImg.id });
+      toast({ 
+        title: "Image Processed", 
+        description: `Simulated upload: Assigned "${randomImg.description}"` 
+      });
+    }
   };
 
   if (!isAuthenticated) {
@@ -161,24 +182,48 @@ export default function AdminDashboard() {
                   <Label>Name</Label>
                   <Input value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} placeholder="Organic Eggs" />
                 </div>
-                <div className="space-y-2">
-                  <Label>Price</Label>
-                  <Input type="number" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} placeholder="6.99" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Price</Label>
+                    <Input type="number" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} placeholder="6.99" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <select 
+                      className="w-full h-10 rounded-md border p-2 bg-background text-sm outline-none focus:ring-2 focus:ring-primary"
+                      value={newProduct.category} 
+                      onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+                    >
+                      <option>Eggs</option>
+                      <option>Meat</option>
+                      <option>Feed</option>
+                      <option>Chicks</option>
+                    </select>
+                  </div>
                 </div>
+                
                 <div className="space-y-2">
-                  <Label>Category</Label>
+                  <Label>Representative Image</Label>
                   <select 
-                    className="w-full rounded-md border p-2 bg-background text-sm outline-none focus:ring-2 focus:ring-primary"
-                    value={newProduct.category} 
-                    onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+                    className="w-full h-10 rounded-md border p-2 bg-background text-sm outline-none focus:ring-2 focus:ring-primary"
+                    value={newProduct.imageId} 
+                    onChange={e => setNewProduct({...newProduct, imageId: e.target.value})}
                   >
-                    <option>Eggs</option>
-                    <option>Meat</option>
-                    <option>Feed</option>
-                    <option>Chicks</option>
+                    {PlaceHolderImages.map(img => (
+                      <option key={img.id} value={img.id}>{img.description}</option>
+                    ))}
                   </select>
                 </div>
-                <Button onClick={handleAddProduct} className="w-full gap-2">
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Upload className="h-4 w-4" /> Upload Custom Image
+                  </Label>
+                  <Input type="file" accept="image/*" onChange={handleImageUpload} className="cursor-pointer" />
+                  <p className="text-[10px] text-muted-foreground">Note: Custom uploads are simulated in this prototype.</p>
+                </div>
+
+                <Button onClick={handleAddProduct} className="w-full gap-2 font-bold mt-2">
                   <Plus className="h-4 w-4" /> Add Product
                 </Button>
               </CardContent>
@@ -192,6 +237,7 @@ export default function AdminDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Image</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Price</TableHead>
@@ -201,6 +247,11 @@ export default function AdminDashboard() {
                   <TableBody>
                     {products?.map((p: any) => (
                       <TableRow key={p.id}>
+                        <TableCell>
+                          <div className="h-10 w-10 rounded bg-muted flex items-center justify-center overflow-hidden">
+                            <ImageIcon className="h-5 w-5 text-muted-foreground opacity-50" />
+                          </div>
+                        </TableCell>
                         <TableCell className="font-medium">{p.name}</TableCell>
                         <TableCell><Badge variant="outline">{p.category}</Badge></TableCell>
                         <TableCell>${p.price.toFixed(2)}</TableCell>
@@ -211,6 +262,13 @@ export default function AdminDashboard() {
                         </TableCell>
                       </TableRow>
                     ))}
+                    {!products?.length && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+                          No products in catalog.
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -234,7 +292,7 @@ export default function AdminDashboard() {
                   <Label>Summary</Label>
                   <Input value={newNews.desc} onChange={e => setNewNews({...newNews, desc: e.target.value})} placeholder="Organic pellets are in stock..." />
                 </div>
-                <Button onClick={handleAddNews} className="w-full gap-2">
+                <Button onClick={handleAddNews} className="w-full gap-2 font-bold">
                   <Plus className="h-4 w-4" /> Post Update
                 </Button>
               </CardContent>
@@ -254,7 +312,7 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {news?.map((n: any) => (
+                    {news?.map((n: any) => ( n.id && (
                       <TableRow key={n.id}>
                         <TableCell className="text-xs text-muted-foreground">{n.date}</TableCell>
                         <TableCell className="font-medium">{n.title}</TableCell>
@@ -264,7 +322,14 @@ export default function AdminDashboard() {
                           </Button>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    )))}
+                    {!news?.length && (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-10 text-muted-foreground">
+                          No news items posted.
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
