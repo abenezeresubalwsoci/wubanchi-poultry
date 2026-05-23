@@ -1,13 +1,29 @@
+
+'use client';
+
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Egg, ShoppingBasket, Lightbulb, Heart, ShieldCheck, Bird, Newspaper } from "lucide-react";
+import { ArrowRight, Egg, ShoppingBasket, Lightbulb, Heart, ShieldCheck, Bird, Newspaper, Loader2 } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { useCollection, useFirestore } from "@/firebase";
+import { collection, query, orderBy, limit } from "firebase/firestore";
+import { useMemo } from "react";
 
 export default function Home() {
+  const db = useFirestore();
   const heroImg = PlaceHolderImages.find(img => img.id === 'hero-farm');
   
+  // Dynamic news query
+  const newsQuery = useMemo(() => query(
+    collection(db, 'news'), 
+    orderBy('createdAt', 'desc'), 
+    limit(2)
+  ), [db]);
+  
+  const { data: newsItems, loading: newsLoading } = useCollection(newsQuery);
+
   const highlights = [
     { 
       title: "Fresh Farm Eggs", 
@@ -69,21 +85,28 @@ export default function Home() {
           </Card>
           
           <div className="lg:col-span-2 grid gap-4 sm:grid-cols-2">
-             {[
-               { title: "Welcome to Wubanchi", desc: "Welcome to Wubanchi poultry farming! We're glad to have you here.", date: "Oct 28" },
-               { title: "Weekly Market", desc: "Join us this Saturday for fresh produce and farm tours.", date: "Oct 26" }
-             ].map((item, i) => (
-               <Card key={i} className="border-none bg-card shadow-lg hover:shadow-xl transition-all cursor-pointer group">
-                 <CardContent className="p-6 flex justify-between items-center">
-                    <div className="space-y-1">
-                      <p className="text-xs font-bold text-primary uppercase tracking-wider">{item.date}</p>
-                      <h4 className="font-bold group-hover:text-primary transition-colors">{item.title}</h4>
-                      <p className="text-sm text-muted-foreground line-clamp-1">{item.desc}</p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-1" />
-                 </CardContent>
-               </Card>
-             ))}
+             {newsLoading ? (
+               <div className="col-span-2 flex items-center justify-center p-8 bg-card rounded-xl">
+                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
+               </div>
+             ) : newsItems?.length ? (
+               newsItems.map((item: any) => (
+                 <Card key={item.id} className="border-none bg-card shadow-lg hover:shadow-xl transition-all cursor-pointer group">
+                   <CardContent className="p-6 flex justify-between items-center">
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-primary uppercase tracking-wider">{item.date}</p>
+                        <h4 className="font-bold group-hover:text-primary transition-colors">{item.title}</h4>
+                        <p className="text-sm text-muted-foreground line-clamp-1">{item.desc}</p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-1" />
+                   </CardContent>
+                 </Card>
+               ))
+             ) : (
+               <div className="col-span-2 flex items-center justify-center p-8 bg-card rounded-xl text-muted-foreground text-sm italic">
+                 Check back soon for latest updates!
+               </div>
+             )}
           </div>
         </div>
       </section>

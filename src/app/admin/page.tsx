@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -26,7 +27,7 @@ export default function AdminDashboard() {
 
   // Data Queries
   const productsQuery = useMemo(() => collection(db, 'products'), [db]);
-  const newsQuery = useMemo(() => query(collection(db, 'news'), orderBy('date', 'desc')), [db]);
+  const newsQuery = useMemo(() => query(collection(db, 'news'), orderBy('createdAt', 'desc')), [db]);
   const ordersQuery = useMemo(() => query(collection(db, 'orders'), orderBy('createdAt', 'desc')), [db]);
   
   const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
