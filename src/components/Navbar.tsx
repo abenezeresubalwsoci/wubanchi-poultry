@@ -35,7 +35,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4 md:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
-            <div className="flex items-center justify-center rounded-full bg-primary overflow-hidden h-10 w-10 text-primary-foreground border-2 border-primary">
+            <div className="flex items-center justify-center rounded-full bg-primary overflow-hidden h-10 w-10 text-primary-foreground">
               {logoUrl ? (
                 <div className="relative w-full h-full">
                   <Image 
