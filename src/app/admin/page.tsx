@@ -95,6 +95,20 @@ export default function AdminDashboard() {
     toast({ title: "Logo Updated", description: "The site logo has been changed." });
   };
 
+  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setLogoUrl(base64String);
+        setDoc(settingsRef, { logoUrl: base64String }, { merge: true });
+        toast({ title: "Logo Uploaded", description: "New branding applied from your device." });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleDelete = (col: string, id: string) => {
     deleteDoc(doc(db, col, id));
     toast({ title: "Deleted", variant: "destructive" });
@@ -212,21 +226,44 @@ export default function AdminDashboard() {
 
         <TabsContent value="settings">
           <Card className="max-w-xl border-none bg-card shadow-sm">
-            <CardHeader><CardTitle>Site Settings</CardTitle><CardDescription>Manage global farm branding and configuration.</CardDescription></CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label>Logo Image URL</Label>
-                <div className="flex gap-2">
-                  <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://example.com/logo.png" />
-                  <Button onClick={handleUpdateLogo}>Update Logo</Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">Enter a direct link to an image file (PNG, JPG, SVG).</p>
-              </div>
-              {logoUrl && (
+            <CardHeader>
+              <CardTitle>Site Settings</CardTitle>
+              <CardDescription>Manage global farm branding and configuration.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Logo Preview</Label>
-                  <div className="h-24 w-24 rounded-full border bg-background overflow-hidden flex items-center justify-center">
-                    <img src={logoUrl} alt="Logo Preview" className="h-full w-full object-cover" />
+                  <Label>Upload Logo from Device</Label>
+                  <div className="flex items-center gap-4">
+                    <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2">
+                      <Upload className="h-4 w-4" />
+                      Choose Image
+                      <input 
+                        type="file" 
+                        className="absolute inset-0 opacity-0 cursor-pointer" 
+                        accept="image/*"
+                        onChange={handleLogoFileUpload}
+                      />
+                    </Button>
+                    <span className="text-xs text-muted-foreground italic">Instant upload & preview</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Or use Logo Image URL</Label>
+                  <div className="flex gap-2">
+                    <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://example.com/logo.png" />
+                    <Button onClick={handleUpdateLogo}>Update</Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Preferred format: PNG or SVG with transparent background.</p>
+                </div>
+              </div>
+
+              {logoUrl && (
+                <div className="space-y-3 pt-4 border-t">
+                  <Label>Active Logo Preview</Label>
+                  <div className="h-32 w-32 rounded-2xl border-2 border-dashed bg-background overflow-hidden flex items-center justify-center p-2 group relative">
+                    <img src={logoUrl} alt="Logo Preview" className="h-full w-full object-contain transition-transform group-hover:scale-105" />
                   </div>
                 </div>
               )}
