@@ -14,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, ShoppingBag, Newspaper, Package, Clock, Lock, LogOut, Upload, Settings, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function AdminDashboard() {
   const db = useFirestore();
@@ -69,30 +71,53 @@ export default function AdminDashboard() {
 
   const handleAddProduct = () => {
     if (!newProduct.name || !newProduct.price) return;
-    addDoc(collection(db, 'products'), {
+    const data = {
       ...newProduct,
       price: parseFloat(newProduct.price as string),
       inStock: true,
       createdAt: serverTimestamp()
-    });
+    };
+    addDoc(collection(db, 'products'), data)
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'products',
+          operation: 'create',
+          requestResourceData: data
+        }));
+      });
     setNewProduct({ name: '', price: '', category: 'Eggs', description: '', imageId: 'organic-eggs' });
     toast({ title: "Product Added" });
   };
 
   const handleAddNews = () => {
     if (!newNews.title) return;
-    addDoc(collection(db, 'news'), {
+    const data = {
       ...newNews,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       createdAt: serverTimestamp()
-    });
+    };
+    addDoc(collection(db, 'news'), data)
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'news',
+          operation: 'create',
+          requestResourceData: data
+        }));
+      });
     setNewNews({ title: '', desc: '', content: '' });
     toast({ title: "News Posted" });
   };
 
   const handleUpdateLogo = () => {
-    setDoc(settingsRef, { logoUrl }, { merge: true });
-    toast({ title: "Logo Updated", description: "The site logo has been changed." });
+    setDoc(settingsRef, { logoUrl }, { merge: true })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: settingsRef.path,
+          operation: 'update',
+          requestResourceData: { logoUrl }
+        }));
+      });
+    toast({ title: "Logo Updated", description: "The site logo has been changed forever." });
   };
 
   const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,15 +127,29 @@ export default function AdminDashboard() {
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setLogoUrl(base64String);
-        setDoc(settingsRef, { logoUrl: base64String }, { merge: true });
-        toast({ title: "Logo Uploaded", description: "New branding applied from your device." });
+        setDoc(settingsRef, { logoUrl: base64String }, { merge: true })
+          .catch(async (error) => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: settingsRef.path,
+              operation: 'update',
+              requestResourceData: { logoUrl: base64String }
+            }));
+          });
+        toast({ title: "Logo Uploaded", description: "New branding applied and saved permanently." });
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleDelete = (col: string, id: string) => {
-    deleteDoc(doc(db, col, id));
+    const docRef = doc(db, col, id);
+    deleteDoc(docRef)
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'delete'
+        }));
+      });
     toast({ title: "Deleted", variant: "destructive" });
   };
 
@@ -228,7 +267,7 @@ export default function AdminDashboard() {
           <Card className="max-w-xl border-none bg-card shadow-sm">
             <CardHeader>
               <CardTitle>Site Settings</CardTitle>
-              <CardDescription>Manage global farm branding and configuration.</CardDescription>
+              <CardDescription>Manage global farm branding and configuration. Changes are saved permanently.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
               <div className="space-y-4">
@@ -245,7 +284,7 @@ export default function AdminDashboard() {
                         onChange={handleLogoFileUpload}
                       />
                     </Button>
-                    <span className="text-xs text-muted-foreground italic">Instant upload & preview</span>
+                    <span className="text-xs text-muted-foreground italic">Saves to Firestore permanently</span>
                   </div>
                 </div>
 
@@ -253,7 +292,7 @@ export default function AdminDashboard() {
                   <Label>Or use Logo Image URL</Label>
                   <div className="flex gap-2">
                     <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://example.com/logo.png" />
-                    <Button onClick={handleUpdateLogo}>Update</Button>
+                    <Button onClick={handleUpdateLogo}>Update Forever</Button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">Preferred format: PNG or SVG with transparent background.</p>
                 </div>

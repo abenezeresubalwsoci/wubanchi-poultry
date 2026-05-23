@@ -35,7 +35,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4 md:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
-            <div className="flex items-center justify-center rounded-full bg-primary overflow-hidden h-10 w-10 text-primary-foreground">
+            <div className="flex items-center justify-center rounded-full overflow-hidden h-10 w-10 text-primary-foreground">
               {logoUrl ? (
                 <div className="relative w-full h-full">
                   <Image 
@@ -47,7 +47,9 @@ export default function Navbar() {
                   />
                 </div>
               ) : (
-                <Bird className="h-6 w-6" />
+                <div className="bg-primary p-2 rounded-full">
+                  <Bird className="h-6 w-6" />
+                </div>
               )}
             </div>
             <span className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Wubanchi</span>
