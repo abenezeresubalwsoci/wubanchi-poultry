@@ -49,14 +49,6 @@ export default function Home() {
             <h1 className="text-4xl font-bold leading-tight md:text-6xl lg:text-7xl">
               Freshness from Our <span className="text-primary">Farm</span> to Your <span className="text-accent">Table</span>
             </h1>
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <Button size="lg" asChild className="rounded-full px-8 text-lg font-bold">
-                <Link href="/products">Shop Catalog</Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild className="rounded-full bg-white/10 px-8 text-lg font-bold backdrop-blur-sm hover:bg-white/20">
-                <Link href="/about">Our Story</Link>
-              </Button>
-            </div>
           </div>
         </div>
       </section>
