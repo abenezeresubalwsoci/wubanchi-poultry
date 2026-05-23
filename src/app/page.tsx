@@ -49,9 +49,6 @@ export default function Home() {
             <h1 className="text-4xl font-bold leading-tight md:text-6xl lg:text-7xl">
               Freshness from Our <span className="text-primary">Farm</span> to Your <span className="text-accent">Table</span>
             </h1>
-            <p className="text-lg opacity-90 md:text-xl max-w-lg">
-              Experience the true taste of nature with Wubanchi's premium poultry products. Raised with love, delivered with care.
-            </p>
             <div className="flex flex-col gap-4 sm:flex-row">
               <Button size="lg" asChild className="rounded-full px-8 text-lg font-bold">
                 <Link href="/products">Shop Catalog</Link>
