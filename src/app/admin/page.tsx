@@ -56,13 +56,16 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (loginForm.username === 'admin' && loginForm.password === 'admin') {
       setIsAuthenticated(true);
-      toast({ title: "Login Successful", description: "Welcome back, Admin." });
+      toast({ title: "Login Successful", description: "Welcome to the Admin Dashboard." });
     } else {
       toast({ variant: "destructive", title: "Login Failed", description: "Invalid credentials." });
     }
   };
 
-  const handleLogout = () => setIsAuthenticated(false);
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    toast({ title: "Signed Out", description: "You have been logged out of the portal." });
+  };
 
   const handleAddProduct = () => {
     if (!newProduct.name || !newProduct.price) return;
@@ -127,7 +130,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 md:px-8">
+    <div className="container mx-auto px-4 py-12 md:px-8 animate-in fade-in duration-500">
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="space-y-2">
           <h1 className="text-4xl font-bold">Admin Dashboard</h1>
@@ -158,8 +161,12 @@ export default function AdminDashboard() {
                     <select className="w-full h-10 rounded-md border p-2 bg-background text-sm" value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}><option>Eggs</option><option>Meat</option><option>Feed</option><option>Chicks</option></select>
                   </div>
                 </div>
-                <div className="space-y-2"><Label>Image</Label>
-                  <select className="w-full h-10 rounded-md border p-2 bg-background text-sm" value={newProduct.imageId} onChange={e => setNewProduct({...newProduct, imageId: e.target.value})}>{PlaceHolderImages.map(img => (<option key={img.id} value={img.id}>{img.description}</option>))}</select>
+                <div className="space-y-2"><Label>Product Image</Label>
+                  <select className="w-full h-10 rounded-md border p-2 bg-background text-sm" value={newProduct.imageId} onChange={e => setNewProduct({...newProduct, imageId: e.target.value})}>
+                    {PlaceHolderImages.map(img => (
+                      <option key={img.id} value={img.id}>{img.description}</option>
+                    ))}
+                  </select>
                 </div>
                 <Button onClick={handleAddProduct} className="w-full gap-2 font-bold"><Plus className="h-4 w-4" /> Add Product</Button>
               </CardContent>
