@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, ShoppingBag, Newspaper, Package, Clock, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -66,7 +66,7 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    toast({ title: "Signed Out", description: "You have been logged out of the portal." });
+    toast({ title: "Signed Out", description: "You have been logged out." });
   };
 
   const handleAddProduct = () => {
@@ -109,11 +109,14 @@ export default function AdminDashboard() {
   };
 
   const handleUpdateLogo = () => {
+    if (!logoUrl) return;
     setIsSavingLogo(true);
-    setDoc(settingsRef, { logoUrl }, { merge: true })
+    
+    // Mutation using setDoc with merge for persistent settings
+    setDoc(settingsRef, { logoUrl, updatedAt: serverTimestamp() }, { merge: true })
       .then(() => {
         setIsSavingLogo(false);
-        toast({ title: "Branding Saved", description: "Logo URL updated in the database permanently." });
+        toast({ title: "Branding Saved", description: "Logo has been updated permanently." });
       })
       .catch(async (error) => {
         setIsSavingLogo(false);
@@ -128,24 +131,40 @@ export default function AdminDashboard() {
   const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size (Firestore document limit is 1MB)
+      if (file.size > 800000) {
+        toast({ 
+          variant: "destructive", 
+          title: "File too large", 
+          description: "Please use an image smaller than 800KB for the logo." 
+        });
+        return;
+      }
+
       setIsSavingLogo(true);
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setLogoUrl(base64String);
-        setDoc(settingsRef, { logoUrl: base64String }, { merge: true })
+        
+        // Save immediately on upload
+        setDoc(settingsRef, { logoUrl: base64String, updatedAt: serverTimestamp() }, { merge: true })
           .then(() => {
             setIsSavingLogo(false);
-            toast({ title: "Logo Uploaded Successfully", description: "New branding file stored in Firestore database." });
+            toast({ title: "Logo Uploaded", description: "New branding saved to the database." });
           })
           .catch(async (error) => {
             setIsSavingLogo(false);
             errorEmitter.emit('permission-error', new FirestorePermissionError({
               path: settingsRef.path,
               operation: 'update',
-              requestResourceData: { logoUrl: base64String }
+              requestResourceData: { logoUrl: 'base64_data' }
             }));
           });
+      };
+      reader.onerror = () => {
+        setIsSavingLogo(false);
+        toast({ variant: "destructive", title: "Upload Error", description: "Could not read the file." });
       };
       reader.readAsDataURL(file);
     }
@@ -197,7 +216,7 @@ export default function AdminDashboard() {
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="space-y-2">
           <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage your farm operations and content.</p>
+          <p className="text-muted-foreground">Manage farm operations and settings.</p>
         </div>
         <Button variant="outline" onClick={handleLogout} className="gap-2 rounded-full">
           <LogOut className="h-4 w-4" /> Sign Out
@@ -276,13 +295,13 @@ export default function AdminDashboard() {
         <TabsContent value="settings">
           <Card className="max-w-xl border-none bg-card shadow-sm">
             <CardHeader>
-              <CardTitle>Site Settings</CardTitle>
-              <CardDescription>Manage global farm branding and configuration. Changes are saved permanently to the database.</CardDescription>
+              <CardTitle>Branding Settings</CardTitle>
+              <CardDescription>Update your farm logo. Changes are saved permanently to Firestore.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Upload Logo from Device</Label>
+                  <Label>Upload Logo (max 800KB)</Label>
                   <div className="flex items-center gap-4">
                     <Button 
                       variant="outline" 
@@ -290,7 +309,7 @@ export default function AdminDashboard() {
                       disabled={isSavingLogo}
                     >
                       {isSavingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                      Choose File
+                      Choose Image
                       <input 
                         type="file" 
                         className="absolute inset-0 opacity-0 cursor-pointer" 
@@ -299,12 +318,12 @@ export default function AdminDashboard() {
                         disabled={isSavingLogo}
                       />
                     </Button>
-                    <span className="text-xs text-muted-foreground italic">Instant save on select</span>
+                    {isSavingLogo && <span className="text-xs text-primary animate-pulse">Saving to Database...</span>}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Or use Logo Image URL</Label>
+                  <Label>Or Paste Image URL</Label>
                   <div className="flex gap-2">
                     <Input 
                       value={logoUrl} 
@@ -313,18 +332,17 @@ export default function AdminDashboard() {
                       disabled={isSavingLogo}
                     />
                     <Button onClick={handleUpdateLogo} disabled={isSavingLogo || !logoUrl}>
-                      {isSavingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update Branding'}
+                      {isSavingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update URL'}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">Enter a direct link to an image file (PNG, JPG, SVG).</p>
                 </div>
               </div>
 
               {logoUrl && (
                 <div className="space-y-3 pt-4 border-t">
-                  <Label>Active Logo Preview</Label>
-                  <div className="h-32 w-32 rounded-2xl border-2 border-dashed bg-background overflow-hidden flex items-center justify-center p-2 group relative">
-                    <img src={logoUrl} alt="Logo Preview" className="h-full w-full object-contain transition-transform group-hover:scale-105" />
+                  <Label>Preview</Label>
+                  <div className="h-32 w-32 rounded-2xl border bg-background overflow-hidden flex items-center justify-center p-2">
+                    <img src={logoUrl} alt="Logo Preview" className="h-full w-full object-contain" />
                   </div>
                 </div>
               )}
@@ -334,13 +352,13 @@ export default function AdminDashboard() {
 
         <TabsContent value="orders">
           <Card className="border-none bg-card shadow-sm">
-            <CardHeader><CardTitle>Customer Orders</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Orders</CardTitle></CardHeader>
             <CardContent>
               {orders?.length ? (
-                <Table><TableHeader><TableRow><TableHead>Order ID</TableHead><TableHead>Customer</TableHead><TableHead>Total</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
-                  <TableBody>{orders.map((o: any) => (<TableRow key={o.id}><TableCell className="font-mono text-xs">{o.id.substring(0, 8)}...</TableCell><TableCell>{o.customerName}</TableCell><TableCell>${o.total?.toFixed(2)}</TableCell><TableCell><Badge>{o.status}</Badge></TableCell></TableRow>))}</TableBody>
+                <Table><TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Customer</TableHead><TableHead>Total</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                  <TableBody>{orders.map((o: any) => (<TableRow key={o.id}><TableCell className="text-xs">{o.id.substring(0, 8)}</TableCell><TableCell>{o.customerName}</TableCell><TableCell>${o.total?.toFixed(2)}</TableCell><TableCell><Badge>{o.status}</Badge></TableCell></TableRow>))}</TableBody>
                 </Table>
-              ) : <div className="text-center py-12 text-muted-foreground">No orders yet.</div>}
+              ) : <div className="text-center py-12 text-muted-foreground">No orders found.</div>}
             </CardContent>
           </Card>
         </TabsContent>
