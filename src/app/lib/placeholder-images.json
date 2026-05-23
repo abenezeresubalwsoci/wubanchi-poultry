@@ -2,15 +2,9 @@
 {
   "placeholderImages": [
     {
-      "id": "app-logo",
-      "description": "Wubanchi Poultry Farm official logo featuring a stylized bird",
-      "imageUrl": "https://picsum.photos/seed/wubanchi-logo/200/200",
-      "imageHint": "poultry logo"
-    },
-    {
       "id": "hero-farm",
       "description": "Sunrise over a beautiful poultry farm with chickens roaming freely",
-      "imageUrl": "https://picsum.photos/seed/farm1/1200/600",
+      "imageUrl": "https://picsum.photos/seed/farm-hero-updated/1200/600",
       "imageHint": "poultry farm"
     },
     {
