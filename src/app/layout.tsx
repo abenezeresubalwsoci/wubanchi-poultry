@@ -4,6 +4,8 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'Wubanchi - Premium Poultry & Care',
@@ -24,9 +26,11 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased flex flex-col min-h-screen bg-background text-foreground selection:bg-primary/30">
         <FirebaseClientProvider>
+          <FirebaseErrorListener />
           <Navbar />
           <main className="flex-grow">{children}</main>
           <Footer />
+          <Toaster />
         </FirebaseClientProvider>
       </body>
     </html>
