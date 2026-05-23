@@ -1,3 +1,166 @@
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowRight, Egg, ShoppingBasket, Lightbulb, Heart, ShieldCheck, Bird } from "lucide-react";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
+
 export default function Home() {
-  return <></>;
+  const heroImg = PlaceHolderImages.find(img => img.id === 'hero-farm');
+  
+  const highlights = [
+    { 
+      title: "Fresh Farm Eggs", 
+      desc: "Harvested daily from our cage-free, organic-fed hens.",
+      img: PlaceHolderImages.find(img => img.id === 'organic-eggs'),
+      href: "/products?category=eggs"
+    },
+    { 
+      title: "Premium Poultry", 
+      desc: "Healthy, antibiotic-free meat processed with the highest standards.",
+      img: PlaceHolderImages.find(img => img.id === 'whole-chicken'),
+      href: "/products?category=meat"
+    },
+    { 
+      title: "Healthy Chicks", 
+      desc: "Day-old chicks bred for vigor and high productivity.",
+      img: PlaceHolderImages.find(img => img.id === 'day-old-chicks'),
+      href: "/products?category=chicks"
+    }
+  ];
+
+  return (
+    <div className="flex flex-col gap-16 pb-16">
+      {/* Hero Section */}
+      <section className="relative h-[600px] w-full overflow-hidden">
+        {heroImg && (
+          <Image
+            src={heroImg.imageUrl}
+            alt={heroImg.description}
+            fill
+            className="object-cover"
+            priority
+            data-ai-hint={heroImg.imageHint}
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+        <div className="container relative mx-auto flex h-full flex-col justify-center px-4 md:px-8">
+          <div className="max-w-2xl space-y-6 text-white animate-in fade-in slide-in-from-left-8 duration-700">
+            <h1 className="text-4xl font-bold leading-tight md:text-6xl lg:text-7xl">
+              Freshness from Our <span className="text-primary">Farm</span> to Your <span className="text-accent">Table</span>
+            </h1>
+            <p className="text-lg opacity-90 md:text-xl max-w-lg">
+              Experience the true taste of nature with Wubanchi's premium poultry products. Raised with love, delivered with care.
+            </p>
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <Button size="lg" asChild className="rounded-full px-8 text-lg font-bold">
+                <Link href="/products">Shop Catalog</Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild className="rounded-full bg-white/10 px-8 text-lg font-bold backdrop-blur-sm hover:bg-white/20">
+                <Link href="/about">Our Story</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Badges */}
+      <section className="container mx-auto px-4 md:px-8">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:gap-12">
+          <div className="flex flex-col items-center text-center space-y-2">
+            <div className="rounded-full bg-primary/10 p-4 text-primary">
+              <ShieldCheck className="h-8 w-8" />
+            </div>
+            <h3 className="font-bold">100% Organic</h3>
+            <p className="text-xs text-muted-foreground">Certified chemical free</p>
+          </div>
+          <div className="flex flex-col items-center text-center space-y-2">
+            <div className="rounded-full bg-primary/10 p-4 text-primary">
+              <Heart className="h-8 w-8" />
+            </div>
+            <h3 className="font-bold">High Welfare</h3>
+            <p className="text-xs text-muted-foreground">Happy, healthy poultry</p>
+          </div>
+          <div className="flex flex-col items-center text-center space-y-2">
+            <div className="rounded-full bg-primary/10 p-4 text-primary">
+              <Egg className="h-8 w-8" />
+            </div>
+            <h3 className="font-bold">Fresh Daily</h3>
+            <p className="text-xs text-muted-foreground">Directly from the farm</p>
+          </div>
+          <div className="flex flex-col items-center text-center space-y-2">
+            <div className="rounded-full bg-primary/10 p-4 text-primary">
+              <ShoppingBasket className="h-8 w-8" />
+            </div>
+            <h3 className="font-bold">Fast Delivery</h3>
+            <p className="text-xs text-muted-foreground">Local farm logistics</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Highlights */}
+      <section className="container mx-auto px-4 md:px-8">
+        <div className="mb-12 flex items-end justify-between">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-bold md:text-4xl">Featured Categories</h2>
+            <p className="text-muted-foreground">Explore our selection of premium poultry goods.</p>
+          </div>
+          <Link href="/products" className="hidden items-center gap-2 font-bold text-primary transition-colors hover:text-accent sm:flex">
+            View All Products <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {highlights.map((item, idx) => (
+            <Card key={idx} className="group overflow-hidden border-none bg-card transition-all hover:shadow-xl hover:-translate-y-1">
+              <div className="relative h-64 overflow-hidden">
+                {item.img && (
+                  <Image
+                    src={item.img.imageUrl}
+                    alt={item.img.description}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    data-ai-hint={item.img.imageHint}
+                  />
+                )}
+              </div>
+              <CardContent className="p-6">
+                <h3 className="mb-2 text-xl font-bold">{item.title}</h3>
+                <p className="mb-6 text-sm text-muted-foreground">{item.desc}</p>
+                <Button variant="outline" asChild className="w-full rounded-full group-hover:bg-primary group-hover:text-primary-foreground">
+                  <Link href={item.href}>Browse {item.title}</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* AI CTA Section */}
+      <section className="container mx-auto px-4 md:px-8">
+        <div className="relative overflow-hidden rounded-3xl bg-accent p-8 md:p-16">
+          <div className="relative z-10 flex flex-col items-center text-center gap-8 lg:flex-row lg:text-left">
+            <div className="flex-1 space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-sm font-bold text-white">
+                <Lightbulb className="h-4 w-4" />
+                <span>AI CARE ADVISOR</span>
+              </div>
+              <h2 className="text-3xl font-bold text-white md:text-5xl">Need expert poultry advice?</h2>
+              <p className="text-lg text-white/90 max-w-xl">
+                Ask Wubanchi AI for tailored tips on feed management, chicken care, or product preparation. Our expert advisor is available 24/7.
+              </p>
+              <Button size="lg" variant="secondary" asChild className="rounded-full px-8 text-lg font-bold">
+                <Link href="/tips">Ask Wubanchi Now</Link>
+              </Button>
+            </div>
+            <div className="flex h-64 w-64 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
+              <Bird className="h-32 w-32 text-white" />
+            </div>
+          </div>
+          {/* Abstract background shapes */}
+          <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/5" />
+          <div className="absolute -bottom-16 left-0 h-48 w-48 rounded-full bg-white/5" />
+        </div>
+      </section>
+    </div>
+  );
 }
