@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -11,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, ShoppingBag, Newspaper, Package, Clock, Lock, LogOut, Upload, Settings, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Newspaper, Package, Clock, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -47,6 +46,7 @@ export default function AdminDashboard() {
   });
   const [newNews, setNewNews] = useState({ title: '', desc: '', content: '' });
   const [logoUrl, setLogoUrl] = useState('');
+  const [isSavingLogo, setIsSavingLogo] = useState(false);
 
   useEffect(() => {
     if (settings?.logoUrl) {
@@ -109,33 +109,43 @@ export default function AdminDashboard() {
   };
 
   const handleUpdateLogo = () => {
+    setIsSavingLogo(true);
     setDoc(settingsRef, { logoUrl }, { merge: true })
+      .then(() => {
+        setIsSavingLogo(false);
+        toast({ title: "Branding Saved", description: "Logo URL updated in the database permanently." });
+      })
       .catch(async (error) => {
+        setIsSavingLogo(false);
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: settingsRef.path,
           operation: 'update',
           requestResourceData: { logoUrl }
         }));
       });
-    toast({ title: "Logo Updated", description: "The site logo has been changed forever." });
   };
 
   const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setIsSavingLogo(true);
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setLogoUrl(base64String);
         setDoc(settingsRef, { logoUrl: base64String }, { merge: true })
+          .then(() => {
+            setIsSavingLogo(false);
+            toast({ title: "Logo Uploaded Successfully", description: "New branding file stored in Firestore database." });
+          })
           .catch(async (error) => {
+            setIsSavingLogo(false);
             errorEmitter.emit('permission-error', new FirestorePermissionError({
               path: settingsRef.path,
               operation: 'update',
               requestResourceData: { logoUrl: base64String }
             }));
           });
-        toast({ title: "Logo Uploaded", description: "New branding applied and saved permanently." });
       };
       reader.readAsDataURL(file);
     }
@@ -267,34 +277,46 @@ export default function AdminDashboard() {
           <Card className="max-w-xl border-none bg-card shadow-sm">
             <CardHeader>
               <CardTitle>Site Settings</CardTitle>
-              <CardDescription>Manage global farm branding and configuration. Changes are saved permanently.</CardDescription>
+              <CardDescription>Manage global farm branding and configuration. Changes are saved permanently to the database.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Upload Logo from Device</Label>
                   <div className="flex items-center gap-4">
-                    <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2">
-                      <Upload className="h-4 w-4" />
-                      Choose Image
+                    <Button 
+                      variant="outline" 
+                      className="relative cursor-pointer overflow-hidden gap-2"
+                      disabled={isSavingLogo}
+                    >
+                      {isSavingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      Choose File
                       <input 
                         type="file" 
                         className="absolute inset-0 opacity-0 cursor-pointer" 
                         accept="image/*"
                         onChange={handleLogoFileUpload}
+                        disabled={isSavingLogo}
                       />
                     </Button>
-                    <span className="text-xs text-muted-foreground italic">Saves to Firestore permanently</span>
+                    <span className="text-xs text-muted-foreground italic">Instant save on select</span>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label>Or use Logo Image URL</Label>
                   <div className="flex gap-2">
-                    <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://example.com/logo.png" />
-                    <Button onClick={handleUpdateLogo}>Update Forever</Button>
+                    <Input 
+                      value={logoUrl} 
+                      onChange={e => setLogoUrl(e.target.value)} 
+                      placeholder="https://example.com/logo.png" 
+                      disabled={isSavingLogo}
+                    />
+                    <Button onClick={handleUpdateLogo} disabled={isSavingLogo || !logoUrl}>
+                      {isSavingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update Branding'}
+                    </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">Preferred format: PNG or SVG with transparent background.</p>
+                  <p className="text-xs text-muted-foreground mt-2">Enter a direct link to an image file (PNG, JPG, SVG).</p>
                 </div>
               </div>
 
