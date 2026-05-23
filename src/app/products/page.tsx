@@ -7,38 +7,40 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Search, ShoppingBasket, Filter, CheckCircle2 } from "lucide-react";
+import { Search, ShoppingBasket, Filter, CheckCircle2, Loader2 } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { useFirestore, useCollection } from "@/firebase";
+import { collection, query, orderBy } from "firebase/firestore";
 
 const CATEGORIES = ["All", "Eggs", "Meat", "Feed", "Chicks"];
-
-const PRODUCTS = [
-  { id: 1, name: "Organic Brown Eggs (Dozen)", category: "Eggs", price: 6.99, image: "organic-eggs", tag: "Fresh" },
-  { id: 2, name: "Free-Range Large White Eggs", category: "Eggs", price: 5.50, image: "organic-eggs", tag: "Best Seller" },
-  { id: 3, name: "Whole Pasture-Raised Chicken", category: "Meat", price: 18.99, image: "whole-chicken", tag: "High Protein" },
-  { id: 4, name: "Chicken Breast Fillets (1kg)", category: "Meat", price: 12.50, image: "whole-chicken", tag: "Fresh" },
-  { id: 5, name: "Layer Pellets Organic Feed (10kg)", category: "Feed", price: 24.00, image: "poultry-feed", tag: "Nutritious" },
-  { id: 6, name: "Organic Corn & Grain Mix (5kg)", category: "Feed", price: 14.50, image: "poultry-feed", tag: "Natural" },
-  { id: 7, name: "Day-Old Broiler Chicks (x10)", category: "Chicks", price: 15.00, image: "day-old-chicks", tag: "Hardy" },
-  { id: 8, name: "Starter Kit for New Chicks", category: "Chicks", price: 45.00, image: "day-old-chicks", tag: "Bundle" },
-];
 
 export default function ProductCatalog() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  
+  const db = useFirestore();
+  const productsQuery = useMemo(() => 
+    query(collection(db, 'products'), orderBy('createdAt', 'desc')), 
+  [db]);
+  
+  const { data: products, loading } = useCollection(productsQuery);
 
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase());
+    if (!products) return [];
+    return products.filter(product => {
+      const matchesSearch = product.name?.toLowerCase().includes(search.toLowerCase());
       const matchesCategory = activeCategory === "All" || product.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [search, activeCategory]);
+  }, [search, activeCategory, products]);
 
   return (
     <div className="container mx-auto px-4 py-12 md:px-8">
       <div className="mb-12 space-y-6">
-        <h1 className="text-4xl font-bold md:text-5xl">Farm Fresh Catalog</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-4xl font-bold md:text-5xl">Farm Fresh Catalog</h1>
+          {loading && <Loader2 className="h-6 w-6 animate-spin text-primary" />}
+        </div>
         <p className="text-lg text-muted-foreground max-w-2xl">
           Browse our high-quality, farm-raised poultry products. We ensure the highest standards of animal welfare and quality control.
         </p>
@@ -69,10 +71,16 @@ export default function ProductCatalog() {
         </div>
       </div>
 
-      {filteredProducts.length > 0 ? (
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
+          <p className="text-muted-foreground animate-pulse">Connecting to Farm Database...</p>
+        </div>
+      ) : filteredProducts.length > 0 ? (
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredProducts.map(product => {
-            const imgData = PlaceHolderImages.find(img => img.id === product.image);
+            const imgData = PlaceHolderImages.find(img => img.id === product.imageId) || 
+                          PlaceHolderImages.find(img => img.id === 'organic-eggs');
             return (
               <Card key={product.id} className="group overflow-hidden border-none bg-card shadow-sm transition-all hover:shadow-md">
                 <div className="relative h-56 overflow-hidden">
@@ -85,9 +93,11 @@ export default function ProductCatalog() {
                       data-ai-hint={imgData.imageHint}
                     />
                   )}
-                  <Badge className="absolute left-3 top-3 bg-accent text-white border-none">
-                    {product.tag}
-                  </Badge>
+                  {product.tag && (
+                    <Badge className="absolute left-3 top-3 bg-accent text-white border-none">
+                      {product.tag}
+                    </Badge>
+                  )}
                 </div>
                 <CardContent className="p-5">
                   <div className="mb-2 text-xs font-bold uppercase tracking-wider text-primary">
@@ -98,11 +108,11 @@ export default function ProductCatalog() {
                   </h3>
                   <div className="flex items-center gap-1.5 text-xs text-green-600 font-semibold">
                     <CheckCircle2 className="h-3 w-3" />
-                    In Stock
+                    {product.inStock ? 'In Stock' : 'Out of Stock'}
                   </div>
                 </CardContent>
                 <CardFooter className="flex items-center justify-between p-5 pt-0">
-                  <span className="text-xl font-bold">${product.price.toFixed(2)}</span>
+                  <span className="text-xl font-bold">${(product.price || 0).toFixed(2)}</span>
                   <Button size="sm" className="rounded-full gap-2 transition-all hover:px-6">
                     <ShoppingBasket className="h-4 w-4" />
                     Add
@@ -118,7 +128,7 @@ export default function ProductCatalog() {
             <Filter className="h-12 w-12 text-muted-foreground" />
           </div>
           <h3 className="text-xl font-bold">No products found</h3>
-          <p className="text-muted-foreground">Try adjusting your filters or search terms.</p>
+          <p className="text-muted-foreground">Try adding some products in the Admin Dashboard!</p>
           <Button variant="link" className="mt-4" onClick={() => { setSearch(""); setActiveCategory("All"); }}>
             Clear all filters
           </Button>
