@@ -3,7 +3,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X, Bird, Egg, ShoppingBasket, Info, MessageSquare, Lightbulb } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Menu, X, Bird, ShoppingBasket, Info, MessageSquare, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
@@ -15,6 +16,8 @@ const navItems = [
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+  const isAdminPage = pathname === "/admin";
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -29,7 +32,7 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex md:items-center md:gap-6">
-            {navItems.map((item) => (
+            {!isAdminPage && navItems.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
@@ -39,27 +42,34 @@ export default function Navbar() {
                 {item.name}
               </Link>
             ))}
-            <Button variant="default" asChild className="ml-4 rounded-full">
-              <Link href="/products">Order Now</Link>
-            </Button>
+            {!isAdminPage && (
+              <Button variant="default" asChild className="ml-4 rounded-full">
+                <Link href="/products">Order Now</Link>
+              </Button>
+            )}
+            {isAdminPage && (
+              <span className="text-sm font-bold text-primary uppercase tracking-widest">Admin Portal</span>
+            )}
           </div>
 
           {/* Mobile Nav Toggle */}
-          <div className="flex md:hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-foreground"
-            >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
-          </div>
+          {!isAdminPage && (
+            <div className="flex md:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsOpen(!isOpen)}
+                className="text-foreground"
+              >
+                {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Mobile Nav Menu */}
-      {isOpen && (
+      {isOpen && !isAdminPage && (
         <div className="md:hidden border-t bg-background animate-in slide-in-from-top-2 duration-200">
           <div className="space-y-1 px-4 py-4">
             {navItems.map((item) => (
