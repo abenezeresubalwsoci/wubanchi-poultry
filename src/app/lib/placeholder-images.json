@@ -2,6 +2,12 @@
 {
   "placeholderImages": [
     {
+      "id": "app-logo",
+      "description": "Wubanchi Farm Logo",
+      "imageUrl": "https://picsum.photos/seed/wubanchi-logo/200/200",
+      "imageHint": "farm logo"
+    },
+    {
       "id": "hero-farm",
       "description": "Sunrise over a beautiful poultry farm with chickens roaming freely",
       "imageUrl": "https://picsum.photos/seed/farm-hero-updated/1200/600",
