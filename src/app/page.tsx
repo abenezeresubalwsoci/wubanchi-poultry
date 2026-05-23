@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Egg, ShoppingBasket, Lightbulb, Heart, ShieldCheck, Bird } from "lucide-react";
+import { ArrowRight, Egg, ShoppingBasket, Lightbulb, Heart, ShieldCheck, Bird, Newspaper } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export default function Home() {
@@ -30,7 +30,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="flex flex-col gap-16 pb-16">
+    <div className="flex flex-col gap-12 pb-16">
       {/* Hero Section */}
       <section className="relative h-[250px] w-full overflow-hidden">
         {heroImg && (
@@ -53,8 +53,43 @@ export default function Home() {
         </div>
       </section>
 
+      {/* News Box Section */}
+      <section className="container mx-auto px-4 md:px-8 -mt-10 relative z-20">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Card className="border-none shadow-xl bg-primary text-primary-foreground">
+            <CardContent className="p-6 flex items-center gap-4 h-full">
+              <div className="rounded-full bg-white/20 p-3">
+                <Newspaper className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Farm News</h3>
+                <p className="text-sm opacity-90 text-white/80">Stay updated with Wubanchi</p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <div className="lg:col-span-2 grid gap-4 sm:grid-cols-2">
+             {[
+               { title: "Weekly Market", desc: "Join us this Saturday for fresh produce.", date: "Oct 26" },
+               { title: "New Feed Stock", desc: "Organic layers pellets now in store.", date: "Oct 24" }
+             ].map((item, i) => (
+               <Card key={i} className="border-none bg-card shadow-lg hover:shadow-xl transition-all cursor-pointer group">
+                 <CardContent className="p-6 flex justify-between items-center">
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-primary uppercase tracking-wider">{item.date}</p>
+                      <h4 className="font-bold group-hover:text-primary transition-colors">{item.title}</h4>
+                      <p className="text-sm text-muted-foreground line-clamp-1">{item.desc}</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-1" />
+                 </CardContent>
+               </Card>
+             ))}
+          </div>
+        </div>
+      </section>
+
       {/* Trust Badges */}
-      <section className="container mx-auto px-4 md:px-8">
+      <section className="container mx-auto px-4 md:px-8 mt-4">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:gap-12">
           <div className="flex flex-col items-center text-center space-y-2">
             <div className="rounded-full bg-primary/10 p-4 text-primary">
