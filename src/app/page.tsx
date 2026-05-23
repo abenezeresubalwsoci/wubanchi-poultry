@@ -70,8 +70,8 @@ export default function Home() {
           
           <div className="lg:col-span-2 grid gap-4 sm:grid-cols-2">
              {[
-               { title: "Weekly Market", desc: "Join us this Saturday for fresh produce.", date: "Oct 26" },
-               { title: "New Feed Stock", desc: "Organic layers pellets now in store.", date: "Oct 24" }
+               { title: "Welcome to Wubanchi", desc: "Welcome to Wubanchi poultry farming! We're glad to have you here.", date: "Oct 28" },
+               { title: "Weekly Market", desc: "Join us this Saturday for fresh produce and farm tours.", date: "Oct 26" }
              ].map((item, i) => (
                <Card key={i} className="border-none bg-card shadow-lg hover:shadow-xl transition-all cursor-pointer group">
                  <CardContent className="p-6 flex justify-between items-center">
