@@ -41,6 +41,18 @@
         "createdAt": { "type": "string", "format": "date-time" }
       }
     },
+    "Feedback": {
+      "title": "Feedback",
+      "description": "Customer feedback and comments",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "comment"]
+    },
     "Settings": {
       "title": "Settings",
       "description": "Site-wide configuration",
@@ -65,6 +77,10 @@
     "/orders/{orderId}": {
       "schema": "#/entities/Order",
       "description": "Collection of customer orders"
+    },
+    "/feedback/{feedbackId}": {
+      "schema": "#/entities/Feedback",
+      "description": "Collection of customer feedback"
     },
     "/settings/{settingId}": {
       "schema": "#/entities/Settings",
