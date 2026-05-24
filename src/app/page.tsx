@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Egg, ShoppingBasket, Lightbulb, Heart, ShieldCheck, Bird, Newspaper, Loader2 } from "lucide-react";
+import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Bird, Newspaper, Loader2, MessageSquare, Quote } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useCollection, useFirestore } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
@@ -182,25 +182,47 @@ export default function Home() {
         </div>
       </section>
 
-      {/* AI CTA Section */}
+      {/* Community Feedback Section */}
       <section className="container mx-auto px-4 md:px-8">
         <div className="relative overflow-hidden rounded-3xl bg-accent p-8 md:p-16">
           <div className="relative z-10 flex flex-col items-center text-center gap-8 lg:flex-row lg:text-left">
-            <div className="flex-1 space-y-4">
+            <div className="flex-1 space-y-6">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-sm font-bold text-white">
-                <Lightbulb className="h-4 w-4" />
-                <span>AI CARE ADVISOR</span>
+                <MessageSquare className="h-4 w-4" />
+                <span>COMMUNITY VOICES</span>
               </div>
-              <h2 className="text-3xl font-bold text-white md:text-5xl">Need expert poultry advice?</h2>
+              <h2 className="text-3xl font-bold text-white md:text-5xl">What our customers are saying</h2>
               <p className="text-lg text-white/90 max-w-xl">
-                Ask Wubanchi AI for tailored tips on feed management, chicken care, or product preparation. Our expert advisor is available 24/7.
+                We take pride in our farm-to-table journey. Read the latest feedback from our local community or share your own experience.
               </p>
-              <Button size="lg" variant="secondary" asChild className="rounded-full px-8 text-lg font-bold">
-                <Link href="/tips">Ask Wubanchi Now</Link>
-              </Button>
+              
+              <div className="grid gap-4 sm:grid-cols-2 mt-8">
+                <Card className="bg-white/10 border-none backdrop-blur-md text-white p-6 relative">
+                  <Quote className="absolute top-2 right-4 h-8 w-8 opacity-20" />
+                  <p className="text-sm italic mb-3">"The freshest eggs in the valley! My kids love visiting the farm shop every Saturday."</p>
+                  <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-full bg-white/30" />
+                    <p className="text-xs font-bold">— Maria K.</p>
+                  </div>
+                </Card>
+                <Card className="bg-white/10 border-none backdrop-blur-md text-white p-6 relative">
+                  <Quote className="absolute top-2 right-4 h-8 w-8 opacity-20" />
+                  <p className="text-sm italic mb-3">"Top quality broiler chicken. Always fresh, ethically raised, and tastes amazing."</p>
+                  <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-full bg-white/30" />
+                    <p className="text-xs font-bold">— David L.</p>
+                  </div>
+                </Card>
+              </div>
+              
+              <div className="pt-4">
+                <Button size="lg" variant="secondary" asChild className="rounded-full px-8 text-lg font-bold">
+                  <Link href="/contact">Leave Feedback</Link>
+                </Button>
+              </div>
             </div>
             <div className="flex h-64 w-64 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
-              <Bird className="h-32 w-32 text-white" />
+              <MessageSquare className="h-32 w-32 text-white" />
             </div>
           </div>
           {/* Abstract background shapes */}
