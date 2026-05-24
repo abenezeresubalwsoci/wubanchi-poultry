@@ -3,16 +3,23 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Bird, Newspaper, Loader2, MessageSquare, Quote } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Quote, Send, CheckCircle2 } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, orderBy, limit } from "firebase/firestore";
-import { useMemo } from "react";
+import { collection, query, orderBy, limit, addDoc, serverTimestamp } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function Home() {
   const db = useFirestore();
+  const { toast } = useToast();
   const heroImg = PlaceHolderImages.find(img => img.id === 'hero-farm');
   
   // Dynamic news query
@@ -23,6 +30,39 @@ export default function Home() {
   ), [db]);
   
   const { data: newsItems, loading: newsLoading } = useCollection(newsQuery);
+
+  // Feedback form state
+  const [feedbackForm, setFeedbackForm] = useState({ name: '', email: '', comment: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!feedbackForm.name || !feedbackForm.comment) return;
+
+    setIsSubmitting(true);
+    const data = {
+      ...feedbackForm,
+      createdAt: serverTimestamp()
+    };
+
+    addDoc(collection(db, 'feedback'), data)
+      .then(() => {
+        setIsSubmitted(true);
+        setFeedbackForm({ name: '', email: '', comment: '' });
+        toast({ title: "Feedback Received", description: "Thank you for sharing your thoughts with the Wubanchi community!" });
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'feedback',
+          operation: 'create',
+          requestResourceData: data
+        }));
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
+  };
 
   const highlights = [
     { 
@@ -185,44 +225,85 @@ export default function Home() {
       {/* Community Feedback Section */}
       <section className="container mx-auto px-4 md:px-8">
         <div className="relative overflow-hidden rounded-3xl bg-accent p-8 md:p-16">
-          <div className="relative z-10 flex flex-col items-center text-center gap-8 lg:flex-row lg:text-left">
+          <div className="relative z-10 flex flex-col items-center text-center gap-12 lg:flex-row lg:text-left">
             <div className="flex-1 space-y-6">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-sm font-bold text-white">
                 <MessageSquare className="h-4 w-4" />
                 <span>COMMUNITY VOICES</span>
               </div>
-              <h2 className="text-3xl font-bold text-white md:text-5xl">What our customers are saying</h2>
+              <h2 className="text-3xl font-bold text-white md:text-5xl">Share Your Experience</h2>
               <p className="text-lg text-white/90 max-w-xl">
-                We take pride in our farm-to-table journey. Read the latest feedback from our local community or share your own experience.
+                We take pride in our farm-to-table journey. Your feedback helps us grow and serve our community better.
               </p>
               
-              <div className="grid gap-4 sm:grid-cols-2 mt-8">
-                <Card className="bg-white/10 border-none backdrop-blur-md text-white p-6 relative">
-                  <Quote className="absolute top-2 right-4 h-8 w-8 opacity-20" />
-                  <p className="text-sm italic mb-3">"The freshest eggs in the valley! My kids love visiting the farm shop every Saturday."</p>
-                  <div className="flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-full bg-white/30" />
-                    <p className="text-xs font-bold">— Maria K.</p>
-                  </div>
-                </Card>
-                <Card className="bg-white/10 border-none backdrop-blur-md text-white p-6 relative">
-                  <Quote className="absolute top-2 right-4 h-8 w-8 opacity-20" />
-                  <p className="text-sm italic mb-3">"Top quality broiler chicken. Always fresh, ethically raised, and tastes amazing."</p>
-                  <div className="flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-full bg-white/30" />
-                    <p className="text-xs font-bold">— David L.</p>
-                  </div>
-                </Card>
-              </div>
-              
-              <div className="pt-4">
-                <Button size="lg" variant="secondary" asChild className="rounded-full px-8 text-lg font-bold">
-                  <Link href="/contact">Leave Feedback</Link>
-                </Button>
+              <div className="hidden lg:block space-y-4">
+                <div className="flex h-48 w-48 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
+                   <MessageSquare className="h-24 w-24 text-white" />
+                </div>
               </div>
             </div>
-            <div className="flex h-64 w-64 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
-              <MessageSquare className="h-32 w-32 text-white" />
+
+            <div className="w-full lg:max-w-md">
+              <Card className="border-none shadow-2xl bg-white/95 backdrop-blur-sm">
+                <CardContent className="p-8">
+                  {isSubmitted ? (
+                    <div className="flex flex-col items-center justify-center py-10 text-center animate-in zoom-in-95 duration-500">
+                      <div className="mb-6 rounded-full bg-green-100 p-4 text-green-600">
+                        <CheckCircle2 className="h-12 w-12" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-foreground mb-2">Thank You!</h3>
+                      <p className="text-muted-foreground">Your feedback has been submitted successfully.</p>
+                      <Button variant="outline" className="mt-6 rounded-full" onClick={() => setIsSubmitted(false)}>
+                        Send Another Comment
+                      </Button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleFeedbackSubmit} className="space-y-5">
+                      <div className="space-y-2 text-left">
+                        <Label htmlFor="name" className="text-foreground font-bold">Your Name</Label>
+                        <Input 
+                          id="name" 
+                          placeholder="John Doe" 
+                          value={feedbackForm.name} 
+                          onChange={e => setFeedbackForm({...feedbackForm, name: e.target.value})} 
+                          className="bg-background"
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-2 text-left">
+                        <Label htmlFor="email" className="text-foreground font-bold">Email Address</Label>
+                        <Input 
+                          id="email" 
+                          type="email" 
+                          placeholder="john@example.com" 
+                          value={feedbackForm.email} 
+                          onChange={e => setFeedbackForm({...feedbackForm, email: e.target.value})} 
+                          className="bg-background"
+                        />
+                      </div>
+                      <div className="space-y-2 text-left">
+                        <Label htmlFor="comment" className="text-foreground font-bold">Your Comment</Label>
+                        <Textarea 
+                          id="comment" 
+                          placeholder="Tell us what you think..." 
+                          value={feedbackForm.comment} 
+                          onChange={e => setFeedbackForm({...feedbackForm, comment: e.target.value})} 
+                          className="min-h-[120px] bg-background resize-none"
+                          required 
+                        />
+                      </div>
+                      <Button 
+                        type="submit" 
+                        className="w-full rounded-full py-6 text-lg font-bold gap-2"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                        Submit Feedback
+                      </Button>
+                    </form>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
           {/* Abstract background shapes */}
