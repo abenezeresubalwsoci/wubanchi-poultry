@@ -11,15 +11,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { firebaseConfig } from '@/firebase/config';
 
 export default function AdminDashboard() {
   const db = useFirestore();
   const { toast } = useToast();
+
+  // Configuration check
+  const isPlaceholderConfig = firebaseConfig.projectId === 'placeholder-project-id';
 
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -79,6 +83,10 @@ export default function AdminDashboard() {
       createdAt: serverTimestamp()
     };
     addDoc(collection(db, 'products'), data)
+      .then(() => {
+        setNewProduct({ name: '', price: '', category: 'Eggs', description: '', imageId: 'organic-eggs' });
+        toast({ title: "Product Added" });
+      })
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: 'products',
@@ -86,8 +94,6 @@ export default function AdminDashboard() {
           requestResourceData: data
         }));
       });
-    setNewProduct({ name: '', price: '', category: 'Eggs', description: '', imageId: 'organic-eggs' });
-    toast({ title: "Product Added" });
   };
 
   const handleAddNews = () => {
@@ -98,6 +104,10 @@ export default function AdminDashboard() {
       createdAt: serverTimestamp()
     };
     addDoc(collection(db, 'news'), data)
+      .then(() => {
+        setNewNews({ title: '', desc: '', content: '' });
+        toast({ title: "News Posted" });
+      })
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: 'news',
@@ -105,34 +115,32 @@ export default function AdminDashboard() {
           requestResourceData: data
         }));
       });
-    setNewNews({ title: '', desc: '', content: '' });
-    toast({ title: "News Posted" });
   };
 
   const handleUpdateLogo = () => {
     if (!logoUrl) return;
     setIsSavingLogo(true);
     
-    // Mutation using setDoc with merge for persistent settings
-    setDoc(settingsRef, { logoUrl, updatedAt: serverTimestamp() }, { merge: true })
+    const data = { logoUrl, updatedAt: serverTimestamp() };
+    setDoc(settingsRef, data, { merge: true })
       .then(() => {
-        setIsSavingLogo(false);
         toast({ title: "Branding Saved", description: "Logo has been updated permanently." });
       })
       .catch(async (error) => {
-        setIsSavingLogo(false);
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: settingsRef.path,
           operation: 'update',
-          requestResourceData: { logoUrl }
+          requestResourceData: data
         }));
+      })
+      .finally(() => {
+        setIsSavingLogo(false);
       });
   };
 
   const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file size (Firestore document limit is 1MB)
       if (file.size > 800000) {
         toast({ 
           variant: "destructive", 
@@ -148,19 +156,20 @@ export default function AdminDashboard() {
         const base64String = reader.result as string;
         setLogoUrl(base64String);
         
-        // Save immediately on upload
-        setDoc(settingsRef, { logoUrl: base64String, updatedAt: serverTimestamp() }, { merge: true })
+        const data = { logoUrl: base64String, updatedAt: serverTimestamp() };
+        setDoc(settingsRef, data, { merge: true })
           .then(() => {
-            setIsSavingLogo(false);
             toast({ title: "Logo Uploaded", description: "New branding saved to the database." });
           })
           .catch(async (error) => {
-            setIsSavingLogo(false);
             errorEmitter.emit('permission-error', new FirestorePermissionError({
               path: settingsRef.path,
               operation: 'update',
               requestResourceData: { logoUrl: 'base64_data' }
             }));
+          })
+          .finally(() => {
+            setIsSavingLogo(false);
           });
       };
       reader.onerror = () => {
@@ -174,18 +183,28 @@ export default function AdminDashboard() {
   const handleDelete = (col: string, id: string) => {
     const docRef = doc(db, col, id);
     deleteDoc(docRef)
+      .then(() => {
+        toast({ title: "Deleted", variant: "destructive" });
+      })
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: docRef.path,
           operation: 'delete'
         }));
       });
-    toast({ title: "Deleted", variant: "destructive" });
   };
 
   if (!isAuthenticated) {
     return (
-      <div className="flex min-h-[80vh] items-center justify-center px-4">
+      <div className="flex min-h-[80vh] flex-col items-center justify-center px-4 gap-6">
+        {isPlaceholderConfig && (
+          <Card className="w-full max-w-md border-destructive/50 bg-destructive/5">
+            <CardContent className="p-4 flex items-center gap-3 text-destructive">
+              <AlertTriangle className="h-5 w-5 shrink-0" />
+              <p className="text-sm font-medium">Warning: Firebase is not configured. Please add your credentials to the .env file.</p>
+            </CardContent>
+          </Card>
+        )}
         <Card className="w-full max-w-md border-none shadow-2xl bg-card">
           <CardHeader className="text-center space-y-2">
             <div className="mx-auto rounded-full bg-primary/10 p-3 w-fit text-primary">
@@ -204,7 +223,7 @@ export default function AdminDashboard() {
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="••••••••" required />
               </div>
-              <Button type="submit" className="w-full font-bold">Login</Button>
+              <Button type="submit" className="w-full font-bold">Login to Admin Portal</Button>
             </form>
           </CardContent>
         </Card>
@@ -300,53 +319,58 @@ export default function AdminDashboard() {
               <CardDescription>Update your farm logo. Changes are saved permanently to Firestore.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Upload Logo (max 800KB)</Label>
-                  <div className="flex items-center gap-4">
-                    <Button 
-                      variant="outline" 
-                      className="relative cursor-pointer overflow-hidden gap-2"
-                      disabled={isSavingLogo}
-                    >
-                      {isSavingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                      Choose Image
-                      <input 
-                        type="file" 
-                        className="absolute inset-0 opacity-0 cursor-pointer" 
-                        accept="image/*"
-                        onChange={handleLogoFileUpload}
-                        disabled={isSavingLogo}
-                      />
-                    </Button>
-                    {isSavingLogo && <span className="text-xs text-primary animate-pulse">Saving to Database...</span>}
+              <div className="space-y-6">
+                <div className="space-y-4 border rounded-xl p-6 bg-background/50">
+                  <Label className="text-lg font-bold">Logo Management</Label>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Upload New File (max 800KB)</Label>
+                      <div className="flex items-center gap-4">
+                        <Button 
+                          variant="outline" 
+                          className="relative cursor-pointer overflow-hidden gap-2"
+                          disabled={isSavingLogo}
+                        >
+                          {isSavingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                          Choose Image
+                          <input 
+                            type="file" 
+                            className="absolute inset-0 opacity-0 cursor-pointer" 
+                            accept="image/*"
+                            onChange={handleLogoFileUpload}
+                            disabled={isSavingLogo}
+                          />
+                        </Button>
+                        {isSavingLogo && <span className="text-xs text-primary animate-pulse font-medium">Syncing with Cloud...</span>}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-2 border-t">
+                      <Label>Or Paste Direct URL</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          value={logoUrl} 
+                          onChange={e => setLogoUrl(e.target.value)} 
+                          placeholder="https://example.com/logo.png" 
+                          disabled={isSavingLogo}
+                        />
+                        <Button onClick={handleUpdateLogo} disabled={isSavingLogo || !logoUrl}>
+                          Update URL
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Or Paste Image URL</Label>
-                  <div className="flex gap-2">
-                    <Input 
-                      value={logoUrl} 
-                      onChange={e => setLogoUrl(e.target.value)} 
-                      placeholder="https://example.com/logo.png" 
-                      disabled={isSavingLogo}
-                    />
-                    <Button onClick={handleUpdateLogo} disabled={isSavingLogo || !logoUrl}>
-                      {isSavingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update URL'}
-                    </Button>
+                {logoUrl && (
+                  <div className="space-y-3 pt-4 border-t">
+                    <Label className="font-bold">Active Branding Preview</Label>
+                    <div className="h-32 w-32 rounded-2xl border-none bg-background shadow-inner overflow-hidden flex items-center justify-center p-4">
+                      <img src={logoUrl} alt="Logo Preview" className="h-full w-full object-contain" />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
-
-              {logoUrl && (
-                <div className="space-y-3 pt-4 border-t">
-                  <Label>Preview</Label>
-                  <div className="h-32 w-32 rounded-2xl border bg-background overflow-hidden flex items-center justify-center p-2">
-                    <img src={logoUrl} alt="Logo Preview" className="h-full w-full object-contain" />
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>
