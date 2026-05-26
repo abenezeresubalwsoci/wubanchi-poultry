@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +36,9 @@ export default function ProductCatalog() {
     });
   }, [search, activeCategory, products]);
 
-  const handleAddToCart = (title: string) => {
+  const handleAddToCart = (e: React.MouseEvent, title: string) => {
+    e.stopPropagation();
+    e.preventDefault();
     toast({
       title: "Added to Selection",
       description: `${title} has been added to your shopping session.`,
@@ -91,43 +94,45 @@ export default function ProductCatalog() {
             const imgHint = PlaceHolderImages.find(img => img.id === product.imageId)?.imageHint || 'poultry product';
             
             return (
-              <Card key={product.id} className="relative group overflow-hidden border-none bg-white rounded-3xl transition-all hover:shadow-xl">
-                {/* Heart Icon - Top Right */}
-                <button className="absolute right-4 top-4 z-10 text-destructive/80 transition-transform hover:scale-110">
-                  <Heart className="h-6 w-6" />
-                </button>
+              <Link key={product.id} href={`/products/${product.id}`} className="block h-full">
+                <Card className="relative group overflow-hidden border-none bg-white rounded-3xl transition-all hover:shadow-xl h-full">
+                  {/* Heart Icon - Top Right */}
+                  <button className="absolute right-4 top-4 z-10 text-destructive/80 transition-transform hover:scale-110" onClick={(e) => e.preventDefault()}>
+                    <Heart className="h-6 w-6" />
+                  </button>
 
-                {/* Product Image Area */}
-                <div className="relative h-48 w-full p-6 flex items-center justify-center bg-gray-50/50">
-                  <div className="relative h-full w-full overflow-hidden">
-                    <Image
-                      src={displayImageUrl}
-                      alt={product.name}
-                      fill
-                      className="object-contain transition-transform duration-500 group-hover:scale-105"
-                      data-ai-hint={imgHint}
-                    />
+                  {/* Product Image Area */}
+                  <div className="relative h-48 w-full p-6 flex items-center justify-center bg-gray-50/50">
+                    <div className="relative h-full w-full overflow-hidden">
+                      <Image
+                        src={displayImageUrl}
+                        alt={product.name}
+                        fill
+                        className="object-contain transition-transform duration-500 group-hover:scale-105"
+                        data-ai-hint={imgHint}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {/* Product Info Area */}
-                <CardContent className="p-5">
-                  <div className="space-y-1 mb-4">
-                    <h3 className="text-lg font-bold text-foreground line-clamp-1">{product.name}</h3>
-                    <p className="text-sm text-muted-foreground">{product.category}</p>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-foreground">ETB {(product.price || 0).toFixed(2)}</span>
-                    <Button 
-                      onClick={() => handleAddToCart(product.name)}
-                      className="h-8 w-8 bg-primary hover:bg-primary/90 rounded-lg p-0 flex items-center justify-center shadow-sm transition-all active:scale-95"
-                    >
-                      <Plus className="h-5 w-5 text-white" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  {/* Product Info Area */}
+                  <CardContent className="p-5">
+                    <div className="space-y-1 mb-4">
+                      <h3 className="text-lg font-bold text-foreground line-clamp-1">{product.name}</h3>
+                      <p className="text-sm text-muted-foreground">{product.category}</p>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-bold text-foreground">ETB {(product.price || 0).toFixed(2)}</span>
+                      <Button 
+                        onClick={(e) => handleAddToCart(e, product.name)}
+                        className="h-8 w-8 bg-primary hover:bg-primary/90 rounded-lg p-0 flex items-center justify-center shadow-sm transition-all active:scale-95"
+                      >
+                        <Plus className="h-5 w-5 text-white" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
         </div>
