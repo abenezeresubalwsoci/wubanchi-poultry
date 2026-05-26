@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -35,6 +36,15 @@ export default function Home() {
   ), [db]);
   
   const { data: newsItems, loading: newsLoading } = useCollection(newsQuery);
+
+  // Real-time products query
+  const productsQuery = useMemo(() => query(
+    collection(db, 'products'), 
+    orderBy('createdAt', 'desc'), 
+    limit(4)
+  ), [db]);
+  
+  const { data: featuredProducts, loading: productsLoading } = useCollection(productsQuery);
 
   // Feedback form state
   const [feedbackForm, setFeedbackForm] = useState({ name: '', email: '', comment: '' });
@@ -75,33 +85,6 @@ export default function Home() {
       description: `${title} has been added to your shopping session.`,
     });
   };
-
-  const highlights = [
-    { 
-      title: "Fresh Farm Eggs", 
-      desc: "Harvested daily from our cage-free, organic-fed hens.",
-      img: PlaceHolderImages.find(img => img.id === 'organic-eggs'),
-      href: "/products?category=eggs"
-    },
-    { 
-      title: "Premium Poultry", 
-      desc: "Healthy, antibiotic-free meat processed with the highest standards.",
-      img: PlaceHolderImages.find(img => img.id === 'whole-chicken'),
-      href: "/products?category=meat"
-    },
-    { 
-      title: "Healthy Chicks", 
-      desc: "Day-old chicks bred for vigor and high productivity.",
-      img: PlaceHolderImages.find(img => img.id === 'day-old-chicks'),
-      href: "/products?category=chicks"
-    },
-    { 
-      title: "Organic Feed", 
-      desc: "Nutritious grain blends for optimal poultry growth.",
-      img: PlaceHolderImages.find(img => img.id === 'poultry-feed'),
-      href: "/products?category=feed"
-    }
-  ];
 
   return (
     <div className="flex flex-col gap-12 pb-16">
@@ -203,50 +186,74 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Highlights */}
+      {/* Real-time Products Section */}
       <section className="container mx-auto px-4 md:px-8">
         <div className="mb-12 flex items-end justify-between">
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold md:text-4xl">Featured Categories</h2>
-            <p className="text-muted-foreground">Explore our selection of premium poultry goods.</p>
+            <h2 className="text-3xl font-bold md:text-4xl">Featured Products</h2>
+            <p className="text-muted-foreground">Fresh from our farm, delivered to your doorstep.</p>
           </div>
           <Link href="/products" className="hidden items-center gap-2 font-bold text-primary transition-colors hover:text-accent sm:flex">
             View All Products <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        <div className="grid gap-8 sm:grid-cols-2">
-          {highlights.map((item, idx) => (
-            <Card key={idx} className="group overflow-hidden border-none bg-card transition-all hover:shadow-xl hover:-translate-y-1">
-              <div className="relative h-64 overflow-hidden">
-                {item.img && (
-                  <Image
-                    src={item.img.imageUrl}
-                    alt={item.img.description}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
-                    data-ai-hint={item.img.imageHint}
-                  />
-                )}
-              </div>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold">{item.title}</h3>
-                  <Button 
-                    onClick={() => handleAddToCart(item.title)}
-                    className="rounded-full h-10 w-10 p-0 flex items-center justify-center transition-transform hover:scale-110"
-                    title="Add (+)"
-                  >
-                    <Plus className="h-5 w-5" />
-                  </Button>
-                </div>
-                <p className="mb-6 text-sm text-muted-foreground">{item.desc}</p>
-                <Button variant="outline" asChild className="w-full rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                  <Link href={item.href}>Details</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        
+        {productsLoading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
+          </div>
+        ) : featuredProducts?.length ? (
+          <div className="grid gap-8 sm:grid-cols-2">
+            {featuredProducts.map((product: any) => {
+              const imgData = PlaceHolderImages.find(img => img.id === product.imageId) || 
+                            PlaceHolderImages.find(img => img.id === 'organic-eggs');
+              return (
+                <Card key={product.id} className="group overflow-hidden border-none bg-card transition-all hover:shadow-xl hover:-translate-y-1">
+                  <div className="relative h-64 overflow-hidden">
+                    {imgData && (
+                      <Image
+                        src={imgData.imageUrl}
+                        alt={product.name}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        data-ai-hint={imgData.imageHint}
+                      />
+                    )}
+                  </div>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-xl font-bold">{product.name}</h3>
+                        <p className="text-xs font-bold text-primary uppercase tracking-wider">{product.category}</p>
+                      </div>
+                      <Button 
+                        onClick={() => handleAddToCart(product.name)}
+                        className="rounded-full h-10 w-10 p-0 flex items-center justify-center transition-transform hover:scale-110"
+                        title="Add (+)"
+                      >
+                        <Plus className="h-5 w-5" />
+                      </Button>
+                    </div>
+                    <p className="mb-6 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">{product.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xl font-bold">${(product.price || 0).toFixed(2)}</span>
+                      <Button variant="outline" asChild className="rounded-full px-6 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                        <Link href="/products">Shop Now</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 bg-muted/20 rounded-3xl text-center">
+            <p className="text-muted-foreground italic mb-4">No products available at the moment.</p>
+            <Button variant="outline" asChild className="rounded-full">
+              <Link href="/admin">Add Products in Admin</Link>
+            </Button>
+          </div>
+        )}
       </section>
 
       {/* Community Feedback Section */}
