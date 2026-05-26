@@ -29,7 +29,7 @@ export default function CheckoutPage() {
     fullName: '',
     email: '',
     phone: '',
-    city: 'Addis Ababa',
+    city: 'Bahir Dar',
     address: '',
     landmark: '',
     paymentMethod: 'cash'
@@ -132,11 +132,11 @@ export default function CheckoutPage() {
                       <Navigation className="h-4 w-4 text-primary" />
                       Pin Your Location
                     </Label>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Addis Ababa, Ethiopia</span>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Bahir Dar, Ethiopia</span>
                   </div>
                   <div className="relative h-[250px] w-full overflow-hidden rounded-2xl border-2 border-primary/10 shadow-inner group">
                     <iframe
-                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126115.11525281987!2d38.7042621!3d9.010793!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b85cef5ab402d%3A0x8467b6b037a24c49!2sAddis%20Ababa!5e0!3m2!1sen!2set!4v1700000000000!5m2!1sen!2set"
+                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d62479.236688523315!2d37.35926521557002!3d11.58739791461973!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1643292671520633%3A0x69ec26ec89f0290!2sBahir%20Dar!5e0!3m2!1sen!2set!4v1709400000000!5m2!1sen!2set"
                       width="100%"
                       height="100%"
                       style={{ border: 0 }}
