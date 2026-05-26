@@ -7,16 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Search, ShoppingBasket, Filter, CheckCircle2, Loader2 } from "lucide-react";
+import { Search, ShoppingBasket, Filter, CheckCircle2, Loader2, Plus } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 const CATEGORIES = ["All", "Eggs", "Meat", "Feed", "Chicks"];
 
 export default function ProductCatalog() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const { toast } = useToast();
   
   const db = useFirestore();
   const productsQuery = useMemo(() => 
@@ -33,6 +35,13 @@ export default function ProductCatalog() {
       return matchesSearch && matchesCategory;
     });
   }, [search, activeCategory, products]);
+
+  const handleAddToCart = (title: string) => {
+    toast({
+      title: "Added to Selection",
+      description: `${title} has been added to your shopping session.`,
+    });
+  };
 
   return (
     <div className="container mx-auto px-4 py-12 md:px-8">
@@ -79,20 +88,19 @@ export default function ProductCatalog() {
       ) : filteredProducts.length > 0 ? (
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredProducts.map(product => {
-            const imgData = PlaceHolderImages.find(img => img.id === product.imageId) || 
-                          PlaceHolderImages.find(img => img.id === 'organic-eggs');
+            const displayImageUrl = product.imageUrl || (PlaceHolderImages.find(img => img.id === product.imageId)?.imageUrl) || PlaceHolderImages[0].imageUrl;
+            const imgHint = PlaceHolderImages.find(img => img.id === product.imageId)?.imageHint || 'poultry product';
+            
             return (
               <Card key={product.id} className="group overflow-hidden border-none bg-card shadow-sm transition-all hover:shadow-md">
                 <div className="relative h-56 overflow-hidden">
-                  {imgData && (
-                    <Image
-                      src={imgData.imageUrl}
-                      alt={product.name}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      data-ai-hint={imgData.imageHint}
-                    />
-                  )}
+                  <Image
+                    src={displayImageUrl}
+                    alt={product.name}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    data-ai-hint={imgHint}
+                  />
                   {product.tag && (
                     <Badge className="absolute left-3 top-3 bg-accent text-white border-none">
                       {product.tag}
@@ -113,8 +121,12 @@ export default function ProductCatalog() {
                 </CardContent>
                 <CardFooter className="flex items-center justify-between p-5 pt-0">
                   <span className="text-xl font-bold">${(product.price || 0).toFixed(2)}</span>
-                  <Button size="sm" className="rounded-full gap-2 transition-all hover:px-6">
-                    <ShoppingBasket className="h-4 w-4" />
+                  <Button 
+                    size="sm" 
+                    className="rounded-full gap-2 transition-all hover:px-6"
+                    onClick={() => handleAddToCart(product.name)}
+                  >
+                    <Plus className="h-4 w-4" />
                     Add
                   </Button>
                 </CardFooter>

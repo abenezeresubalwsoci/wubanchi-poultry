@@ -205,20 +205,19 @@ export default function Home() {
         ) : featuredProducts?.length ? (
           <div className="grid gap-8 sm:grid-cols-2">
             {featuredProducts.map((product: any) => {
-              const imgData = PlaceHolderImages.find(img => img.id === product.imageId) || 
-                            PlaceHolderImages.find(img => img.id === 'organic-eggs');
+              const displayImageUrl = product.imageUrl || (PlaceHolderImages.find(img => img.id === product.imageId)?.imageUrl) || PlaceHolderImages[0].imageUrl;
+              const imgHint = PlaceHolderImages.find(img => img.id === product.imageId)?.imageHint || 'poultry product';
+              
               return (
                 <Card key={product.id} className="group overflow-hidden border-none bg-card transition-all hover:shadow-xl hover:-translate-y-1">
                   <div className="relative h-64 overflow-hidden">
-                    {imgData && (
-                      <Image
-                        src={imgData.imageUrl}
-                        alt={product.name}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        data-ai-hint={imgData.imageHint}
-                      />
-                    )}
+                    <Image
+                      src={displayImageUrl}
+                      alt={product.name}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      data-ai-hint={imgHint}
+                    />
                   </div>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">

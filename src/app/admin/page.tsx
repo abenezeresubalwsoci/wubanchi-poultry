@@ -43,7 +43,8 @@ export default function AdminDashboard() {
     price: '', 
     category: 'Eggs', 
     description: '',
-    imageId: 'organic-eggs' 
+    imageId: 'organic-eggs',
+    imageUrl: ''
   });
   const [newNews, setNewNews] = useState({ title: '', desc: '', content: '' });
   
@@ -71,6 +72,21 @@ export default function AdminDashboard() {
     toast({ title: "Signed Out", description: "You have been logged out." });
   };
 
+  const handleProductImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 800000) {
+        toast({ variant: "destructive", title: "File too large", description: "Please use an image smaller than 800KB." });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewProduct(prev => ({ ...prev, imageUrl: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAddProduct = () => {
     if (!newProduct.name || !newProduct.price) return;
     const data = {
@@ -81,7 +97,7 @@ export default function AdminDashboard() {
     };
     addDoc(collection(db, 'products'), data)
       .then(() => {
-        setNewProduct({ name: '', price: '', category: 'Eggs', description: '', imageId: 'organic-eggs' });
+        setNewProduct({ name: '', price: '', category: 'Eggs', description: '', imageId: 'organic-eggs', imageUrl: '' });
         toast({ title: "Product Added" });
       })
       .catch(async (error) => {
@@ -251,13 +267,39 @@ export default function AdminDashboard() {
                     <select className="w-full h-10 rounded-md border p-2 bg-background text-sm" value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}><option>Eggs</option><option>Meat</option><option>Feed</option><option>Chicks</option></select>
                   </div>
                 </div>
-                <div className="space-y-2"><Label>Image</Label>
-                  <select className="w-full h-10 rounded-md border p-2 bg-background text-sm" value={newProduct.imageId} onChange={e => setNewProduct({...newProduct, imageId: e.target.value})}>
-                    {PlaceHolderImages.map(img => (
-                      <option key={img.id} value={img.id}>{img.description}</option>
-                    ))}
-                  </select>
+                
+                <div className="space-y-2">
+                  <Label>Product Image</Label>
+                  <div className="flex items-center gap-4">
+                    <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 w-full">
+                      <Upload className="h-4 w-4" />
+                      Upload From Device
+                      <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleProductImageUpload} />
+                    </Button>
+                  </div>
+                  {newProduct.imageUrl && (
+                    <div className="mt-2 relative h-32 w-full rounded-md border overflow-hidden">
+                      <img src={newProduct.imageUrl} className="h-full w-full object-cover" />
+                      <Button 
+                        variant="destructive" 
+                        size="icon" 
+                        className="absolute top-1 right-1 h-6 w-6" 
+                        onClick={() => setNewProduct(prev => ({...prev, imageUrl: ''}))}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                  <div className="pt-2">
+                    <Label className="text-[10px] uppercase text-muted-foreground">Or Select Placeholder</Label>
+                    <select className="w-full h-10 rounded-md border p-2 bg-background text-sm mt-1" value={newProduct.imageId} onChange={e => setNewProduct({...newProduct, imageId: e.target.value})}>
+                      {PlaceHolderImages.map(img => (
+                        <option key={img.id} value={img.id}>{img.description}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
+
                 <Button onClick={handleAddProduct} className="w-full gap-2 font-bold"><Plus className="h-4 w-4" /> Add Product</Button>
               </CardContent>
             </Card>
