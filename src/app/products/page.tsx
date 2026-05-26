@@ -121,7 +121,7 @@ export default function ProductCatalog() {
                     <span className="text-lg font-bold text-foreground">ETB {(product.price || 0).toFixed(2)}</span>
                     <Button 
                       onClick={() => handleAddToCart(product.name)}
-                      className="h-8 w-8 bg-destructive hover:bg-destructive/90 rounded-lg p-0 flex items-center justify-center shadow-sm transition-all active:scale-95"
+                      className="h-8 w-8 bg-primary hover:bg-primary/90 rounded-lg p-0 flex items-center justify-center shadow-sm transition-all active:scale-95"
                     >
                       <Plus className="h-5 w-5 text-white" />
                     </Button>

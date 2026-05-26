@@ -181,7 +181,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Real-time Products Section - Updated Grid Arrangement */}
+      {/* Real-time Products Section */}
       <section className="container mx-auto px-4 md:px-8">
         <div className="mb-12 flex items-end justify-between">
           <div className="space-y-2">
@@ -234,7 +234,7 @@ export default function Home() {
                       <span className="text-xl font-bold text-foreground">ETB {(product.price || 0).toFixed(2)}</span>
                       <Button 
                         onClick={() => handleAddToCart(product.name)}
-                        className="h-9 w-9 bg-destructive hover:bg-destructive/90 rounded-lg p-0 flex items-center justify-center shadow-sm transition-all active:scale-95"
+                        className="h-9 w-9 bg-primary hover:bg-primary/90 rounded-lg p-0 flex items-center justify-center shadow-sm transition-all active:scale-95"
                       >
                         <Plus className="h-5 w-5 text-white" />
                       </Button>
