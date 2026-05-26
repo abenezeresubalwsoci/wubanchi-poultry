@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Quote, Send, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Quote, Send, CheckCircle2, Plus } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useCollection, useFirestore } from "@/firebase";
 import { collection, query, orderBy, limit, addDoc, serverTimestamp } from "firebase/firestore";
@@ -64,6 +64,13 @@ export default function Home() {
       });
   };
 
+  const handleAddToCart = (title: string) => {
+    toast({
+      title: "Added to Selection",
+      description: `${title} has been added to your shopping session.`,
+    });
+  };
+
   const highlights = [
     { 
       title: "Fresh Farm Eggs", 
@@ -82,6 +89,12 @@ export default function Home() {
       desc: "Day-old chicks bred for vigor and high productivity.",
       img: PlaceHolderImages.find(img => img.id === 'day-old-chicks'),
       href: "/products?category=chicks"
+    },
+    { 
+      title: "Organic Feed", 
+      desc: "Nutritious grain blends for optimal poultry growth.",
+      img: PlaceHolderImages.find(img => img.id === 'poultry-feed'),
+      href: "/products?category=feed"
     }
   ];
 
@@ -196,7 +209,7 @@ export default function Home() {
             View All Products <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 sm:grid-cols-2">
           {highlights.map((item, idx) => (
             <Card key={idx} className="group overflow-hidden border-none bg-card transition-all hover:shadow-xl hover:-translate-y-1">
               <div className="relative h-64 overflow-hidden">
@@ -211,10 +224,19 @@ export default function Home() {
                 )}
               </div>
               <CardContent className="p-6">
-                <h3 className="mb-2 text-xl font-bold">{item.title}</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold">{item.title}</h3>
+                  <Button 
+                    onClick={() => handleAddToCart(item.title)}
+                    className="rounded-full h-10 w-10 p-0 flex items-center justify-center transition-transform hover:scale-110"
+                    title="Add (+)"
+                  >
+                    <Plus className="h-5 w-5" />
+                  </Button>
+                </div>
                 <p className="mb-6 text-sm text-muted-foreground">{item.desc}</p>
-                <Button variant="outline" asChild className="w-full rounded-full group-hover:bg-primary group-hover:text-primary-foreground">
-                  <Link href={item.href}>Browse {item.title}</Link>
+                <Button variant="outline" asChild className="w-full rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                  <Link href={item.href}>Details</Link>
                 </Button>
               </CardContent>
             </Card>
