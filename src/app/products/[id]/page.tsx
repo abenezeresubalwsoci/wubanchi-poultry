@@ -45,10 +45,30 @@ export default function ProductDetailPage() {
   const imgHint = PlaceHolderImages.find(img => img.id === product.imageId)?.imageHint || 'poultry product';
 
   const handleAddToCart = () => {
+    const savedCart = localStorage.getItem('wubanchi_cart');
+    let cart = savedCart ? JSON.parse(savedCart) : [];
+    
+    const existing = cart.find((item: any) => item.id === product.id);
+    
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      cart.push({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: displayImageUrl,
+        quantity: quantity
+      });
+    }
+    
+    localStorage.setItem('wubanchi_cart', JSON.stringify(cart));
+
     toast({
       title: "Added to Selection",
-      description: `${quantity}x ${product.name} added to your selection.`,
+      description: `${quantity}x ${product.name} added to your basket.`,
     });
+    router.push('/cart');
   };
 
   return (
@@ -137,7 +157,7 @@ export default function ProductDetailPage() {
               onClick={handleAddToCart}
               className="flex-1 h-12 rounded-full text-lg font-bold bg-primary hover:bg-primary/90 shadow-lg transition-all active:scale-95 hover:shadow-primary/40"
             >
-              Add to Cart
+              Add to Basket
             </Button>
           </div>
         </div>

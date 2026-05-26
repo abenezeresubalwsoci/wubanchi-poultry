@@ -76,12 +76,33 @@ export default function Home() {
       });
   };
 
-  const handleAddToCart = (e: React.MouseEvent, title: string) => {
+  const handleAddToCart = (e: React.MouseEvent, product: any) => {
     e.stopPropagation();
     e.preventDefault();
+    
+    const savedCart = localStorage.getItem('wubanchi_cart');
+    let cart = savedCart ? JSON.parse(savedCart) : [];
+    
+    const existing = cart.find((item: any) => item.id === product.id);
+    const displayImageUrl = product.imageUrl || (PlaceHolderImages.find(img => img.id === product.imageId)?.imageUrl) || PlaceHolderImages[0].imageUrl;
+    
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      cart.push({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: displayImageUrl,
+        quantity: 1
+      });
+    }
+    
+    localStorage.setItem('wubanchi_cart', JSON.stringify(cart));
+    
     toast({
       title: "Added to Selection",
-      description: `${title} has been added to your shopping session.`,
+      description: `${product.name} has been added to your basket.`,
     });
     router.push('/cart');
   };
@@ -225,7 +246,7 @@ export default function Home() {
                       <div className="flex items-center justify-between">
                         <span className="text-xl font-bold text-foreground">ETB {(product.price || 0).toFixed(2)}</span>
                         <Button 
-                          onClick={(e) => handleAddToCart(e, product.name)}
+                          onClick={(e) => handleAddToCart(e, product)}
                           className="h-9 w-9 bg-primary hover:bg-primary/90 rounded-lg p-0 flex items-center justify-center shadow-md transition-all active:scale-75 hover:rotate-90"
                         >
                           <Plus className="h-5 w-5 text-white" />

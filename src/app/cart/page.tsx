@@ -1,19 +1,35 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ShoppingBasket, ArrowLeft, Trash2, Plus, Minus, CreditCard } from 'lucide-react';
+import { ShoppingBasket, ArrowLeft, Trash2, Plus, Minus, CreditCard, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function CartPage() {
   const { toast } = useToast();
-  // Mock cart items for demonstration since we don't have a global state yet
-  const [cartItems, setCartItems] = useState([
-    { id: '1', name: 'Organic Fresh Eggs', price: 450, quantity: 2, image: 'https://picsum.photos/seed/eggs1/200/200' },
-  ]);
+  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const savedCart = localStorage.getItem('wubanchi_cart');
+    if (savedCart) {
+      try {
+        setCartItems(JSON.parse(savedCart));
+      } catch (e) {
+        console.error("Failed to parse cart", e);
+      }
+    }
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('wubanchi_cart', JSON.stringify(cartItems));
+    }
+  }, [cartItems, isLoaded]);
 
   const total = useMemo(() => cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0), [cartItems]);
 
@@ -28,11 +44,19 @@ export default function CartPage() {
     toast({ variant: "destructive", title: "Item Removed", description: "Product has been taken out of your basket." });
   };
 
+  if (!isLoaded) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-12 md:px-8 animate-in fade-in duration-700">
       <div className="flex flex-col gap-8">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" asChild className="rounded-full">
+          <Button variant="ghost" asChild className="rounded-full transition-all active:scale-95">
             <Link href="/products"><ArrowLeft className="h-5 w-5 mr-2" /> Back to Shop</Link>
           </Button>
           <h1 className="text-4xl font-bold">Your Basket</h1>
@@ -42,21 +66,26 @@ export default function CartPage() {
           <div className="grid gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map((item, idx) => (
-                <Card key={item.id} className="border-none bg-card shadow-sm overflow-hidden animate-in slide-in-from-left-4 duration-500" style={{ delay: `${idx * 100}ms` }}>
+                <Card key={item.id} className="border-none bg-card shadow-sm overflow-hidden animate-in slide-in-from-left-4 duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
                   <CardContent className="p-4 flex items-center gap-4">
-                    <div className="relative h-20 w-20 rounded-xl overflow-hidden bg-muted">
-                      <Image src={item.image} alt={item.name} fill className="object-cover" />
+                    <div className="relative h-20 w-20 rounded-xl overflow-hidden bg-muted flex items-center justify-center">
+                      <Image 
+                        src={item.image} 
+                        alt={item.name} 
+                        fill 
+                        className="object-cover" 
+                      />
                     </div>
                     <div className="flex-1 space-y-1">
-                      <h3 className="font-bold">{item.name}</h3>
+                      <h3 className="font-bold text-lg">{item.name}</h3>
                       <p className="text-primary font-bold">ETB {item.price.toFixed(2)}</p>
                     </div>
-                    <div className="flex items-center gap-3 bg-background rounded-full p-1 border">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => updateQuantity(item.id, -1)}><Minus className="h-4 w-4" /></Button>
+                    <div className="flex items-center gap-3 bg-background rounded-full p-1 border shadow-sm">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full transition-all active:scale-75" onClick={() => updateQuantity(item.id, -1)}><Minus className="h-4 w-4" /></Button>
                       <span className="font-bold text-sm w-4 text-center">{item.quantity}</span>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => updateQuantity(item.id, 1)}><Plus className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full transition-all active:scale-75" onClick={() => updateQuantity(item.id, 1)}><Plus className="h-4 w-4" /></Button>
                     </div>
-                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => removeItem(item.id)}><Trash2 className="h-5 w-5" /></Button>
+                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 transition-all active:scale-75" onClick={() => removeItem(item.id)}><Trash2 className="h-5 w-5" /></Button>
                   </CardContent>
                 </Card>
               ))}
@@ -87,7 +116,7 @@ export default function CartPage() {
               <h2 className="text-2xl font-bold">Your basket is empty</h2>
               <p className="text-muted-foreground">Looks like you haven't added any fresh poultry yet.</p>
             </div>
-            <Button asChild className="rounded-full px-8 py-6 text-lg font-bold"><Link href="/products">Start Shopping</Link></Button>
+            <Button asChild className="rounded-full px-8 py-6 text-lg font-bold transition-all active:scale-95"><Link href="/products">Start Shopping</Link></Button>
           </div>
         )}
       </div>
