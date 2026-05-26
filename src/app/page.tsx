@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -122,7 +121,7 @@ export default function Home() {
         <div className="container relative mx-auto flex h-full flex-col justify-center px-4 md:px-8">
           <div className="max-w-2xl space-y-6 text-white animate-in fade-in slide-in-from-left-8 duration-700">
             <h1 className="text-4xl font-bold leading-tight md:text-6xl lg:text-7xl">
-              Freshness from Our <span className="text-primary">Farm</span> to Your <span className="text-accent">Table</span>
+              Welcome to <span className="text-primary">Wubanchi</span> Poultry <span className="text-accent">Farming</span>
             </h1>
           </div>
         </div>
