@@ -84,7 +84,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col gap-12 pb-16">
+    <div className="flex flex-col gap-12 pb-16 animate-in fade-in duration-700">
       {/* Hero Section */}
       <section className="relative h-[350px] w-full overflow-hidden">
         {heroImageUrl && (
@@ -92,14 +92,14 @@ export default function Home() {
             src={heroImageUrl}
             alt="Wubanchi Farm Hero"
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-1000 hover:scale-105"
             priority
             data-ai-hint="poultry farm"
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
         <div className="container relative mx-auto flex h-full flex-col justify-center px-4 md:px-8">
-          <div className="max-w-2xl space-y-6 text-white animate-in fade-in slide-in-from-left-8 duration-700">
+          <div className="max-w-2xl space-y-6 text-white animate-in fade-in slide-in-from-left-8 duration-1000">
             <h1 className="text-4xl font-bold leading-tight md:text-6xl lg:text-7xl">
               Welcome to <span className="text-primary">Wubanchi</span> Poultry <span className="text-accent">Farming</span>
             </h1>
@@ -108,9 +108,9 @@ export default function Home() {
       </section>
 
       {/* News Box Section */}
-      <section className="container mx-auto px-4 md:px-8 -mt-10 relative z-20">
+      <section className="container mx-auto px-4 md:px-8 -mt-10 relative z-20 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Card className="border-none shadow-xl bg-primary text-primary-foreground">
+          <Card className="border-none shadow-xl bg-primary text-primary-foreground transition-transform hover:scale-[1.02]">
             <CardContent className="p-6 flex items-center gap-4 h-full">
               <div className="rounded-full bg-white/20 p-3">
                 <Newspaper className="h-6 w-6" />
@@ -128,8 +128,8 @@ export default function Home() {
                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
                </div>
              ) : newsItems?.length ? (
-               newsItems.map((item: any) => (
-                 <Card key={item.id} className="border-none bg-card shadow-lg hover:shadow-xl transition-all cursor-pointer group">
+               newsItems.map((item: any, idx: number) => (
+                 <Card key={item.id} className={`border-none bg-card shadow-lg hover:shadow-xl transition-all cursor-pointer group animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[${idx * 100}ms]`}>
                    <CardContent className="p-6 flex justify-between items-center">
                       <div className="space-y-1">
                         <p className="text-xs font-bold text-primary uppercase tracking-wider">{item.date}</p>
@@ -150,48 +150,34 @@ export default function Home() {
       </section>
 
       {/* Trust Badges */}
-      <section className="container mx-auto px-4 md:px-8 mt-4">
+      <section className="container mx-auto px-4 md:px-8 mt-4 animate-in fade-in duration-1000 delay-300">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:gap-12">
-          <div className="flex flex-col items-center text-center space-y-2">
-            <div className="rounded-full bg-primary/10 p-4 text-primary">
-              <ShieldCheck className="h-8 w-8" />
+          {[
+            { icon: ShieldCheck, title: "100% Organic", desc: "Certified chemical free" },
+            { icon: Heart, title: "High Welfare", desc: "Happy, healthy poultry" },
+            { icon: Egg, title: "Fresh Daily", desc: "Directly from the farm" },
+            { icon: ShoppingBasket, title: "Fast Delivery", desc: "Local farm logistics" }
+          ].map((badge, idx) => (
+            <div key={idx} className="flex flex-col items-center text-center space-y-2 group">
+              <div className="rounded-full bg-primary/10 p-4 text-primary transition-transform group-hover:scale-110 duration-300">
+                <badge.icon className="h-8 w-8" />
+              </div>
+              <h3 className="font-bold transition-colors group-hover:text-primary">{badge.title}</h3>
+              <p className="text-xs text-muted-foreground">{badge.desc}</p>
             </div>
-            <h3 className="font-bold">100% Organic</h3>
-            <p className="text-xs text-muted-foreground">Certified chemical free</p>
-          </div>
-          <div className="flex flex-col items-center text-center space-y-2">
-            <div className="rounded-full bg-primary/10 p-4 text-primary">
-              <Heart className="h-8 w-8" />
-            </div>
-            <h3 className="font-bold">High Welfare</h3>
-            <p className="text-xs text-muted-foreground">Happy, healthy poultry</p>
-          </div>
-          <div className="flex flex-col items-center text-center space-y-2">
-            <div className="rounded-full bg-primary/10 p-4 text-primary">
-              <Egg className="h-8 w-8" />
-            </div>
-            <h3 className="font-bold">Fresh Daily</h3>
-            <p className="text-xs text-muted-foreground">Directly from the farm</p>
-          </div>
-          <div className="flex flex-col items-center text-center space-y-2">
-            <div className="rounded-full bg-primary/10 p-4 text-primary">
-              <ShoppingBasket className="h-8 w-8" />
-            </div>
-            <h3 className="font-bold">Fast Delivery</h3>
-            <p className="text-xs text-muted-foreground">Local farm logistics</p>
-          </div>
+          ))}
         </div>
       </section>
 
       {/* Real-time Products Section */}
-      <section className="container mx-auto px-4 md:px-8">
+      <section className="container mx-auto px-4 md:px-8 animate-in fade-in duration-1000 delay-500">
         <div className="mb-12 flex items-end justify-between">
           <div className="space-y-2">
             <h2 className="text-3xl font-bold md:text-4xl">Featured Products</h2>
             <p className="text-muted-foreground">Fresh from our farm, delivered to your doorstep.</p>
           </div>
-          <Link href="/products" className="hidden items-center gap-2 font-bold text-primary transition-colors hover:text-accent sm:flex">
-            View All Products <ArrowRight className="h-4 w-4" />
+          <Link href="/products" className="hidden items-center gap-2 font-bold text-primary transition-all hover:text-accent sm:flex group">
+            View All Products <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
         
@@ -201,26 +187,26 @@ export default function Home() {
           </div>
         ) : featuredProducts?.length ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:gap-8">
-            {featuredProducts.map((product: any) => {
+            {featuredProducts.map((product: any, idx: number) => {
               const displayImageUrl = product.imageUrl || (PlaceHolderImages.find(img => img.id === product.imageId)?.imageUrl) || PlaceHolderImages[0].imageUrl;
               const imgHint = PlaceHolderImages.find(img => img.id === product.imageId)?.imageHint || 'poultry product';
               
               return (
-                <Link key={product.id} href={`/products/${product.id}`} className="block">
-                  <Card className="relative group overflow-hidden border-none bg-white rounded-3xl transition-all hover:shadow-xl h-full">
+                <Link key={product.id} href={`/products/${product.id}`} className={`block animate-in fade-in zoom-in-95 duration-500 delay-[${idx * 150}ms]`}>
+                  <Card className="relative group overflow-hidden border-none bg-white rounded-3xl transition-all hover:shadow-2xl h-full hover:-translate-y-1">
                     {/* Heart Icon - Top Right */}
-                    <button className="absolute right-4 top-4 z-10 text-destructive/80 transition-transform hover:scale-110" onClick={(e) => e.preventDefault()}>
+                    <button className="absolute right-4 top-4 z-10 text-destructive/80 transition-transform hover:scale-125 duration-300" onClick={(e) => e.preventDefault()}>
                       <Heart className="h-6 w-6" />
                     </button>
 
                     {/* Product Image Area */}
-                    <div className="relative h-56 w-full p-6 flex items-center justify-center bg-gray-50/50">
+                    <div className="relative h-56 w-full p-6 flex items-center justify-center bg-gray-50/50 transition-colors group-hover:bg-primary/5">
                       <div className="relative h-full w-full overflow-hidden">
                         <Image
                           src={displayImageUrl}
                           alt={product.name}
                           fill
-                          className="object-contain transition-transform duration-500 group-hover:scale-105"
+                          className="object-contain transition-transform duration-700 group-hover:scale-110"
                           data-ai-hint={imgHint}
                         />
                       </div>
@@ -229,7 +215,7 @@ export default function Home() {
                     {/* Product Info Area */}
                     <CardContent className="p-6">
                       <div className="space-y-1 mb-4">
-                        <h3 className="text-xl font-bold text-foreground line-clamp-1">{product.name}</h3>
+                        <h3 className="text-xl font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors">{product.name}</h3>
                         <p className="text-sm text-muted-foreground">{product.category}</p>
                       </div>
                       
@@ -237,7 +223,7 @@ export default function Home() {
                         <span className="text-xl font-bold text-foreground">ETB {(product.price || 0).toFixed(2)}</span>
                         <Button 
                           onClick={(e) => handleAddToCart(e, product.name)}
-                          className="h-9 w-9 bg-primary hover:bg-primary/90 rounded-lg p-0 flex items-center justify-center shadow-sm transition-all active:scale-95"
+                          className="h-9 w-9 bg-primary hover:bg-primary/90 rounded-lg p-0 flex items-center justify-center shadow-md transition-all active:scale-75 hover:rotate-90"
                         >
                           <Plus className="h-5 w-5 text-white" />
                         </Button>
@@ -249,9 +235,9 @@ export default function Home() {
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 bg-muted/20 rounded-3xl text-center">
+          <div className="flex flex-col items-center justify-center py-20 bg-muted/20 rounded-3xl text-center animate-in zoom-in-95 duration-500">
             <p className="text-muted-foreground italic mb-4">No products available at the moment.</p>
-            <Button variant="outline" asChild className="rounded-full">
+            <Button variant="outline" asChild className="rounded-full transition-all active:scale-95">
               <Link href="/admin">Add Products in Admin</Link>
             </Button>
           </div>
@@ -259,11 +245,11 @@ export default function Home() {
       </section>
 
       {/* Community Feedback Section */}
-      <section className="container mx-auto px-4 md:px-8">
+      <section className="container mx-auto px-4 md:px-8 animate-in fade-in duration-1000 delay-700">
         <div className="relative overflow-hidden rounded-3xl bg-accent p-8 md:p-16">
           <div className="relative z-10 flex flex-col items-center text-center gap-12 lg:flex-row lg:text-left">
             <div className="flex-1 space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-sm font-bold text-white">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-sm font-bold text-white animate-bounce">
                 <MessageSquare className="h-4 w-4" />
                 <span>COMMUNITY VOICES</span>
               </div>
@@ -271,25 +257,19 @@ export default function Home() {
               <p className="text-lg text-white/90 max-w-xl">
                 We take pride in our farm-to-table journey. Your feedback helps us grow and serve our community better.
               </p>
-              
-              <div className="hidden lg:block space-y-4">
-                <div className="flex h-48 w-48 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
-                   <MessageSquare className="h-24 w-24 text-white" />
-                </div>
-              </div>
             </div>
 
             <div className="w-full lg:max-w-md">
-              <Card className="border-none shadow-2xl bg-white/95 backdrop-blur-sm">
+              <Card className="border-none shadow-2xl bg-white/95 backdrop-blur-sm transition-all hover:shadow-white/20">
                 <CardContent className="p-8">
                   {isSubmitted ? (
                     <div className="flex flex-col items-center justify-center py-10 text-center animate-in zoom-in-95 duration-500">
-                      <div className="mb-6 rounded-full bg-green-100 p-4 text-green-600">
+                      <div className="mb-6 rounded-full bg-green-100 p-4 text-green-600 animate-bounce">
                         <CheckCircle2 className="h-12 w-12" />
                       </div>
                       <h3 className="text-2xl font-bold text-foreground mb-2">Thank You!</h3>
                       <p className="text-muted-foreground">Your feedback has been submitted successfully.</p>
-                      <Button variant="outline" className="mt-6 rounded-full" onClick={() => setIsSubmitted(false)}>
+                      <Button variant="outline" className="mt-6 rounded-full transition-all active:scale-95" onClick={() => setIsSubmitted(false)}>
                         Send Another Comment
                       </Button>
                     </div>
@@ -302,7 +282,7 @@ export default function Home() {
                           placeholder="John Doe" 
                           value={feedbackForm.name} 
                           onChange={e => setFeedbackForm({...feedbackForm, name: e.target.value})} 
-                          className="bg-background"
+                          className="bg-background transition-all focus:ring-2 focus:ring-primary/20"
                           required 
                         />
                       </div>
@@ -314,7 +294,7 @@ export default function Home() {
                           placeholder="john@example.com" 
                           value={feedbackForm.email} 
                           onChange={e => setFeedbackForm({...feedbackForm, email: e.target.value})} 
-                          className="bg-background"
+                          className="bg-background transition-all focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
                       <div className="space-y-2 text-left">
@@ -324,13 +304,13 @@ export default function Home() {
                           placeholder="Tell us what you think..." 
                           value={feedbackForm.comment} 
                           onChange={e => setFeedbackForm({...feedbackForm, comment: e.target.value})} 
-                          className="min-h-[120px] bg-background resize-none"
+                          className="min-h-[120px] bg-background resize-none transition-all focus:ring-2 focus:ring-primary/20"
                           required 
                         />
                       </div>
                       <Button 
                         type="submit" 
-                        className="w-full rounded-full py-6 text-lg font-bold gap-2"
+                        className="w-full rounded-full py-6 text-lg font-bold gap-2 transition-all active:scale-95 shadow-lg hover:shadow-primary/30"
                         disabled={isSubmitting}
                       >
                         {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
@@ -343,8 +323,8 @@ export default function Home() {
             </div>
           </div>
           {/* Abstract background shapes */}
-          <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/5" />
-          <div className="absolute -bottom-16 left-0 h-48 w-48 rounded-full bg-white/5" />
+          <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/5 animate-pulse" />
+          <div className="absolute -bottom-16 left-0 h-48 w-48 rounded-full bg-white/5 animate-pulse delay-700" />
         </div>
       </section>
     </div>

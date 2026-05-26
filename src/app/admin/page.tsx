@@ -203,18 +203,18 @@ export default function AdminDashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex min-h-[80vh] flex-col items-center justify-center px-4 gap-6">
+      <div className="flex min-h-[80vh] flex-col items-center justify-center px-4 gap-6 animate-in fade-in duration-700">
         {isPlaceholderConfig && (
-          <Card className="w-full max-w-md border-destructive/50 bg-destructive/5">
+          <Card className="w-full max-w-md border-destructive/50 bg-destructive/5 animate-bounce">
             <CardContent className="p-4 flex items-center gap-3 text-destructive">
               <AlertTriangle className="h-5 w-5 shrink-0" />
               <p className="text-sm font-medium">Warning: Firebase is not configured.</p>
             </CardContent>
           </Card>
         )}
-        <Card className="w-full max-w-md border-none shadow-2xl bg-card">
+        <Card className="w-full max-w-md border-none shadow-2xl bg-card transition-all hover:shadow-primary/10">
           <CardHeader className="text-center space-y-2">
-            <div className="mx-auto rounded-full bg-primary/10 p-3 w-fit text-primary">
+            <div className="mx-auto rounded-full bg-primary/10 p-3 w-fit text-primary animate-in zoom-in-75 duration-700">
               <Lock className="h-6 w-6" />
             </div>
             <CardTitle className="text-2xl font-bold">Admin Portal</CardTitle>
@@ -223,13 +223,13 @@ export default function AdminDashboard() {
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
-                <Input id="username" value={loginForm.username} onChange={e => setLoginForm({...loginForm, username: e.target.value})} placeholder="admin" required />
+                <Input id="username" value={loginForm.username} onChange={e => setLoginForm({...loginForm, username: e.target.value})} placeholder="admin" required className="transition-all focus:ring-2 focus:ring-primary/20" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="admin" required />
+                <Input id="password" type="password" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="admin" required className="transition-all focus:ring-2 focus:ring-primary/20" />
               </div>
-              <Button type="submit" className="w-full font-bold">Login</Button>
+              <Button type="submit" className="w-full font-bold transition-all active:scale-95 shadow-lg">Login</Button>
             </form>
           </CardContent>
         </Card>
@@ -240,49 +240,49 @@ export default function AdminDashboard() {
   return (
     <div className="container mx-auto px-4 py-12 md:px-8 animate-in fade-in duration-500">
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-        <Button variant="outline" onClick={handleLogout} className="gap-2 rounded-full">
+        <h1 className="text-4xl font-bold animate-in slide-in-from-left-4 duration-700">Admin Dashboard</h1>
+        <Button variant="outline" onClick={handleLogout} className="gap-2 rounded-full transition-all active:scale-90">
           <LogOut className="h-4 w-4" /> Sign Out
         </Button>
       </div>
 
       <Tabs defaultValue="products" className="space-y-6">
-        <TabsList className="bg-muted p-1 flex-wrap h-auto">
-          <TabsTrigger value="products" className="gap-2"><Package className="h-4 w-4" /> Products</TabsTrigger>
-          <TabsTrigger value="news" className="gap-2"><Newspaper className="h-4 w-4" /> News</TabsTrigger>
-          <TabsTrigger value="feedback" className="gap-2"><MessageSquare className="h-4 w-4" /> Feedback</TabsTrigger>
-          <TabsTrigger value="settings" className="gap-2"><Settings className="h-4 w-4" /> Branding</TabsTrigger>
+        <TabsList className="bg-muted p-1 flex-wrap h-auto animate-in fade-in duration-700 delay-200">
+          <TabsTrigger value="products" className="gap-2 transition-all"><Package className="h-4 w-4" /> Products</TabsTrigger>
+          <TabsTrigger value="news" className="gap-2 transition-all"><Newspaper className="h-4 w-4" /> News</TabsTrigger>
+          <TabsTrigger value="feedback" className="gap-2 transition-all"><MessageSquare className="h-4 w-4" /> Feedback</TabsTrigger>
+          <TabsTrigger value="settings" className="gap-2 transition-all"><Settings className="h-4 w-4" /> Branding</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="products" className="space-y-6">
+        <TabsContent value="products" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid gap-6 md:grid-cols-3">
-            <Card className="md:col-span-1 border-none bg-card shadow-sm h-fit">
+            <Card className="md:col-span-1 border-none bg-card shadow-sm h-fit transition-all hover:shadow-md">
               <CardHeader><CardTitle>Add Product</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2"><Label>Name</Label><Input value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} /></div>
+                <div className="space-y-2"><Label>Name</Label><Input value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} className="transition-all focus:ring-1 focus:ring-primary/20" /></div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label>Price</Label><Input type="number" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} /></div>
+                  <div className="space-y-2"><Label>Price</Label><Input type="number" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} className="transition-all focus:ring-1 focus:ring-primary/20" /></div>
                   <div className="space-y-2"><Label>Category</Label>
-                    <select className="w-full h-10 rounded-md border p-2 bg-background text-sm" value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}><option>Eggs</option><option>Meat</option><option>Feed</option><option>Chicks</option></select>
+                    <select className="w-full h-10 rounded-md border p-2 bg-background text-sm transition-all focus:ring-1 focus:ring-primary/20" value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}><option>Eggs</option><option>Meat</option><option>Feed</option><option>Chicks</option></select>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
                   <Label>Product Image</Label>
                   <div className="flex items-center gap-4">
-                    <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 w-full">
+                    <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 w-full transition-all active:scale-95">
                       <Upload className="h-4 w-4" />
                       Upload From Device
                       <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleProductImageUpload} />
                     </Button>
                   </div>
                   {newProduct.imageUrl && (
-                    <div className="mt-2 relative h-32 w-full rounded-md border overflow-hidden">
+                    <div className="mt-2 relative h-32 w-full rounded-md border overflow-hidden animate-in zoom-in-95">
                       <img src={newProduct.imageUrl} className="h-full w-full object-cover" />
                       <Button 
                         variant="destructive" 
                         size="icon" 
-                        className="absolute top-1 right-1 h-6 w-6" 
+                        className="absolute top-1 right-1 h-6 w-6 transition-all active:scale-75" 
                         onClick={() => setNewProduct(prev => ({...prev, imageUrl: ''}))}
                       >
                         <Trash2 className="h-3 w-3" />
@@ -291,7 +291,7 @@ export default function AdminDashboard() {
                   )}
                   <div className="pt-2">
                     <Label className="text-[10px] uppercase text-muted-foreground">Or Select Placeholder</Label>
-                    <select className="w-full h-10 rounded-md border p-2 bg-background text-sm mt-1" value={newProduct.imageId} onChange={e => setNewProduct({...newProduct, imageId: e.target.value})}>
+                    <select className="w-full h-10 rounded-md border p-2 bg-background text-sm mt-1 transition-all focus:ring-1 focus:ring-primary/20" value={newProduct.imageId} onChange={e => setNewProduct({...newProduct, imageId: e.target.value})}>
                       {PlaceHolderImages.map(img => (
                         <option key={img.id} value={img.id}>{img.description}</option>
                       ))}
@@ -299,18 +299,18 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <Button onClick={handleAddProduct} className="w-full gap-2 font-bold"><Plus className="h-4 w-4" /> Add Product</Button>
+                <Button onClick={handleAddProduct} className="w-full gap-2 font-bold transition-all active:scale-95"><Plus className="h-4 w-4" /> Add Product</Button>
               </CardContent>
             </Card>
-            <Card className="md:col-span-2 border-none bg-card shadow-sm overflow-hidden">
+            <Card className="md:col-span-2 border-none bg-card shadow-sm overflow-hidden transition-all hover:shadow-md">
               <Table>
                 <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Price</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {products?.map((p: any) => (
-                    <TableRow key={p.id}>
+                    <TableRow key={p.id} className="animate-in fade-in duration-300">
                       <TableCell className="font-medium">{p.name}</TableCell>
                       <TableCell>ETB {p.price.toFixed(2)}</TableCell>
-                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('products', p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
+                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('products', p.id)} className="transition-all active:scale-75 hover:bg-destructive/10"><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -319,25 +319,25 @@ export default function AdminDashboard() {
           </div>
         </TabsContent>
 
-        <TabsContent value="news" className="space-y-6">
+        <TabsContent value="news" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid gap-6 md:grid-cols-3">
             <Card className="md:col-span-1 border-none bg-card shadow-sm h-fit">
               <CardHeader><CardTitle>Post News</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2"><Label>Title</Label><Input value={newNews.title} onChange={e => setNewNews({...newNews, title: e.target.value})} /></div>
                 <div className="space-y-2"><Label>Summary</Label><Input value={newNews.desc} onChange={e => setNewNews({...newNews, desc: e.target.value})} /></div>
-                <Button onClick={handleAddNews} className="w-full gap-2 font-bold"><Plus className="h-4 w-4" /> Post Update</Button>
+                <Button onClick={handleAddNews} className="w-full gap-2 font-bold transition-all active:scale-95"><Plus className="h-4 w-4" /> Post Update</Button>
               </CardContent>
             </Card>
             <Card className="md:col-span-2 border-none bg-card shadow-sm">
                 <Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Title</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
-                  <TableBody>{news?.map((n: any) => (<TableRow key={n.id}><TableCell className="text-xs">{n.date}</TableCell><TableCell className="font-medium">{n.title}</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('news', n.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell></TableRow>))}</TableBody>
+                  <TableBody>{news?.map((n: any) => (<TableRow key={n.id} className="animate-in fade-in duration-300"><TableCell className="text-xs">{n.date}</TableCell><TableCell className="font-medium">{n.title}</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('news', n.id)} className="transition-all active:scale-75"><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell></TableRow>))}</TableBody>
                 </Table>
             </Card>
           </div>
         </TabsContent>
 
-        <TabsContent value="feedback">
+        <TabsContent value="feedback" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <Card className="border-none bg-card shadow-sm">
             <CardHeader><CardTitle>Customer Feedback</CardTitle></CardHeader>
             <CardContent>
@@ -345,10 +345,10 @@ export default function AdminDashboard() {
                 <TableHeader><TableRow><TableHead>Customer</TableHead><TableHead>Comment</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {feedback?.map((f: any) => (
-                    <TableRow key={f.id}>
+                    <TableRow key={f.id} className="animate-in fade-in duration-300">
                       <TableCell><div className="font-bold">{f.name}</div><div className="text-xs text-muted-foreground">{f.email}</div></TableCell>
                       <TableCell className="max-w-md truncate">"{f.comment}"</TableCell>
-                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('feedback', f.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
+                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('feedback', f.id)} className="transition-all active:scale-75"><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -357,40 +357,40 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="settings">
+        <TabsContent value="settings" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid gap-6 md:grid-cols-2">
-            <Card className="border-none bg-card shadow-sm">
+            <Card className="border-none bg-card shadow-sm transition-all hover:shadow-md">
               <CardHeader><CardTitle>Logo Management</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2">
+                  <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 transition-all active:scale-95">
                     {isSavingSettings ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                     Upload Logo
                     <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleFileUpload('logo')} disabled={isSavingSettings} />
                   </Button>
-                  {logoUrl && <div className="h-10 w-10 rounded border overflow-hidden"><img src={logoUrl} className="h-full w-full object-contain" /></div>}
+                  {logoUrl && <div className="h-10 w-10 rounded border overflow-hidden animate-in zoom-in-75"><img src={logoUrl} className="h-full w-full object-contain" /></div>}
                 </div>
-                <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="Logo URL" disabled={isSavingSettings} />
+                <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="Logo URL" disabled={isSavingSettings} className="transition-all focus:ring-1 focus:ring-primary/20" />
               </CardContent>
             </Card>
 
-            <Card className="border-none bg-card shadow-sm">
+            <Card className="border-none bg-card shadow-sm transition-all hover:shadow-md">
               <CardHeader><CardTitle>Hero Image Management</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2">
+                  <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 transition-all active:scale-95">
                     {isSavingSettings ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                     Upload Hero
                     <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleFileUpload('hero')} disabled={isSavingSettings} />
                   </Button>
-                  {heroImageUrl && <div className="h-10 w-20 rounded border overflow-hidden"><img src={heroImageUrl} className="h-full w-full object-cover" /></div>}
+                  {heroImageUrl && <div className="h-10 w-20 rounded border overflow-hidden animate-in zoom-in-75"><img src={heroImageUrl} className="h-full w-full object-cover" /></div>}
                 </div>
-                <Input value={heroImageUrl} onChange={e => setHeroImageUrl(e.target.value)} placeholder="Hero Image URL" disabled={isSavingSettings} />
+                <Input value={heroImageUrl} onChange={e => setHeroImageUrl(e.target.value)} placeholder="Hero Image URL" disabled={isSavingSettings} className="transition-all focus:ring-1 focus:ring-primary/20" />
               </CardContent>
             </Card>
 
             <div className="md:col-span-2">
-              <Button onClick={handleUpdateSettings} className="w-full py-6 text-lg" disabled={isSavingSettings}>
+              <Button onClick={handleUpdateSettings} className="w-full py-6 text-lg transition-all active:scale-[0.98] shadow-lg" disabled={isSavingSettings}>
                 {isSavingSettings ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Settings className="h-5 w-5 mr-2" />}
                 Save All Branding Settings
               </Button>
