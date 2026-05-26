@@ -86,7 +86,7 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-12 pb-16">
       {/* Hero Section */}
-      <section className="relative h-[450px] w-full overflow-hidden">
+      <section className="relative h-[350px] w-full overflow-hidden">
         {heroImageUrl && (
           <Image
             src={heroImageUrl}
