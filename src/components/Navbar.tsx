@@ -31,7 +31,7 @@ export default function Navbar() {
   const logoUrl = settings?.logoUrl || fallbackLogo?.imageUrl;
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="container mx-auto px-4 md:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
@@ -95,7 +95,7 @@ export default function Navbar() {
 
       {/* Mobile Nav Menu */}
       {isOpen && !isAdminPage && (
-        <div className="md:hidden border-t bg-background animate-in slide-in-from-top-2 duration-200">
+        <div className="md:hidden border-t bg-white animate-in slide-in-from-top-2 duration-200">
           <div className="space-y-1 px-4 py-4">
             {navItems.map((item) => (
               <Link
