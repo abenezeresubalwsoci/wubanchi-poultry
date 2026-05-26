@@ -104,7 +104,6 @@ export default function Home() {
       title: "Added to Selection",
       description: `${product.name} has been added to your basket.`,
     });
-    router.push('/cart');
   };
 
   return (
