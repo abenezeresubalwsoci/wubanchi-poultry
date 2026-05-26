@@ -5,8 +5,8 @@ import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Search, ShoppingBasket, Filter, CheckCircle2, Loader2, Plus } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search, Heart, Filter, Loader2, Plus } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
@@ -85,50 +85,48 @@ export default function ProductCatalog() {
           <p className="text-muted-foreground animate-pulse">Connecting to Farm Database...</p>
         </div>
       ) : filteredProducts.length > 0 ? (
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredProducts.map(product => {
             const displayImageUrl = product.imageUrl || (PlaceHolderImages.find(img => img.id === product.imageId)?.imageUrl) || PlaceHolderImages[0].imageUrl;
             const imgHint = PlaceHolderImages.find(img => img.id === product.imageId)?.imageHint || 'poultry product';
             
             return (
-              <Card key={product.id} className="group overflow-hidden border-none bg-card shadow-sm transition-all hover:shadow-md">
-                <div className="relative h-56 overflow-hidden">
-                  <Image
-                    src={displayImageUrl}
-                    alt={product.name}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    data-ai-hint={imgHint}
-                  />
-                  {product.tag && (
-                    <Badge className="absolute left-3 top-3 bg-accent text-white border-none">
-                      {product.tag}
-                    </Badge>
-                  )}
-                </div>
-                <CardContent className="p-5">
-                  <div className="mb-2 text-xs font-bold uppercase tracking-wider text-primary">
-                    {product.category}
+              <Card key={product.id} className="relative group overflow-hidden border-none bg-white rounded-3xl transition-all hover:shadow-xl">
+                {/* Heart Icon - Top Right */}
+                <button className="absolute right-4 top-4 z-10 text-destructive/80 transition-transform hover:scale-110">
+                  <Heart className="h-6 w-6" />
+                </button>
+
+                {/* Product Image Area */}
+                <div className="relative h-48 w-full p-6 flex items-center justify-center bg-gray-50/50">
+                  <div className="relative h-full w-full overflow-hidden">
+                    <Image
+                      src={displayImageUrl}
+                      alt={product.name}
+                      fill
+                      className="object-contain transition-transform duration-500 group-hover:scale-105"
+                      data-ai-hint={imgHint}
+                    />
                   </div>
-                  <h3 className="mb-4 text-lg font-bold leading-tight line-clamp-2 min-h-[3.5rem]">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-center gap-1.5 text-xs text-green-600 font-semibold">
-                    <CheckCircle2 className="h-3 w-3" />
-                    {product.inStock ? 'In Stock' : 'Out of Stock'}
+                </div>
+
+                {/* Product Info Area */}
+                <CardContent className="p-5">
+                  <div className="space-y-1 mb-4">
+                    <h3 className="text-lg font-bold text-foreground line-clamp-1">{product.name}</h3>
+                    <p className="text-sm text-muted-foreground">{product.category}</p>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold text-foreground">ETB {(product.price || 0).toFixed(2)}</span>
+                    <Button 
+                      onClick={() => handleAddToCart(product.name)}
+                      className="h-8 w-8 bg-destructive hover:bg-destructive/90 rounded-lg p-0 flex items-center justify-center shadow-sm transition-all active:scale-95"
+                    >
+                      <Plus className="h-5 w-5 text-white" />
+                    </Button>
                   </div>
                 </CardContent>
-                <CardFooter className="flex items-center justify-between p-5 pt-0">
-                  <span className="text-xl font-bold">ETB {(product.price || 0).toFixed(2)}</span>
-                  <Button 
-                    size="sm" 
-                    className="rounded-full gap-2 transition-all hover:px-6"
-                    onClick={() => handleAddToCart(product.name)}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add
-                  </Button>
-                </CardFooter>
               </Card>
             );
           })}

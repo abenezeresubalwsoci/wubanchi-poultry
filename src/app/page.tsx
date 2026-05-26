@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Quote, Send, CheckCircle2, Plus } from "lucide-react";
+import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Plus, Send, CheckCircle2 } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useCollection, useFirestore, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, addDoc, serverTimestamp, doc } from "firebase/firestore";
@@ -20,14 +20,12 @@ export default function Home() {
   const db = useFirestore();
   const { toast } = useToast();
   
-  // Custom Settings for Hero & Branding
   const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
   const { data: settings } = useDoc(settingsRef);
 
   const fallbackHero = PlaceHolderImages.find(img => img.id === 'hero-farm');
   const heroImageUrl = settings?.heroImageUrl || fallbackHero?.imageUrl;
   
-  // Dynamic news query
   const newsQuery = useMemo(() => query(
     collection(db, 'news'), 
     orderBy('createdAt', 'desc'), 
@@ -36,7 +34,6 @@ export default function Home() {
   
   const { data: newsItems, loading: newsLoading } = useCollection(newsQuery);
 
-  // Real-time products query
   const productsQuery = useMemo(() => query(
     collection(db, 'products'), 
     orderBy('createdAt', 'desc'), 
@@ -45,7 +42,6 @@ export default function Home() {
   
   const { data: featuredProducts, loading: productsLoading } = useCollection(productsQuery);
 
-  // Feedback form state
   const [feedbackForm, setFeedbackForm] = useState({ name: '', email: '', comment: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -185,7 +181,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Real-time Products Section */}
+      {/* Real-time Products Section - Updated Grid Arrangement */}
       <section className="container mx-auto px-4 md:px-8">
         <div className="mb-12 flex items-end justify-between">
           <div className="space-y-2">
@@ -202,41 +198,45 @@ export default function Home() {
             <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
           </div>
         ) : featuredProducts?.length ? (
-          <div className="grid gap-8 sm:grid-cols-2">
+          <div className="grid gap-6 sm:grid-cols-2 lg:gap-8">
             {featuredProducts.map((product: any) => {
               const displayImageUrl = product.imageUrl || (PlaceHolderImages.find(img => img.id === product.imageId)?.imageUrl) || PlaceHolderImages[0].imageUrl;
               const imgHint = PlaceHolderImages.find(img => img.id === product.imageId)?.imageHint || 'poultry product';
               
               return (
-                <Card key={product.id} className="group overflow-hidden border-none bg-card transition-all hover:shadow-xl hover:-translate-y-1">
-                  <div className="relative h-64 overflow-hidden">
-                    <Image
-                      src={displayImageUrl}
-                      alt={product.name}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                      data-ai-hint={imgHint}
-                    />
+                <Card key={product.id} className="relative group overflow-hidden border-none bg-white rounded-3xl transition-all hover:shadow-xl">
+                  {/* Heart Icon - Top Right */}
+                  <button className="absolute right-4 top-4 z-10 text-destructive/80 transition-transform hover:scale-110">
+                    <Heart className="h-6 w-6" />
+                  </button>
+
+                  {/* Product Image Area */}
+                  <div className="relative h-56 w-full p-6 flex items-center justify-center bg-gray-50/50">
+                    <div className="relative h-full w-full overflow-hidden">
+                      <Image
+                        src={displayImageUrl}
+                        alt={product.name}
+                        fill
+                        className="object-contain transition-transform duration-500 group-hover:scale-105"
+                        data-ai-hint={imgHint}
+                      />
+                    </div>
                   </div>
+
+                  {/* Product Info Area */}
                   <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="text-xl font-bold">{product.name}</h3>
-                        <p className="text-xs font-bold text-primary uppercase tracking-wider">{product.category}</p>
-                      </div>
+                    <div className="space-y-1 mb-4">
+                      <h3 className="text-xl font-bold text-foreground line-clamp-1">{product.name}</h3>
+                      <p className="text-sm text-muted-foreground">{product.category}</p>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-xl font-bold text-foreground">ETB {(product.price || 0).toFixed(2)}</span>
                       <Button 
                         onClick={() => handleAddToCart(product.name)}
-                        className="rounded-full h-10 w-10 p-0 flex items-center justify-center transition-transform hover:scale-110"
-                        title="Add (+)"
+                        className="h-9 w-9 bg-destructive hover:bg-destructive/90 rounded-lg p-0 flex items-center justify-center shadow-sm transition-all active:scale-95"
                       >
-                        <Plus className="h-5 w-5" />
-                      </Button>
-                    </div>
-                    <p className="mb-6 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">{product.description}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl font-bold">ETB {(product.price || 0).toFixed(2)}</span>
-                      <Button variant="outline" asChild className="rounded-full px-6 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                        <Link href="/products">Shop Now</Link>
+                        <Plus className="h-5 w-5 text-white" />
                       </Button>
                     </div>
                   </CardContent>
