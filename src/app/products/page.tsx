@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -120,7 +119,7 @@ export default function ProductCatalog() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex items-center justify-between p-5 pt-0">
-                  <span className="text-xl font-bold">${(product.price || 0).toFixed(2)}</span>
+                  <span className="text-xl font-bold">ETB {(product.price || 0).toFixed(2)}</span>
                   <Button 
                     size="sm" 
                     className="rounded-full gap-2 transition-all hover:px-6"

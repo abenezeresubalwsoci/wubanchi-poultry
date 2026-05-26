@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -235,7 +234,7 @@ export default function Home() {
                     </div>
                     <p className="mb-6 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">{product.description}</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-xl font-bold">${(product.price || 0).toFixed(2)}</span>
+                      <span className="text-xl font-bold">ETB {(product.price || 0).toFixed(2)}</span>
                       <Button variant="outline" asChild className="rounded-full px-6 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                         <Link href="/products">Shop Now</Link>
                       </Button>
