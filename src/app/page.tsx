@@ -11,8 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Quote, Send, CheckCircle2, Plus } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, orderBy, limit, addDoc, serverTimestamp } from "firebase/firestore";
+import { useCollection, useFirestore, useDoc } from "@/firebase";
+import { collection, query, orderBy, limit, addDoc, serverTimestamp, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -20,7 +20,13 @@ import { FirestorePermissionError } from '@/firebase/errors';
 export default function Home() {
   const db = useFirestore();
   const { toast } = useToast();
-  const heroImg = PlaceHolderImages.find(img => img.id === 'hero-farm');
+  
+  // Custom Settings for Hero & Branding
+  const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
+  const { data: settings } = useDoc(settingsRef);
+
+  const fallbackHero = PlaceHolderImages.find(img => img.id === 'hero-farm');
+  const heroImageUrl = settings?.heroImageUrl || fallbackHero?.imageUrl;
   
   // Dynamic news query
   const newsQuery = useMemo(() => query(
@@ -102,14 +108,14 @@ export default function Home() {
     <div className="flex flex-col gap-12 pb-16">
       {/* Hero Section */}
       <section className="relative h-[250px] w-full overflow-hidden">
-        {heroImg && (
+        {heroImageUrl && (
           <Image
-            src={heroImg.imageUrl}
-            alt={heroImg.description}
+            src={heroImageUrl}
+            alt="Wubanchi Farm Hero"
             fill
             className="object-cover"
             priority
-            data-ai-hint={heroImg.imageHint}
+            data-ai-hint="poultry farm"
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />

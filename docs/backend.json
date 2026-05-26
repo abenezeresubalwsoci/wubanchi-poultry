@@ -58,7 +58,8 @@
       "description": "Site-wide configuration",
       "type": "object",
       "properties": {
-        "logoUrl": { "type": "string" }
+        "logoUrl": { "type": "string" },
+        "heroImageUrl": { "type": "string" }
       }
     }
   },

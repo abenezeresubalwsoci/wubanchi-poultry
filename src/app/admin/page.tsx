@@ -29,7 +29,6 @@ export default function AdminDashboard() {
 
   const productsQuery = useMemo(() => query(collection(db, 'products'), orderBy('createdAt', 'desc')), [db]);
   const newsQuery = useMemo(() => query(collection(db, 'news'), orderBy('createdAt', 'desc')), [db]);
-  const ordersQuery = useMemo(() => query(collection(db, 'orders'), orderBy('createdAt', 'desc')), [db]);
   const feedbackQuery = useMemo(() => query(collection(db, 'feedback'), orderBy('createdAt', 'desc')), [db]);
   
   const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
@@ -37,7 +36,6 @@ export default function AdminDashboard() {
 
   const { data: products } = useCollection(productsQuery);
   const { data: news } = useCollection(newsQuery);
-  const { data: orders } = useCollection(ordersQuery);
   const { data: feedback } = useCollection(feedbackQuery);
 
   const [newProduct, setNewProduct] = useState({ 
@@ -48,13 +46,14 @@ export default function AdminDashboard() {
     imageId: 'organic-eggs' 
   });
   const [newNews, setNewNews] = useState({ title: '', desc: '', content: '' });
+  
   const [logoUrl, setLogoUrl] = useState('');
-  const [isSavingLogo, setIsSavingLogo] = useState(false);
+  const [heroImageUrl, setHeroImageUrl] = useState('');
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   useEffect(() => {
-    if (settings?.logoUrl) {
-      setLogoUrl(settings.logoUrl);
-    }
+    if (settings?.logoUrl) setLogoUrl(settings.logoUrl);
+    if (settings?.heroImageUrl) setHeroImageUrl(settings.heroImageUrl);
   }, [settings]);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -115,14 +114,17 @@ export default function AdminDashboard() {
       });
   };
 
-  const handleUpdateLogo = () => {
-    if (!logoUrl) return;
-    setIsSavingLogo(true);
+  const handleUpdateSettings = () => {
+    setIsSavingSettings(true);
+    const data = { 
+      logoUrl, 
+      heroImageUrl,
+      updatedAt: serverTimestamp() 
+    };
     
-    const data = { logoUrl, updatedAt: serverTimestamp() };
     setDoc(settingsRef, data, { merge: true })
       .then(() => {
-        toast({ title: "Branding Saved", description: "Logo has been updated permanently." });
+        toast({ title: "Settings Saved", description: "Branding and Hero updated successfully." });
       })
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -132,36 +134,38 @@ export default function AdminDashboard() {
         }));
       })
       .finally(() => {
-        setIsSavingLogo(false);
+        setIsSavingSettings(false);
       });
   };
 
-  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (type: 'logo' | 'hero') => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 800000) {
         toast({ variant: "destructive", title: "File too large", description: "Please use an image smaller than 800KB." });
         return;
       }
-      setIsSavingLogo(true);
+      setIsSavingSettings(true);
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        setLogoUrl(base64String);
-        const data = { logoUrl: base64String, updatedAt: serverTimestamp() };
+        if (type === 'logo') setLogoUrl(base64String);
+        else setHeroImageUrl(base64String);
+        
+        const data = { [type === 'logo' ? 'logoUrl' : 'heroImageUrl']: base64String, updatedAt: serverTimestamp() };
         setDoc(settingsRef, data, { merge: true })
           .then(() => {
-            toast({ title: "Logo Uploaded" });
+            toast({ title: `${type.charAt(0).toUpperCase() + type.slice(1)} Uploaded` });
           })
           .catch(async (error) => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
               path: settingsRef.path,
               operation: 'update',
-              requestResourceData: { logoUrl: 'base64_data' }
+              requestResourceData: { [type === 'logo' ? 'logoUrl' : 'heroImageUrl']: 'base64_data' }
             }));
           })
           .finally(() => {
-            setIsSavingLogo(false);
+            setIsSavingSettings(false);
           });
       };
       reader.readAsDataURL(file);
@@ -232,8 +236,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="products" className="gap-2"><Package className="h-4 w-4" /> Products</TabsTrigger>
           <TabsTrigger value="news" className="gap-2"><Newspaper className="h-4 w-4" /> News</TabsTrigger>
           <TabsTrigger value="feedback" className="gap-2"><MessageSquare className="h-4 w-4" /> Feedback</TabsTrigger>
-          <TabsTrigger value="orders" className="gap-2"><ShoppingBag className="h-4 w-4" /> Orders</TabsTrigger>
-          <TabsTrigger value="settings" className="gap-2"><Settings className="h-4 w-4" /> Settings</TabsTrigger>
+          <TabsTrigger value="settings" className="gap-2"><Settings className="h-4 w-4" /> Branding</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="space-y-6">
@@ -295,35 +298,18 @@ export default function AdminDashboard() {
 
         <TabsContent value="feedback">
           <Card className="border-none bg-card shadow-sm">
-            <CardHeader>
-              <CardTitle>Customer Feedback</CardTitle>
-              <CardDescription>View all feedback submitted from the home page.</CardDescription>
-            </CardHeader>
+            <CardHeader><CardTitle>Customer Feedback</CardTitle></CardHeader>
             <CardContent>
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Comment</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
+                <TableHeader><TableRow><TableHead>Customer</TableHead><TableHead>Comment</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {feedback?.map((f: any) => (
                     <TableRow key={f.id}>
-                      <TableCell>
-                        <div className="font-bold">{f.name}</div>
-                        <div className="text-xs text-muted-foreground">{f.email}</div>
-                      </TableCell>
-                      <TableCell className="max-w-md truncate italic">"{f.comment}"</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete('feedback', f.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </TableCell>
+                      <TableCell><div className="font-bold">{f.name}</div><div className="text-xs text-muted-foreground">{f.email}</div></TableCell>
+                      <TableCell className="max-w-md truncate">"{f.comment}"</TableCell>
+                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('feedback', f.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
                   ))}
-                  {!feedback?.length && <TableRow><TableCell colSpan={3} className="text-center py-12 text-muted-foreground">No feedback received yet.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent>
@@ -331,42 +317,44 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="settings">
-          <Card className="max-w-xl border-none bg-card shadow-sm">
-            <CardHeader><CardTitle>Branding Settings</CardTitle></CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4 border rounded-xl p-6 bg-background/50">
-                <Label className="text-lg font-bold">Logo Management</Label>
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="border-none bg-card shadow-sm">
+              <CardHeader><CardTitle>Logo Management</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
                   <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2">
-                    {isSavingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    Upload Logo File
-                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleLogoFileUpload} disabled={isSavingLogo} />
+                    {isSavingSettings ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    Upload Logo
+                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleFileUpload('logo')} disabled={isSavingSettings} />
                   </Button>
+                  {logoUrl && <div className="h-10 w-10 rounded border overflow-hidden"><img src={logoUrl} className="h-full w-full object-contain" /></div>}
                 </div>
-                <div className="flex gap-2 pt-4 border-t">
-                  <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="Logo URL" disabled={isSavingLogo} />
-                  <Button onClick={handleUpdateLogo} disabled={isSavingLogo || !logoUrl}>Save URL</Button>
-                </div>
-              </div>
-              {logoUrl && (
-                <div className="h-32 w-32 rounded-2xl border bg-background flex items-center justify-center p-4">
-                  <img src={logoUrl} alt="Logo Preview" className="h-full w-full object-contain" />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="Logo URL" disabled={isSavingSettings} />
+              </CardContent>
+            </Card>
 
-        <TabsContent value="orders">
-          <Card className="border-none bg-card shadow-sm">
-            <CardHeader><CardTitle>Recent Orders</CardTitle></CardHeader>
-            <CardContent>
-              <Table><TableHeader><TableRow><TableHead>Customer</TableHead><TableHead>Total</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
-                <TableBody>{orders?.map((o: any) => (<TableRow key={o.id}><TableCell>{o.customerName}</TableCell><TableCell>${o.total?.toFixed(2)}</TableCell><TableCell><Badge>{o.status}</Badge></TableCell></TableRow>))}</TableBody>
-              </Table>
-              {!orders?.length && <div className="text-center py-12 text-muted-foreground">No orders yet.</div>}
-            </CardContent>
-          </Card>
+            <Card className="border-none bg-card shadow-sm">
+              <CardHeader><CardTitle>Hero Image Management</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2">
+                    {isSavingSettings ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    Upload Hero
+                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleFileUpload('hero')} disabled={isSavingSettings} />
+                  </Button>
+                  {heroImageUrl && <div className="h-10 w-20 rounded border overflow-hidden"><img src={heroImageUrl} className="h-full w-full object-cover" /></div>}
+                </div>
+                <Input value={heroImageUrl} onChange={e => setHeroImageUrl(e.target.value)} placeholder="Hero Image URL" disabled={isSavingSettings} />
+              </CardContent>
+            </Card>
+
+            <div className="md:col-span-2">
+              <Button onClick={handleUpdateSettings} className="w-full py-6 text-lg" disabled={isSavingSettings}>
+                {isSavingSettings ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Settings className="h-5 w-5 mr-2" />}
+                Save All Branding Settings
+              </Button>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
