@@ -1,4 +1,3 @@
-
 import type {Metadata} from 'next';
 import './globals.css';
 import Navbar from '@/components/Navbar';
@@ -40,10 +39,10 @@ export default function RootLayout({
               size="icon"
               className="h-16 w-16 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.2)] bg-primary text-white hover:bg-primary/90 transition-all hover:scale-110 active:scale-95 flex items-center justify-center border-4 border-white"
             >
-              <Link href="/products">
+              <Link href="/cart">
                 <ShoppingBasket className="h-8 w-8" />
                 <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white border-2 border-white animate-pulse">
-                  0
+                  1
                 </span>
               </Link>
             </Button>

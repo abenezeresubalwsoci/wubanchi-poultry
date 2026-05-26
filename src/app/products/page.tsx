@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 const CATEGORIES = ["All", "Eggs", "Meat", "Feed", "Chicks"];
 
 export default function ProductCatalog() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const { toast } = useToast();
@@ -43,6 +45,7 @@ export default function ProductCatalog() {
       title: "Added to Selection",
       description: `${title} has been added to your shopping session.`,
     });
+    router.push('/cart');
   };
 
   return (

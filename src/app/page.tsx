@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function Home() {
+  const router = useRouter();
   const db = useFirestore();
   const { toast } = useToast();
   
@@ -81,6 +83,7 @@ export default function Home() {
       title: "Added to Selection",
       description: `${title} has been added to your shopping session.`,
     });
+    router.push('/cart');
   };
 
   return (
