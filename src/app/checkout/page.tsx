@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { ArrowLeft, MapPin, CreditCard, Truck, CheckCircle2, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Truck, CheckCircle2, Loader2, Navigation } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CheckoutPage() {
@@ -124,28 +124,51 @@ export default function CheckoutPage() {
                   <CardDescription>Where should we bring your fresh poultry?</CardDescription>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
+                {/* Map Integration */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="font-bold flex items-center gap-2">
+                      <Navigation className="h-4 w-4 text-primary" />
+                      Pin Your Location
+                    </Label>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Addis Ababa, Ethiopia</span>
+                  </div>
+                  <div className="relative h-[250px] w-full overflow-hidden rounded-2xl border-2 border-primary/10 shadow-inner group">
+                    <iframe
+                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126115.11525281987!2d38.7042621!3d9.010793!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b85cef5ab402d%3A0x8467b6b037a24c49!2sAddis%20Ababa!5e0!3m2!1sen!2set!4v1700000000000!5m2!1sen!2set"
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      allowFullScreen={true}
+                      loading="lazy"
+                      className="transition-opacity duration-500 group-hover:opacity-90"
+                    ></iframe>
+                    <div className="absolute inset-0 pointer-events-none border-[6px] border-white/20 rounded-2xl"></div>
+                  </div>
+                </div>
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Full Name</Label>
-                    <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} placeholder="John Doe" className="bg-background" />
+                    <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} placeholder="John Doe" className="bg-background transition-all focus:ring-2 focus:ring-primary/20" />
                   </div>
                   <div className="space-y-2">
                     <Label>Phone Number</Label>
-                    <Input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+251..." className="bg-background" />
+                    <Input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+251..." className="bg-background transition-all focus:ring-2 focus:ring-primary/20" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Email (Optional)</Label>
-                  <Input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="john@example.com" className="bg-background" />
+                  <Input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="john@example.com" className="bg-background transition-all focus:ring-2 focus:ring-primary/20" />
                 </div>
                 <div className="space-y-2">
                   <Label>Street Address</Label>
-                  <Input required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="House number, Street name" className="bg-background" />
+                  <Input required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="House number, Street name" className="bg-background transition-all focus:ring-2 focus:ring-primary/20" />
                 </div>
                 <div className="space-y-2">
                   <Label>Location Indicator / Landmark</Label>
-                  <Textarea required value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} placeholder="Near the yellow gate, opposite the central market..." className="min-h-[80px] bg-background resize-none" />
+                  <Textarea required value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} placeholder="Near the yellow gate, opposite the central market..." className="min-h-[80px] bg-background resize-none transition-all focus:ring-2 focus:ring-primary/20" />
                 </div>
               </CardContent>
             </Card>
