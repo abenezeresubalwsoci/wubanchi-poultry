@@ -102,8 +102,10 @@ export default function CartPage() {
                       <span>Total</span><span>ETB {total.toFixed(2)}</span>
                     </div>
                   </div>
-                  <Button className="w-full h-14 rounded-full bg-white text-primary hover:bg-white/90 text-lg font-bold gap-2 shadow-lg transition-all active:scale-95">
-                    <CreditCard className="h-5 w-5" /> Checkout
+                  <Button asChild className="w-full h-14 rounded-full bg-white text-primary hover:bg-white/90 text-lg font-bold gap-2 shadow-lg transition-all active:scale-95">
+                    <Link href="/checkout">
+                      <CreditCard className="h-5 w-5" /> Proceed to Checkout
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
