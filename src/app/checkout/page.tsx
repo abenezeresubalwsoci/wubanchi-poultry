@@ -59,7 +59,7 @@ export default function CheckoutPage() {
       customerPhone: formData.phone,
       deliveryAddress: {
         city: formData.city,
-        street: formData.address,
+        kebele: formData.address,
         landmark: formData.landmark
       },
       items: cartItems,
@@ -163,8 +163,8 @@ export default function CheckoutPage() {
                   <Input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="john@example.com" className="bg-background transition-all focus:ring-2 focus:ring-primary/20" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Street Address</Label>
-                  <Input required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="House number, Street name" className="bg-background transition-all focus:ring-2 focus:ring-primary/20" />
+                  <Label>Kebele</Label>
+                  <Input required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="Enter Kebele Number (e.g. Kebele 04)" className="bg-background transition-all focus:ring-2 focus:ring-primary/20" />
                 </div>
                 <div className="space-y-2">
                   <Label>Location Indicator / Landmark</Label>
@@ -214,7 +214,7 @@ export default function CheckoutPage() {
                     <div key={item.id} className="flex justify-between items-center text-sm border-b border-white/10 pb-2">
                       <div className="flex gap-3 items-center">
                         <div className="relative h-10 w-10 rounded-md overflow-hidden bg-white/20 flex-shrink-0">
-                          <Image src={item.image} alt={item.name} fill className="object-cover" />
+                          <Image src={item.image} alt={item.name} width={40} height={40} className="object-cover" />
                         </div>
                         <div>
                           <p className="font-bold line-clamp-1">{item.name}</p>
