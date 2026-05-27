@@ -533,7 +533,7 @@ export default function Home() {
                     </div>
                     <div className="text-left">
                       <p className="text-sm font-bold text-foreground">Address</p>
-                      <p className="text-muted-foreground">Bahir Dar, Ethiopia</p>
+                      <p className="text-muted-foreground">Bahir Dar, Ethiopia, Bahir Dar Kebele 05 & 08, and Gonder, Ethiopia, Gondar- Piassa Sub City, Coming soon in Gorgora and Lalibela</p>
                     </div>
                   </div>
                   <Link 
