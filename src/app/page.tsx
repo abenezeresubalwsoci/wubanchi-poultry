@@ -582,7 +582,7 @@ export default function Home() {
 
       {/* Community Feedback Section */}
       <section className="container mx-auto px-4 md:px-8 animate-in fade-in duration-1000 delay-700">
-        <div className="relative overflow-hidden rounded-3xl bg-accent p-8 md:p-16">
+        <div className="relative overflow-hidden rounded-3xl bg-primary p-8 md:p-16">
           <div className="relative z-10 flex flex-col items-center text-center gap-12 lg:flex-row lg:text-left">
             <div className="flex-1 space-y-6">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-sm font-bold text-white">
