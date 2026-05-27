@@ -109,7 +109,7 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-12 pb-16 animate-in fade-in duration-700">
       {/* Hero Section */}
-      <section className="relative h-[350px] w-full overflow-hidden">
+      <section className="relative h-[250px] w-full overflow-hidden">
         {heroImageUrl && (
           <Image
             src={heroImageUrl}
@@ -123,7 +123,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
         <div className="container relative mx-auto flex h-full flex-col justify-center px-4 md:px-8">
           <div className="max-w-2xl space-y-6 text-white animate-in fade-in slide-in-from-left-8 duration-1000">
-            <h1 className="text-4xl font-bold leading-tight md:text-6xl lg:text-7xl">
+            <h1 className="text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
               Welcome to <span className="text-primary">Wubanchi</span> Poultry <span className="text-accent">Farming</span>
             </h1>
           </div>
