@@ -262,7 +262,7 @@ export default function About() {
             "A happy hen makes for a healthy heart. We treat our poultry and our land with the respect they deserve."
           </h2>
           <div className="space-y-2">
-            <p className="font-bold text-2xl">— Elena Wubanchi</p>
+            <p className="font-bold text-2xl">Ms. Wubanchi Bayih</p>
             <p className="opacity-80 text-lg uppercase tracking-widest">Founder & Head Farmer</p>
           </div>
         </div>
