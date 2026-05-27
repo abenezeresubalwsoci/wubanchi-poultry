@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -17,6 +18,12 @@ import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
+interface HeroSlide {
+  imageUrl: string;
+  title: string;
+  subtitle: string;
+}
+
 export default function Home() {
   const router = useRouter();
   const db = useFirestore();
@@ -25,39 +32,41 @@ export default function Home() {
   const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  const fallbackHero = PlaceHolderImages.find(img => img.id === 'hero-farm');
-  
   // Carousel Logic
-  const heroImages = useMemo(() => {
-    const list = [];
+  const heroSlides = useMemo(() => {
+    const list: HeroSlide[] = [];
     
-    // Check for new multiple images array first
-    if (settings?.heroImages && Array.isArray(settings.heroImages) && settings.heroImages.length > 0) {
-      list.push(...settings.heroImages);
+    // Check for slides collection first
+    if (settings?.heroSlides && Array.isArray(settings.heroSlides) && settings.heroSlides.length > 0) {
+      list.push(...settings.heroSlides);
     } 
-    // Fallback to old single image field
-    else if (settings?.heroImageUrl) {
-      list.push(settings.heroImageUrl);
+    
+    // Fallback if list is empty
+    if (list.length === 0) {
+      list.push({
+        imageUrl: PlaceHolderImages.find(img => img.id === 'hero-farm')?.imageUrl || '',
+        title: 'Welcome to Wubanchi',
+        subtitle: 'Experience the freshest poultry products in Bahir Dar'
+      });
+      list.push({
+        imageUrl: PlaceHolderImages.find(img => img.id === 'farm-story')?.imageUrl || '',
+        title: 'Three Generations of Care',
+        subtitle: 'Raised with love and expertise since 1994'
+      });
     }
     
-    // Always include fallbacks if list is still small
-    if (list.length < 3) {
-      list.push(fallbackHero?.imageUrl || '');
-      list.push(PlaceHolderImages.find(img => img.id === 'farm-story')?.imageUrl || '');
-    }
-    
-    return list.filter(Boolean);
-  }, [settings?.heroImages, settings?.heroImageUrl, fallbackHero]);
+    return list;
+  }, [settings?.heroSlides]);
 
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
   useEffect(() => {
-    if (heroImages.length <= 1) return;
+    if (heroSlides.length <= 1) return;
     const interval = setInterval(() => {
-      setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length);
-    }, 8000); // 8 seconds carousel
+      setCurrentHeroIndex((prev) => (prev + 1) % heroSlides.length);
+    }, 8000);
     return () => clearInterval(interval);
-  }, [heroImages.length]);
+  }, [heroSlides.length]);
 
   const newsQuery = useMemo(() => query(
     collection(db, 'news'), 
@@ -93,7 +102,7 @@ export default function Home() {
       .then(() => {
         setIsSubmitted(true);
         setFeedbackForm({ name: '', email: '', comment: '' });
-        toast({ title: "Feedback Received", description: "Thank you for sharing your thoughts with the Wubanchi community!" });
+        toast({ title: "Feedback Received", description: "Thank you for sharing your thoughts!" });
       })
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -130,50 +139,51 @@ export default function Home() {
     }
     
     localStorage.setItem('wubanchi_cart', JSON.stringify(cart));
-    
-    toast({
-      title: "Added to Selection",
-      description: `${product.name} has been added to your basket.`,
-    });
+    toast({ title: "Added to Basket", description: `${product.name} ready for checkout.` });
   };
 
   return (
     <div className="flex flex-col gap-12 pb-16 animate-in fade-in duration-700">
-      {/* Hero Section Carousel */}
+      {/* Hero Section Synchronized Carousel */}
       <section className="relative h-[250px] w-full overflow-hidden">
-        {heroImages.map((url, idx) => (
+        {heroSlides.map((slide, idx) => (
           <div 
-            key={url + idx}
+            key={slide.imageUrl + idx}
             className={`absolute inset-0 transition-opacity duration-[2000ms] ease-in-out ${idx === currentHeroIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
           >
             <Image
-              src={url}
-              alt={`Wubanchi Farm Hero ${idx + 1}`}
+              src={slide.imageUrl}
+              alt={slide.title}
               fill
               className="object-cover"
               priority={idx === 0}
               data-ai-hint="poultry farm"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+            
+            {/* Synchronized Text Content */}
+            {idx === currentHeroIndex && (
+              <div className="container relative mx-auto flex h-full flex-col justify-center px-4 md:px-8 z-20">
+                <div className="max-w-2xl space-y-4 text-white animate-in fade-in slide-in-from-left-12 duration-1000">
+                  <h1 className="text-4xl font-bold leading-tight md:text-5xl lg:text-6xl text-shadow-lg">
+                    {slide.title}
+                  </h1>
+                  <p className="text-lg md:text-xl opacity-90 max-w-lg text-shadow animate-in fade-in slide-in-from-left-12 duration-1000 delay-300">
+                    {slide.subtitle}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         ))}
         
-        <div className="container relative mx-auto flex h-full flex-col justify-center px-4 md:px-8 z-20">
-          <div className="max-w-2xl space-y-6 text-white animate-in fade-in slide-in-from-left-8 duration-1000">
-            <h1 className="text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
-              Welcome to <span className="text-primary">Wubanchi</span> Poultry <span className="text-accent">Farming</span>
-            </h1>
-            <p className="text-lg opacity-90 max-w-md hidden sm:block">Experience the freshest poultry products in Bahir Dar, raised with love and expertise.</p>
-          </div>
-        </div>
-
         {/* Carousel Indicators */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-30">
-          {heroImages.map((_, idx) => (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-30">
+          {heroSlides.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentHeroIndex(idx)}
-              className={`h-1.5 rounded-full transition-all duration-500 ${idx === currentHeroIndex ? 'w-8 bg-primary' : 'w-2 bg-white/40'}`}
+              className={`h-2 rounded-full transition-all duration-700 ${idx === currentHeroIndex ? 'w-10 bg-primary shadow-lg shadow-primary/40' : 'w-2 bg-white/40 hover:bg-white/60'}`}
             />
           ))}
         </div>
@@ -266,12 +276,9 @@ export default function Home() {
               return (
                 <Link key={product.id} href={`/products/${product.id}`} className="block animate-in fade-in zoom-in-95 duration-500">
                   <Card className="relative group overflow-hidden border-none bg-white rounded-3xl transition-all hover:shadow-2xl h-full hover:-translate-y-1">
-                    {/* Heart Icon - Top Right */}
                     <button className="absolute right-4 top-4 z-10 text-destructive/80 transition-transform hover:scale-125 duration-300" onClick={(e) => e.preventDefault()}>
                       <Heart className="h-6 w-6" />
                     </button>
-
-                    {/* Product Image Area */}
                     <div className="relative h-56 w-full p-6 flex items-center justify-center bg-gray-50/50 transition-colors group-hover:bg-primary/5">
                       <div className="relative h-full w-full overflow-hidden">
                         <Image
@@ -283,20 +290,14 @@ export default function Home() {
                         />
                       </div>
                     </div>
-
-                    {/* Product Info Area */}
                     <CardContent className="p-6">
                       <div className="space-y-1 mb-4">
                         <h3 className="text-xl font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors">{product.name}</h3>
                         <p className="text-sm text-muted-foreground">{product.category}</p>
                       </div>
-                      
                       <div className="flex items-center justify-between">
                         <span className="text-xl font-bold text-foreground">ETB {(product.price || 0).toFixed(2)}</span>
-                        <Button 
-                          onClick={(e) => handleAddToCart(e, product)}
-                          className="h-9 w-9 bg-primary hover:bg-primary/90 rounded-lg p-0 flex items-center justify-center shadow-md transition-all active:scale-75 hover:rotate-90"
-                        >
+                        <Button onClick={(e) => handleAddToCart(e, product)} className="h-9 w-9 bg-primary hover:bg-primary/90 rounded-lg p-0 flex items-center justify-center shadow-md active:scale-75 transition-all">
                           <Plus className="h-5 w-5 text-white" />
                         </Button>
                       </div>
@@ -307,11 +308,8 @@ export default function Home() {
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 bg-muted/20 rounded-3xl text-center animate-in zoom-in-95 duration-500">
+          <div className="flex flex-col items-center justify-center py-20 bg-muted/20 rounded-3xl text-center">
             <p className="text-muted-foreground italic mb-4">No products available at the moment.</p>
-            <Button variant="outline" asChild className="rounded-full transition-all active:scale-95">
-              <Link href="/admin">Add Products in Admin</Link>
-            </Button>
           </div>
         )}
       </section>
@@ -321,70 +319,36 @@ export default function Home() {
         <div className="relative overflow-hidden rounded-3xl bg-accent p-8 md:p-16">
           <div className="relative z-10 flex flex-col items-center text-center gap-12 lg:flex-row lg:text-left">
             <div className="flex-1 space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-sm font-bold text-white animate-bounce">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-sm font-bold text-white">
                 <MessageSquare className="h-4 w-4" />
                 <span>COMMUNITY VOICES</span>
               </div>
               <h2 className="text-3xl font-bold text-white md:text-5xl">Share Your Experience</h2>
               <p className="text-lg text-white/90 max-w-xl">
-                We take pride in our farm-to-table journey. Your feedback helps us grow and serve our community better.
+                We take pride in our farm-to-table journey. Your feedback helps us grow.
               </p>
             </div>
-
             <div className="w-full lg:max-w-md">
-              <Card className="border-none shadow-2xl bg-white/95 backdrop-blur-sm transition-all hover:shadow-white/20">
+              <Card className="border-none shadow-2xl bg-white/95 backdrop-blur-sm">
                 <CardContent className="p-8">
                   {isSubmitted ? (
-                    <div className="flex flex-col items-center justify-center py-10 text-center animate-in zoom-in-95 duration-500">
-                      <div className="mb-6 rounded-full bg-green-100 p-4 text-green-600 animate-bounce">
-                        <CheckCircle2 className="h-12 w-12" />
-                      </div>
-                      <h3 className="text-2xl font-bold text-foreground mb-2">Thank You!</h3>
-                      <p className="text-muted-foreground">Your feedback has been submitted successfully.</p>
-                      <Button variant="outline" className="mt-6 rounded-full transition-all active:scale-95" onClick={() => setIsSubmitted(false)}>
-                        Send Another Comment
-                      </Button>
+                    <div className="flex flex-col items-center justify-center py-10 text-center animate-in zoom-in-95">
+                      <CheckCircle2 className="h-12 w-12 text-green-600 mb-4" />
+                      <h3 className="text-2xl font-bold text-foreground">Thank You!</h3>
+                      <p className="text-muted-foreground">Your feedback has been submitted.</p>
+                      <Button variant="outline" className="mt-6 rounded-full" onClick={() => setIsSubmitted(false)}>Send Another</Button>
                     </div>
                   ) : (
                     <form onSubmit={handleFeedbackSubmit} className="space-y-5">
                       <div className="space-y-2 text-left">
                         <Label htmlFor="name" className="text-foreground font-bold">Your Name</Label>
-                        <Input 
-                          id="name" 
-                          placeholder="John Doe" 
-                          value={feedbackForm.name} 
-                          onChange={e => setFeedbackForm({...feedbackForm, name: e.target.value})} 
-                          className="bg-background transition-all focus:ring-2 focus:ring-primary/20"
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-2 text-left">
-                        <Label htmlFor="email" className="text-foreground font-bold">Email Address</Label>
-                        <Input 
-                          id="email" 
-                          type="email" 
-                          placeholder="john@example.com" 
-                          value={feedbackForm.email} 
-                          onChange={e => setFeedbackForm({...feedbackForm, email: e.target.value})} 
-                          className="bg-background transition-all focus:ring-2 focus:ring-primary/20"
-                        />
+                        <Input id="name" placeholder="John Doe" value={feedbackForm.name} onChange={e => setFeedbackForm({...feedbackForm, name: e.target.value})} required />
                       </div>
                       <div className="space-y-2 text-left">
                         <Label htmlFor="comment" className="text-foreground font-bold">Your Comment</Label>
-                        <Textarea 
-                          id="comment" 
-                          placeholder="Tell us what you think..." 
-                          value={feedbackForm.comment} 
-                          onChange={e => setFeedbackForm({...feedbackForm, comment: e.target.value})} 
-                          className="min-h-[120px] bg-background resize-none transition-all focus:ring-2 focus:ring-primary/20"
-                          required 
-                        />
+                        <Textarea id="comment" placeholder="Tell us what you think..." value={feedbackForm.comment} onChange={e => setFeedbackForm({...feedbackForm, comment: e.target.value})} className="min-h-[120px]" required />
                       </div>
-                      <Button 
-                        type="submit" 
-                        className="w-full rounded-full py-6 text-lg font-bold gap-2 transition-all active:scale-95 shadow-lg hover:shadow-primary/30"
-                        disabled={isSubmitting}
-                      >
+                      <Button type="submit" className="w-full rounded-full py-6 text-lg font-bold gap-2 active:scale-95" disabled={isSubmitting}>
                         {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
                         Submit Feedback
                       </Button>
@@ -394,9 +358,6 @@ export default function Home() {
               </Card>
             </div>
           </div>
-          {/* Abstract background shapes */}
-          <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/5 animate-pulse" />
-          <div className="absolute -bottom-16 left-0 h-48 w-48 rounded-full bg-white/5 animate-pulse delay-700" />
         </div>
       </section>
     </div>

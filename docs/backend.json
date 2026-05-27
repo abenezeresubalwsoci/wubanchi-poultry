@@ -60,7 +60,17 @@
       "type": "object",
       "properties": {
         "logoUrl": { "type": "string" },
-        "heroImageUrl": { "type": "string" }
+        "heroSlides": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "imageUrl": { "type": "string" },
+              "title": { "type": "string" },
+              "subtitle": { "type": "string" }
+            }
+          }
+        }
       }
     }
   },

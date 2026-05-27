@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -10,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, AlertTriangle, MessageSquare, Sparkles, Bird, X } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, AlertTriangle, MessageSquare, Sparkles, Bird, X, Text } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -18,6 +19,12 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { firebaseConfig } from '@/firebase/config';
 import { generateFarmHero } from '@/ai/flows/generate-image-flow';
 import Image from 'next/image';
+
+interface HeroSlide {
+  imageUrl: string;
+  title: string;
+  subtitle: string;
+}
 
 export default function AdminDashboard() {
   const db = useFirestore();
@@ -48,16 +55,15 @@ export default function AdminDashboard() {
   const [newNews, setNewNews] = useState({ title: '', desc: '', content: '' });
   
   const [logoUrl, setLogoUrl] = useState('');
-  const [heroImages, setHeroImages] = useState<string[]>([]);
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('Sunrise over a modern poultry farm with free-range chickens');
-  const [manualUrl, setManualUrl] = useState('');
+  const [manualSlide, setManualSlide] = useState({ url: '', title: '', subtitle: '' });
 
   useEffect(() => {
     if (settings?.logoUrl) setLogoUrl(settings.logoUrl);
-    if (settings?.heroImages) setHeroImages(settings.heroImages);
-    else if (settings?.heroImageUrl) setHeroImages([settings.heroImageUrl]);
+    if (settings?.heroSlides) setHeroSlides(settings.heroSlides);
   }, [settings]);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -80,7 +86,12 @@ export default function AdminDashboard() {
     setIsGeneratingAI(true);
     try {
       const result = await generateFarmHero({ prompt: aiPrompt });
-      setHeroImages(prev => [...prev, result.imageUrl]);
+      const newSlide: HeroSlide = {
+        imageUrl: result.imageUrl,
+        title: 'New AI Generation',
+        subtitle: 'Experience the future of farming'
+      };
+      setHeroSlides(prev => [...prev, newSlide]);
       toast({ title: "AI Image Generated", description: "Image added to carousel collection." });
     } catch (error) {
       toast({ variant: "destructive", title: "Generation Failed", description: "AI could not generate the image right now." });
@@ -89,81 +100,35 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleAddManualUrl = () => {
-    if (!manualUrl.trim()) return;
-    setHeroImages(prev => [...prev, manualUrl.trim()]);
-    setManualUrl('');
-    toast({ title: "Image URL Added" });
+  const handleAddManualSlide = () => {
+    if (!manualSlide.url.trim()) return;
+    setHeroSlides(prev => [...prev, { 
+      imageUrl: manualSlide.url.trim(), 
+      title: manualSlide.title || 'Wubanchi Farm', 
+      subtitle: manualSlide.subtitle || 'Premium Poultry Excellence' 
+    }]);
+    setManualSlide({ url: '', title: '', subtitle: '' });
+    toast({ title: "Hero Slide Added" });
   };
 
-  const handleRemoveHeroImage = (index: number) => {
-    setHeroImages(prev => prev.filter((_, i) => i !== index));
-    toast({ title: "Image Removed", variant: "destructive" });
+  const handleRemoveHeroSlide = (index: number) => {
+    setHeroSlides(prev => prev.filter((_, i) => i !== index));
+    toast({ title: "Slide Removed", variant: "destructive" });
   };
 
-  const handleProductImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 800000) {
-        toast({ variant: "destructive", title: "File too large", description: "Please use an image smaller than 800KB." });
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewProduct(prev => ({ ...prev, imageUrl: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleAddProduct = () => {
-    if (!newProduct.name || !newProduct.price) return;
-    const data = {
-      ...newProduct,
-      price: parseFloat(newProduct.price as string),
-      inStock: true,
-      createdAt: serverTimestamp()
-    };
-    addDoc(collection(db, 'products'), data)
-      .then(() => {
-        setNewProduct({ name: '', price: '', category: 'Eggs', description: '', imageId: 'organic-eggs', imageUrl: '' });
-        toast({ title: "Product Added" });
-      })
-      .catch(async (error) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: 'products',
-          operation: 'create',
-          requestResourceData: data
-        }));
-      });
-  };
-
-  const handleAddNews = () => {
-    if (!newNews.title) return;
-    const data = {
-      ...newNews,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      createdAt: serverTimestamp()
-    };
-    addDoc(collection(db, 'news'), data)
-      .then(() => {
-        setNewNews({ title: '', desc: '', content: '' });
-        toast({ title: "News Posted" });
-      })
-      .catch(async (error) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: 'news',
-          operation: 'create',
-          requestResourceData: data
-        }));
-      });
+  const handleUpdateSlideText = (index: number, field: 'title' | 'subtitle', value: string) => {
+    setHeroSlides(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
   };
 
   const handleUpdateSettings = () => {
     setIsSavingSettings(true);
     const data = { 
       logoUrl, 
-      heroImages,
+      heroSlides,
       updatedAt: serverTimestamp() 
     };
     
@@ -194,7 +159,7 @@ export default function AdminDashboard() {
       reader.onloadend = () => {
         const base64String = reader.result as string;
         if (type === 'logo') setLogoUrl(base64String);
-        else setHeroImages(prev => [...prev, base64String]);
+        else setHeroSlides(prev => [...prev, { imageUrl: base64String, title: 'Fresh Arrival', subtitle: 'Straight from the farm' }]);
         toast({ title: "Image Uploaded", description: "Don't forget to save your changes." });
       };
       reader.readAsDataURL(file);
@@ -273,6 +238,7 @@ export default function AdminDashboard() {
         </TabsList>
 
         <TabsContent value="products" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* ... existing products content ... */}
           <div className="grid gap-6 md:grid-cols-3">
             <Card className="md:col-span-1 border-none bg-card shadow-sm h-fit">
               <CardHeader><CardTitle>Add Product</CardTitle></CardHeader>
@@ -284,17 +250,19 @@ export default function AdminDashboard() {
                     <select className="w-full h-10 rounded-md border p-2 bg-background text-sm" value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}><option>Eggs</option><option>Meat</option><option>Feed</option><option>Chicks</option></select>
                   </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label>Product Image</Label>
-                  <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 w-full">
-                    <Upload className="h-4 w-4" /> Upload
-                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleProductImageUpload} />
-                  </Button>
-                  {newProduct.imageUrl && <div className="mt-2 h-32 w-full rounded-md border overflow-hidden"><img src={newProduct.imageUrl} className="h-full w-full object-cover" /></div>}
-                </div>
-
-                <Button onClick={handleAddProduct} className="w-full gap-2 font-bold transition-all active:scale-95"><Plus className="h-4 w-4" /> Add Product</Button>
+                <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 w-full">
+                  <Upload className="h-4 w-4" /> Upload Product Image
+                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => setNewProduct(prev => ({ ...prev, imageUrl: reader.result as string }));
+                      reader.readAsDataURL(file);
+                    }
+                  }} />
+                </Button>
+                {newProduct.imageUrl && <div className="mt-2 h-32 w-full rounded-md border overflow-hidden"><img src={newProduct.imageUrl} className="h-full w-full object-cover" /></div>}
+                <Button onClick={handleAddProduct} className="w-full gap-2 font-bold"><Plus className="h-4 w-4" /> Add Product</Button>
               </CardContent>
             </Card>
             <Card className="md:col-span-2 border-none bg-card shadow-sm overflow-hidden">
@@ -305,7 +273,7 @@ export default function AdminDashboard() {
                     <TableRow key={p.id}>
                       <TableCell className="font-medium">{p.name}</TableCell>
                       <TableCell>ETB {p.price.toFixed(2)}</TableCell>
-                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('products', p.id)} className="hover:bg-destructive/10"><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
+                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('products', p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -315,13 +283,13 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="news" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-           <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-3">
             <Card className="md:col-span-1 border-none bg-card shadow-sm h-fit">
               <CardHeader><CardTitle>Post News</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2"><Label>Title</Label><Input value={newNews.title} onChange={e => setNewNews({...newNews, title: e.target.value})} /></div>
                 <div className="space-y-2"><Label>Summary</Label><Input value={newNews.desc} onChange={e => setNewNews({...newNews, desc: e.target.value})} /></div>
-                <Button onClick={handleAddNews} className="w-full gap-2 font-bold transition-all active:scale-95"><Plus className="h-4 w-4" /> Post Update</Button>
+                <Button onClick={handleAddNews} className="w-full gap-2 font-bold"><Plus className="h-4 w-4" /> Post Update</Button>
               </CardContent>
             </Card>
             <Card className="md:col-span-2 border-none bg-card shadow-sm">
@@ -333,7 +301,7 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="feedback" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Card className="border-none bg-card shadow-sm">
+           <Card className="border-none bg-card shadow-sm">
             <CardHeader><CardTitle>Customer Feedback</CardTitle></CardHeader>
             <CardContent>
               <Table>
@@ -369,73 +337,70 @@ export default function AdminDashboard() {
             </Card>
 
             <Card className="border-none bg-card shadow-sm h-fit">
-              <CardHeader><CardTitle>Hero Image Generator</CardTitle><CardDescription>Create custom hero images using AI</CardDescription></CardHeader>
+              <CardHeader><CardTitle>Hero AI Image Generator</CardTitle><CardDescription>Create slide imagery using AI</CardDescription></CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>AI Generation Prompt</Label>
-                  <Input 
-                    value={aiPrompt} 
-                    onChange={e => setAiPrompt(e.target.value)} 
-                    placeholder="E.g., Sunrise over a poultry farm..." 
-                  />
+                  <Input value={aiPrompt} onChange={e => setAiPrompt(e.target.value)} placeholder="E.g., Sunrise over a poultry farm..." />
                 </div>
-                <Button 
-                  onClick={handleGenerateAIHero} 
-                  disabled={isGeneratingAI}
-                  variant="accent"
-                  className="w-full gap-2 font-bold"
-                >
+                <Button onClick={handleGenerateAIHero} disabled={isGeneratingAI} variant="accent" className="w-full gap-2 font-bold">
                   {isGeneratingAI ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  Generate & Add to Carousel
+                  Generate Slide
                 </Button>
               </CardContent>
             </Card>
 
             <Card className="md:col-span-2 border-none bg-card shadow-sm">
-              <CardHeader><CardTitle>Branding & Carousel Review</CardTitle><CardDescription>Manage all images displayed in your home page hero section</CardDescription></CardHeader>
+              <CardHeader><CardTitle>Hero Slides & Content Carousel</CardTitle><CardDescription>Manage images and synchronized text for your home page hero</CardDescription></CardHeader>
               <CardContent className="space-y-8">
-                <div className="grid gap-6 md:grid-cols-2">
-                   <div className="space-y-4">
-                      <Label className="text-lg font-bold">Add Image URL</Label>
-                      <div className="flex gap-2">
-                        <Input value={manualUrl} onChange={e => setManualUrl(e.target.value)} placeholder="https://..." />
-                        <Button onClick={handleAddManualUrl} variant="outline" size="icon"><Plus className="h-4 w-4" /></Button>
+                <div className="grid gap-8 md:grid-cols-2">
+                   <div className="space-y-4 bg-muted/30 p-6 rounded-2xl">
+                      <Label className="text-lg font-bold flex items-center gap-2"><Plus className="h-5 w-5" /> Add New Slide</Label>
+                      <div className="space-y-3">
+                        <Input value={manualSlide.url} onChange={e => setManualSlide({...manualSlide, url: e.target.value})} placeholder="Image URL (https://...)" />
+                        <Input value={manualSlide.title} onChange={e => setManualSlide({...manualSlide, title: e.target.value})} placeholder="Slide Title (e.g. Fresh Eggs)" />
+                        <Input value={manualSlide.subtitle} onChange={e => setManualSlide({...manualSlide, subtitle: e.target.value})} placeholder="Slide Subtitle" />
+                        <Button onClick={handleAddManualSlide} className="w-full gap-2"><Plus className="h-4 w-4" /> Add Slide to Collection</Button>
                       </div>
-                      <div className="pt-4">
-                        <Label className="text-lg font-bold">Upload Local File</Label>
+                      <div className="pt-4 border-t">
+                        <Label className="text-sm font-bold opacity-70">Or Upload File</Label>
                         <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 w-full mt-2">
-                          <Upload className="h-4 w-4" /> Select File
+                          <Upload className="h-4 w-4" /> Select Image File
                           <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleFileUpload('hero')} />
                         </Button>
                       </div>
                    </div>
 
                    <div className="space-y-4">
-                      <Label className="text-lg font-bold">Current Carousel Collection ({heroImages.length})</Label>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                        {heroImages.map((url, idx) => (
-                          <div key={idx} className="relative group aspect-video rounded-xl overflow-hidden border-2 border-muted shadow-sm hover:shadow-md transition-all">
-                            <img src={url} className="h-full w-full object-cover" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <Button variant="destructive" size="icon" className="h-8 w-8 rounded-full" onClick={() => handleRemoveHeroImage(idx)}>
-                                <X className="h-4 w-4" />
+                      <Label className="text-lg font-bold">Active Carousel Slides ({heroSlides.length})</Label>
+                      <div className="space-y-4">
+                        {heroSlides.map((slide, idx) => (
+                          <div key={idx} className="flex gap-4 p-4 rounded-xl border bg-background group hover:border-primary/50 transition-all shadow-sm">
+                            <div className="relative h-24 w-32 rounded-lg overflow-hidden border bg-muted flex-shrink-0">
+                              <img src={slide.imageUrl} className="h-full w-full object-cover" />
+                              <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoveHeroSlide(idx)}>
+                                <X className="h-3 w-3" />
                               </Button>
+                            </div>
+                            <div className="flex-1 space-y-2">
+                               <div className="flex items-center gap-2"><Text className="h-3 w-3 opacity-50" /><Input className="h-8 text-xs" value={slide.title} onChange={e => handleUpdateSlideText(idx, 'title', e.target.value)} placeholder="Title" /></div>
+                               <div className="flex items-center gap-2"><Text className="h-3 w-3 opacity-50" /><Input className="h-8 text-xs" value={slide.subtitle} onChange={e => handleUpdateSlideText(idx, 'subtitle', e.target.value)} placeholder="Subtitle" /></div>
                             </div>
                           </div>
                         ))}
-                        {heroImages.length === 0 && (
-                          <div className="col-span-full border-2 border-dashed border-muted rounded-xl p-8 flex flex-col items-center justify-center text-muted-foreground text-sm">
-                            <ImageIcon className="h-8 w-8 mb-2 opacity-20" />
-                            No custom images added
+                        {heroSlides.length === 0 && (
+                          <div className="border-2 border-dashed border-muted rounded-xl p-12 flex flex-col items-center justify-center text-muted-foreground">
+                            <ImageIcon className="h-10 w-10 mb-4 opacity-10" />
+                            No slides added yet
                           </div>
                         )}
                       </div>
                    </div>
                 </div>
 
-                <Button onClick={handleUpdateSettings} className="w-full py-6 text-xl font-bold shadow-xl animate-pulse hover:animate-none" disabled={isSavingSettings}>
+                <Button onClick={handleUpdateSettings} className="w-full py-6 text-xl font-bold shadow-xl active:scale-[0.98] transition-all" disabled={isSavingSettings}>
                   {isSavingSettings ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <Settings className="h-6 w-6 mr-2" />}
-                  Save All Branding Changes
+                  Save All Branding & Content Changes
                 </Button>
               </CardContent>
             </Card>
