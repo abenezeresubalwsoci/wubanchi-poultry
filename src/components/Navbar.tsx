@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X, Bird, ShoppingBasket, Info, MessageSquare, Lightbulb, Languages, Loader2 } from "lucide-react";
+import { Menu, X, Bird, ShoppingBasket, Info, MessageSquare, Languages, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useFirestore, useDoc } from "@/firebase";
@@ -14,7 +14,6 @@ import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
   { name: "Products", href: "/products", icon: ShoppingBasket },
-  { name: "AI Tips", href: "/tips", icon: Lightbulb },
   { name: "About", href: "/about", icon: Info },
   { name: "Contact", href: "/contact", icon: MessageSquare },
 ];
