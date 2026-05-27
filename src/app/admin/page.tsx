@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, AlertTriangle, MessageSquare, Sparkles, Bird, X, Text, Users } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, AlertTriangle, MessageSquare, Sparkles, Bird, X, Text, Users, Construction } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -38,6 +38,7 @@ export default function AdminDashboard() {
   const newsQuery = useMemo(() => query(collection(db, 'news'), orderBy('createdAt', 'desc')), [db]);
   const feedbackQuery = useMemo(() => query(collection(db, 'feedback'), orderBy('createdAt', 'desc')), [db]);
   const managersQuery = useMemo(() => query(collection(db, 'managers'), orderBy('createdAt', 'desc')), [db]);
+  const facilitiesQuery = useMemo(() => query(collection(db, 'facilities'), orderBy('createdAt', 'desc')), [db]);
   
   const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
   const { data: settings } = useDoc(settingsRef);
@@ -46,6 +47,7 @@ export default function AdminDashboard() {
   const { data: news } = useCollection(newsQuery);
   const { data: feedback } = useCollection(feedbackQuery);
   const { data: managers } = useCollection(managersQuery);
+  const { data: facilities } = useCollection(facilitiesQuery);
 
   const [newProduct, setNewProduct] = useState({ 
     name: '', 
@@ -57,6 +59,7 @@ export default function AdminDashboard() {
   });
   const [newNews, setNewNews] = useState({ title: '', desc: '', content: '' });
   const [newManager, setNewManager] = useState({ name: '', role: '', description: '', imageUrl: '' });
+  const [newFacility, setNewFacility] = useState({ name: '', description: '', imageUrl: '' });
   
   const [logoUrl, setLogoUrl] = useState('');
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
@@ -147,6 +150,26 @@ export default function AdminDashboard() {
       });
   };
 
+  const handleAddFacility = () => {
+    if (!newFacility.name || !newFacility.description) return;
+    const data = {
+      ...newFacility,
+      createdAt: serverTimestamp()
+    };
+    addDoc(collection(db, 'facilities'), data)
+      .then(() => {
+        setNewFacility({ name: '', description: '', imageUrl: '' });
+        toast({ title: "Facility Added" });
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'facilities',
+          operation: 'create',
+          requestResourceData: data
+        }));
+      });
+  };
+
   const handleGenerateAIHero = async () => {
     if (!aiPrompt.trim()) return;
     setIsGeneratingAI(true);
@@ -214,7 +237,7 @@ export default function AdminDashboard() {
       });
   };
 
-  const handleFileUpload = (type: 'logo' | 'hero' | 'manager') => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (type: 'logo' | 'hero' | 'manager' | 'facility') => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 800000) {
@@ -227,6 +250,7 @@ export default function AdminDashboard() {
         if (type === 'logo') setLogoUrl(base64String);
         else if (type === 'hero') setHeroSlides(prev => [...prev, { imageUrl: base64String, title: 'Fresh Arrival', subtitle: 'Straight from the farm' }]);
         else if (type === 'manager') setNewManager(prev => ({ ...prev, imageUrl: base64String }));
+        else if (type === 'facility') setNewFacility(prev => ({ ...prev, imageUrl: base64String }));
         toast({ title: "Image Uploaded", description: "Don't forget to save your changes." });
       };
       reader.readAsDataURL(file);
@@ -301,6 +325,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="products" className="gap-2 transition-all"><Package className="h-4 w-4" /> Products</TabsTrigger>
           <TabsTrigger value="news" className="gap-2 transition-all"><Newspaper className="h-4 w-4" /> News</TabsTrigger>
           <TabsTrigger value="team" className="gap-2 transition-all"><Users className="h-4 w-4" /> Management Team</TabsTrigger>
+          <TabsTrigger value="facilities" className="gap-2 transition-all"><Construction className="h-4 w-4" /> Operations</TabsTrigger>
           <TabsTrigger value="feedback" className="gap-2 transition-all"><MessageSquare className="h-4 w-4" /> Feedback</TabsTrigger>
           <TabsTrigger value="settings" className="gap-2 transition-all"><Settings className="h-4 w-4" /> Branding</TabsTrigger>
         </TabsList>
@@ -393,6 +418,38 @@ export default function AdminDashboard() {
                       <TableCell className="font-medium">{m.name}</TableCell>
                       <TableCell>{m.role}</TableCell>
                       <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('managers', m.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="facilities" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="grid gap-6 md:grid-cols-3">
+             <Card className="md:col-span-1 border-none bg-card shadow-sm h-fit">
+              <CardHeader><CardTitle>Add Facility/Operation</CardTitle><CardDescription>Highlight farm areas like Waste Recycling or Storage</CardDescription></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2"><Label>Area Name</Label><Input value={newFacility.name} onChange={e => setNewFacility({...newFacility, name: e.target.value})} placeholder="e.g. Waste Recycling Area" /></div>
+                <div className="space-y-2"><Label>Description</Label><Textarea value={newFacility.description} onChange={e => setNewFacility({...newFacility, description: e.target.value})} placeholder="Describe what happens here..." /></div>
+                <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 w-full">
+                  <Upload className="h-4 w-4" /> Upload Facility Photo
+                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleFileUpload('facility')} />
+                </Button>
+                {newFacility.imageUrl && <div className="mt-2 h-32 w-full rounded-2xl border overflow-hidden"><img src={newFacility.imageUrl} className="h-full w-full object-cover" /></div>}
+                <Button onClick={handleAddFacility} className="w-full gap-2 font-bold"><Plus className="h-4 w-4" /> Add Facility</Button>
+              </CardContent>
+            </Card>
+            <Card className="md:col-span-2 border-none bg-card shadow-sm">
+              <Table>
+                <TableHeader><TableRow><TableHead>Photo</TableHead><TableHead>Name</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {facilities?.map((f: any) => (
+                    <TableRow key={f.id}>
+                      <TableCell><div className="h-10 w-16 rounded-md overflow-hidden border bg-muted">{f.imageUrl && <img src={f.imageUrl} className="h-full w-full object-cover" />}</div></TableCell>
+                      <TableCell className="font-medium">{f.name}</TableCell>
+                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('facilities', f.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

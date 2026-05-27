@@ -67,6 +67,18 @@
       },
       "required": ["name", "role"]
     },
+    "Facility": {
+      "title": "Facility",
+      "description": "A farm facility or operation area",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "description"]
+    },
     "Settings": {
       "title": "Settings",
       "description": "Site-wide configuration",
@@ -110,6 +122,10 @@
     "/managers/{managerId}": {
       "schema": "#/entities/Manager",
       "description": "Collection of management team members"
+    },
+    "/facilities/{facilityId}": {
+      "schema": "#/entities/Facility",
+      "description": "Collection of farm facilities and operations"
     },
     "/settings/{settingId}": {
       "schema": "#/entities/Settings",
