@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -10,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Plus, Send, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Plus, Send, CheckCircle2, ChevronLeft, ChevronRight, Bird } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useCollection, useFirestore, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, addDoc, serverTimestamp, doc } from "firebase/firestore";
@@ -143,7 +142,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col gap-12 pb-16 animate-in fade-in duration-700">
+    <div className="flex flex-col gap-16 pb-24 animate-in fade-in duration-700">
       {/* Hero Section Synchronized Carousel */}
       <section className="relative h-[250px] w-full overflow-hidden">
         {heroSlides.map((slide, idx) => (
@@ -314,6 +313,52 @@ export default function Home() {
         )}
       </section>
 
+      {/* About Us Summary Section */}
+      <section className="container mx-auto px-4 md:px-8 animate-in fade-in duration-1000 delay-600">
+        <div className="grid gap-12 lg:grid-cols-2 items-center bg-card rounded-[3rem] p-8 md:p-16 overflow-hidden relative shadow-sm">
+          <div className="space-y-6 relative z-10">
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-bold text-primary">
+               <Bird className="h-4 w-4" />
+               <span>OUR STORY</span>
+            </div>
+            <h2 className="text-3xl font-bold md:text-5xl leading-tight">Rooted in Quality, Driven by Care</h2>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Founded in 1994, Wubanchi began with a simple mission: to provide truly fresh, organic poultry to our neighbors in Bahir Dar. 
+              Today, we carry forward that legacy with modern sustainability and the same family values that have guided us for three generations.
+            </p>
+            <div className="grid grid-cols-2 gap-6 pt-4">
+               <div className="space-y-1">
+                 <h4 className="font-bold text-2xl text-primary">30+</h4>
+                 <p className="text-sm text-muted-foreground">Years Experience</p>
+               </div>
+               <div className="space-y-1">
+                 <h4 className="font-bold text-2xl text-primary">100%</h4>
+                 <p className="text-sm text-muted-foreground">Organic Certified</p>
+               </div>
+            </div>
+            <Button asChild variant="outline" className="rounded-full px-8 h-12 font-bold group border-primary/20 hover:border-primary transition-all">
+              <Link href="/about">
+                Learn More About Us <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Button>
+          </div>
+          <div className="relative h-[400px] rounded-2xl overflow-hidden shadow-2xl transition-transform duration-700 hover:scale-[1.02]">
+            <Image 
+              src={PlaceHolderImages.find(img => img.id === 'farm-story')?.imageUrl || ''} 
+              alt="Farm Story" 
+              fill 
+              className="object-cover"
+              data-ai-hint="ethiopian farmers"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+            <div className="absolute bottom-6 left-6 text-white">
+              <p className="font-bold text-lg">Quality You Can Taste</p>
+              <p className="text-xs opacity-80">Heritage Poultry Specialist</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Community Feedback Section */}
       <section className="container mx-auto px-4 md:px-8 animate-in fade-in duration-1000 delay-700">
         <div className="relative overflow-hidden rounded-3xl bg-accent p-8 md:p-16">
@@ -325,7 +370,7 @@ export default function Home() {
               </div>
               <h2 className="text-3xl font-bold text-white md:text-5xl">Share Your Experience</h2>
               <p className="text-lg text-white/90 max-w-xl">
-                We take pride in our farm-to-table journey. Your feedback helps us grow.
+                We take pride in our farm-to-table journey. Your feedback helps us grow and serve our community better.
               </p>
             </div>
             <div className="w-full lg:max-w-md">
