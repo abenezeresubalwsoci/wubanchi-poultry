@@ -508,7 +508,7 @@ export default function Home() {
                   <Phone className="h-5 w-5" />
                   <h4>Quick Contact</h4>
                 </div>
-                <div className="grid gap-6 sm:grid-cols-2">
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
                   <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4">
                     <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                       <Phone className="h-6 w-6" />
@@ -525,6 +525,30 @@ export default function Home() {
                     <div className="text-left">
                       <p className="text-sm font-bold text-foreground">Email Us</p>
                       <p className="text-muted-foreground">contact@wubanchi.com</p>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <MapPin className="h-6 w-6" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-foreground">Address</p>
+                      <p className="text-muted-foreground">Bahir Dar, Ethiopia</p>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 448 512"
+                        className="h-6 w-6 fill-current"
+                      >
+                        <path d="M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z" />
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-foreground">TikTok</p>
+                      <p className="text-muted-foreground">@wubanchi_farm</p>
                     </div>
                   </div>
                 </div>
