@@ -7,10 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Mail, Phone, MapPin, Clock, Send, CheckCircle2 } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Send, CheckCircle2, Copy, MessageSquare } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,8 +21,15 @@ export default function Contact() {
     // Mock submission
   };
 
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied!", description: `Phone number ${text} copied to clipboard.` });
+  };
+
+  const phoneNumbers = ['+251932224193', '+251920774757', '+251969058626'];
+
   return (
-    <div className="container mx-auto px-4 py-12 md:px-8">
+    <div className="container mx-auto px-4 py-12 md:px-8 animate-in fade-in duration-700">
       <div className="mx-auto max-w-6xl">
         <div className="mb-12 text-center space-y-4">
           <h1 className="text-4xl font-bold md:text-5xl">Get in Touch</h1>
@@ -32,40 +42,62 @@ export default function Contact() {
           {/* Contact Info */}
           <div className="space-y-8">
             <div className="grid gap-6 sm:grid-cols-2">
-              <Card className="border-none bg-card shadow-sm">
+              <Card className="border-none bg-card shadow-sm hover:shadow-md transition-all">
                 <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
                   <div className="rounded-full bg-primary/10 p-3 text-primary">
                     <Phone className="h-6 w-6" />
                   </div>
-                  <h3 className="font-bold">Phone</h3>
-                  <p className="text-sm text-muted-foreground">+1 (555) 789-1234</p>
-                  <p className="text-xs text-muted-foreground">Mon-Fri 8am-6pm</p>
+                  <h3 className="font-bold">Call Us</h3>
+                  <div className="flex flex-col gap-1 w-full">
+                    {phoneNumbers.map((num) => (
+                      <div key={num} className="flex items-center justify-center gap-2 group">
+                        <a href={`tel:${num}`} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                          {num}
+                        </a>
+                        <button 
+                          onClick={() => handleCopy(num)}
+                          className="p-1 rounded-md hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Copy to clipboard"
+                        >
+                          <Copy className="h-3 w-3 text-muted-foreground" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
-              <Card className="border-none bg-card shadow-sm">
+              <Card className="border-none bg-card shadow-sm hover:shadow-md transition-all">
                 <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
                   <div className="rounded-full bg-primary/10 p-3 text-primary">
                     <Mail className="h-6 w-6" />
                   </div>
                   <h3 className="font-bold">Email</h3>
-                  <p className="text-sm text-muted-foreground">hello@wubanchi-farm.com</p>
+                  <p className="text-sm text-muted-foreground">contact@wubanchi.com</p>
                   <p className="text-xs text-muted-foreground">Expect response in 24h</p>
                 </CardContent>
               </Card>
             </div>
 
-            <Card className="border-none bg-card shadow-sm">
+            <Card className="border-none bg-card shadow-sm hover:shadow-md transition-all">
               <CardContent className="p-8 space-y-6">
                 <div className="flex items-start gap-4">
                   <MapPin className="h-6 w-6 text-primary shrink-0" />
-                  <div className="space-y-1">
-                    <h3 className="font-bold">Farm Location</h3>
-                    <p className="text-muted-foreground">123 Goldenrod Lane, Sunshine Valley, SV 90210</p>
+                  <div className="space-y-1 text-left">
+                    <h3 className="font-bold">Farm Locations</h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Bahir Dar, Ethiopia, Bahir Dar Kebele 05 & 08
+                    </p>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Gonder, Ethiopia, Gondar- Piassa Sub City
+                    </p>
+                    <p className="text-xs text-primary font-bold pt-2 italic">
+                      Coming soon in Gorgora and Lalibela
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 pt-4 border-t">
                   <Clock className="h-6 w-6 text-primary shrink-0" />
-                  <div className="space-y-1">
+                  <div className="space-y-1 text-left">
                     <h3 className="font-bold">Farm Shop Hours</h3>
                     <p className="text-muted-foreground">Daily: 7:00 AM — 7:00 PM</p>
                   </div>
@@ -73,14 +105,27 @@ export default function Contact() {
               </CardContent>
             </Card>
 
-            <div className="relative h-[300px] w-full overflow-hidden rounded-3xl bg-muted">
-              <div className="absolute inset-0 flex items-center justify-center bg-primary/5">
-                 <div className="text-center space-y-2">
-                   <MapPin className="h-12 w-12 text-primary mx-auto opacity-50" />
-                   <p className="text-muted-foreground font-medium">Interactive Map Placeholder</p>
-                 </div>
-              </div>
-            </div>
+            <Card className="border-none bg-card shadow-sm hover:shadow-md transition-all overflow-hidden">
+               <Link 
+                  href="http://tiktok.com/@twchicken_fish" 
+                  target="_blank"
+                  className="flex items-center gap-6 p-6 transition-all hover:bg-primary/5 group"
+                >
+                  <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shrink-0">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 448 512"
+                      className="h-7 w-7 fill-current"
+                    >
+                      <path d="M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z" />
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-lg font-bold text-foreground">Follow our Journey on TikTok</p>
+                    <p className="text-primary font-bold group-hover:underline transition-all">@twchicken_fish</p>
+                  </div>
+                </Link>
+            </Card>
           </div>
 
           {/* Contact Form */}
