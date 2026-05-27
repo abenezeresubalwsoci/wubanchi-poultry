@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Plus, Send, CheckCircle2, ChevronLeft, ChevronRight, Bird } from "lucide-react";
+import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Plus, Send, CheckCircle2, Bird, History, Target, Eye, Sparkles } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useCollection, useFirestore, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, addDoc, serverTimestamp, doc } from "firebase/firestore";
@@ -35,12 +35,10 @@ export default function Home() {
   const heroSlides = useMemo(() => {
     const list: HeroSlide[] = [];
     
-    // Check for slides collection first
     if (settings?.heroSlides && Array.isArray(settings.heroSlides) && settings.heroSlides.length > 0) {
       list.push(...settings.heroSlides);
     } 
     
-    // Fallback if list is empty
     if (list.length === 0) {
       list.push({
         imageUrl: PlaceHolderImages.find(img => img.id === 'hero-farm')?.imageUrl || '',
@@ -143,7 +141,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-16 pb-24 animate-in fade-in duration-700">
-      {/* Hero Section Synchronized Carousel */}
+      {/* Hero Section */}
       <section className="relative h-[250px] w-full overflow-hidden">
         {heroSlides.map((slide, idx) => (
           <div 
@@ -160,7 +158,6 @@ export default function Home() {
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
             
-            {/* Synchronized Text Content */}
             {idx === currentHeroIndex && (
               <div className="container relative mx-auto flex h-full flex-col justify-center px-4 md:px-8 z-20">
                 <div className="max-w-2xl space-y-4 text-white animate-in fade-in slide-in-from-left-12 duration-1000">
@@ -176,7 +173,6 @@ export default function Home() {
           </div>
         ))}
         
-        {/* Carousel Indicators */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-30">
           {heroSlides.map((_, idx) => (
             <button
@@ -313,47 +309,87 @@ export default function Home() {
         )}
       </section>
 
-      {/* About Us Summary Section */}
+      {/* About Us Expanded Section */}
       <section className="container mx-auto px-4 md:px-8 animate-in fade-in duration-1000 delay-600">
-        <div className="grid gap-12 lg:grid-cols-2 items-center bg-card rounded-[3rem] p-8 md:p-16 overflow-hidden relative shadow-sm">
-          <div className="space-y-6 relative z-10">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-bold text-primary">
-               <Bird className="h-4 w-4" />
-               <span>OUR STORY</span>
+        <div className="bg-card rounded-[3rem] p-8 md:p-16 overflow-hidden relative shadow-sm border border-primary/10">
+          <div className="grid gap-16 lg:grid-cols-2">
+            <div className="space-y-12">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1 text-sm font-bold text-primary">
+                   <Bird className="h-4 w-4" />
+                   <span>THE WUBANCHI LEGACY</span>
+                </div>
+                <h2 className="text-4xl font-bold md:text-5xl leading-tight">Rooted in Quality, Driven by Care</h2>
+                <div className="flex items-start gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10">
+                   <History className="h-6 w-6 text-primary shrink-0 mt-1" />
+                   <div>
+                      <h4 className="font-bold text-lg">Our History</h4>
+                      <p className="text-muted-foreground">
+                        Founded in 1994, Wubanchi began with a simple mission: to provide truly fresh, organic poultry to our neighbors in Bahir Dar. Today, we carry forward that legacy with modern sustainability and the same family values that have guided us for three generations.
+                      </p>
+                   </div>
+                </div>
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="space-y-3">
+                  <div className="h-12 w-12 rounded-2xl bg-accent/10 flex items-center justify-center text-accent">
+                    <Target className="h-6 w-6" />
+                  </div>
+                  <h4 className="font-bold text-xl">Our Mission</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    To deliver premium, organic poultry products while fostering sustainable farming practices that empower our local Bahir Dar community.
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                    <Eye className="h-6 w-6" />
+                  </div>
+                  <h4 className="font-bold text-xl">Our Vision</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    To become Ethiopia's benchmark for regenerative poultry farming, recognized for exceptional quality and ethical animal welfare.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-6 border-t border-primary/10">
+                <div className="flex items-center gap-2 text-primary font-bold">
+                  <Sparkles className="h-5 w-5" />
+                  <h4>Our Core Values</h4>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {["Integrity", "Sustainability", "Quality", "Community First", "Animal Welfare", "Transparency"].map((value) => (
+                    <div key={value} className="bg-white px-4 py-2 rounded-full text-xs font-bold border shadow-sm text-muted-foreground">
+                      {value}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Button asChild className="rounded-full px-8 h-14 text-lg font-bold group shadow-xl">
+                <Link href="/about">
+                  Full Story <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </Button>
             </div>
-            <h2 className="text-3xl font-bold md:text-5xl leading-tight">Rooted in Quality, Driven by Care</h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              Founded in 1994, Wubanchi began with a simple mission: to provide truly fresh, organic poultry to our neighbors in Bahir Dar. 
-              Today, we carry forward that legacy with modern sustainability and the same family values that have guided us for three generations.
-            </p>
-            <div className="grid grid-cols-2 gap-6 pt-4">
-               <div className="space-y-1">
-                 <h4 className="font-bold text-2xl text-primary">30+</h4>
-                 <p className="text-sm text-muted-foreground">Years Experience</p>
-               </div>
-               <div className="space-y-1">
-                 <h4 className="font-bold text-2xl text-primary">100%</h4>
-                 <p className="text-sm text-muted-foreground">Organic Certified</p>
-               </div>
-            </div>
-            <Button asChild variant="outline" className="rounded-full px-8 h-12 font-bold group border-primary/20 hover:border-primary transition-all">
-              <Link href="/about">
-                Learn More About Us <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-            </Button>
-          </div>
-          <div className="relative h-[400px] rounded-2xl overflow-hidden shadow-2xl transition-transform duration-700 hover:scale-[1.02]">
-            <Image 
-              src={PlaceHolderImages.find(img => img.id === 'farm-story')?.imageUrl || ''} 
-              alt="Farm Story" 
-              fill 
-              className="object-cover"
-              data-ai-hint="ethiopian farmers"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-            <div className="absolute bottom-6 left-6 text-white">
-              <p className="font-bold text-lg">Quality You Can Taste</p>
-              <p className="text-xs opacity-80">Heritage Poultry Specialist</p>
+
+            <div className="relative h-full min-h-[500px] rounded-[2.5rem] overflow-hidden shadow-2xl group">
+              <Image 
+                src={PlaceHolderImages.find(img => img.id === 'farm-story')?.imageUrl || ''} 
+                alt="Farm Story" 
+                fill 
+                className="object-cover transition-transform duration-[2000ms] group-hover:scale-110"
+                data-ai-hint="ethiopian farmers"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              <div className="absolute bottom-10 left-10 text-white space-y-2">
+                <div className="flex items-center gap-3">
+                   <div className="h-px w-12 bg-white/50" />
+                   <p className="font-bold uppercase tracking-widest text-xs opacity-80">Heritage Poultry</p>
+                </div>
+                <h3 className="text-3xl font-bold">Quality You Can Taste</h3>
+                <p className="opacity-90 max-w-xs text-sm">Experience three generations of organic farming expertise in every bite.</p>
+              </div>
             </div>
           </div>
         </div>
