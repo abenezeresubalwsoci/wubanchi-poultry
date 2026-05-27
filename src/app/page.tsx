@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -578,12 +577,6 @@ export default function Home() {
                   </Link>
                 </div>
               </div>
-
-              <Button asChild className="rounded-full px-8 h-14 text-lg font-bold group shadow-xl">
-                <Link href="/about">
-                  Full Story < ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </Button>
             </div>
 
             <div className="relative h-full min-h-[500px] rounded-[2.5rem] overflow-hidden shadow-2xl group">
