@@ -248,7 +248,7 @@ export default function Home() {
           <Card className="border-none shadow-xl bg-primary text-primary-foreground transition-transform hover:scale-[1.02]">
             <CardContent className="p-6 flex items-center gap-4 h-full">
               <div className="rounded-full bg-white/20 p-3">
-                <Newspaper className="h-6 w-6" />
+                < Newspaper className="h-6 w-6" />
               </div>
               <div>
                 <h3 className="font-bold text-lg">Farm News</h3>
@@ -536,8 +536,12 @@ export default function Home() {
                       <p className="text-muted-foreground">Bahir Dar, Ethiopia</p>
                     </div>
                   </div>
-                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Link 
+                    href="http://tiktok.com/@twchicken_fish" 
+                    target="_blank"
+                    className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4 transition-all hover:shadow-md hover:border-primary/20 group"
+                  >
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 448 512"
@@ -548,15 +552,15 @@ export default function Home() {
                     </div>
                     <div className="text-left">
                       <p className="text-sm font-bold text-foreground">TikTok</p>
-                      <p className="text-muted-foreground">@wubanchi_farm</p>
+                      <p className="text-muted-foreground group-hover:text-primary transition-colors">@twchicken_fish</p>
                     </div>
-                  </div>
+                  </Link>
                 </div>
               </div>
 
               <Button asChild className="rounded-full px-8 h-14 text-lg font-bold group shadow-xl">
                 <Link href="/about">
-                  Full Story <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  Full Story < ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
             </div>
