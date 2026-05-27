@@ -375,226 +375,205 @@ export default function Home() {
       {/* About Us Expanded Section */}
       <section className="container mx-auto px-4 md:px-8 animate-in fade-in duration-1000 delay-600">
         <div className="bg-card rounded-[3rem] p-8 md:p-16 overflow-hidden relative shadow-sm border border-primary/10">
-          <div className="grid gap-16 lg:grid-cols-2">
-            <div className="space-y-12">
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1 text-sm font-bold text-primary">
-                   <Bird className="h-4 w-4" />
-                   <span>THE WUBANCHI LEGACY</span>
-                </div>
-                <h2 className="text-4xl font-bold md:text-5xl leading-tight">Rooted in Quality, Driven by Care</h2>
-                <div className="flex items-start gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10">
-                   <History className="h-6 w-6 text-primary shrink-0 mt-1" />
-                   <div>
-                      <h4 className="font-bold text-lg">Our History</h4>
-                      <p className="text-muted-foreground">
-                        Founded in 1994, Wubanchi began with a simple mission: to provide truly fresh, organic poultry to our neighbors in Bahir Dar. Today, we carry forward that legacy with modern sustainability and the same family values that have guided us for three generations.
-                      </p>
-                   </div>
-                </div>
+          <div className="space-y-12">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1 text-sm font-bold text-primary">
+                 <Bird className="h-4 w-4" />
+                 <span>THE WUBANCHI LEGACY</span>
               </div>
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-3">
-                  <div className="h-12 w-12 rounded-2xl bg-accent/10 flex items-center justify-center text-accent">
-                    <Target className="h-6 w-6" />
-                  </div>
-                  <h4 className="font-bold text-xl">Our Mission</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Our mission is to provide nutritious, safe, and affordable poultry and fish products through innovative and eco-friendly integrated farming practices. We commit to empowering smallholder farmers through training and market linkages, creating jobs, and contributing to the global fight against hunger and poverty.
-                  </p>
-                </div>
-                <div className="space-y-3">
-                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                    <Eye className="h-6 w-6" />
-                  </div>
-                  <h4 className="font-bold text-xl">Our Vision</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    To be the leading and most trusted integrated farming enterprise in BahirDar, ensuring food security by delivering high-quality, sustainably produced poultry and fish products to every household.
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4 pt-6 border-t border-primary/10">
-                <div className="flex items-center gap-2 text-primary font-bold">
-                  <Sparkles className="h-5 w-5" />
-                  <h4>Our Core Values</h4>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-3">
-                    {coreValues.map((value) => (
-                      <button 
-                        key={value.title} 
-                        onClick={() => setSelectedValue(selectedValue === value.title ? null : value.title)}
-                        className={`px-4 py-2 rounded-full text-xs font-bold border shadow-sm transition-all active:scale-95 ${selectedValue === value.title ? 'bg-primary text-white border-primary' : 'bg-white text-muted-foreground hover:bg-primary/5'}`}
-                      >
-                        {value.title}
-                      </button>
-                    ))}
-                  </div>
-                  {selectedValue && (
-                    <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <p className="text-sm text-muted-foreground italic">
-                        {coreValues.find(v => v.title === selectedValue)?.desc}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Management Team Section */}
-              <div className="space-y-8 pt-8 border-t border-primary/10">
-                <div className="flex items-center gap-2 text-primary font-bold">
-                  <Users className="h-5 w-5" />
-                  <h4>Management Team</h4>
-                </div>
-                {managersLoading ? (
-                  <div className="flex justify-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary opacity-20" /></div>
-                ) : managers?.length ? (
-                  <div className="grid gap-6 sm:grid-cols-2">
-                    {managers.map((m: any) => (
-                      <div key={m.id} className="flex gap-4 items-center p-3 rounded-2xl bg-white shadow-sm border border-gray-50 transition-all hover:shadow-md group">
-                        <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-primary/20 shrink-0">
-                          {m.imageUrl ? (
-                            <Image src={m.imageUrl} alt={m.name} fill className="object-cover transition-transform group-hover:scale-110" />
-                          ) : (
-                            <div className="h-full w-full bg-muted flex items-center justify-center text-muted-foreground"><Users className="h-6 w-6" /></div>
-                          )}
-                        </div>
-                        <div className="space-y-0.5">
-                          <h5 className="font-bold text-sm leading-tight group-hover:text-primary transition-colors">{m.name}</h5>
-                          <p className="text-xs text-primary font-medium">{m.role}</p>
-                          <p className="text-[10px] text-muted-foreground line-clamp-2">{m.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground italic">Management team profiles coming soon.</p>
-                )}
-              </div>
-
-              {/* Operations & Facilities Section */}
-              <div className="space-y-8 pt-8 border-t border-primary/10">
-                <div className="flex items-center gap-2 text-primary font-bold">
-                  <Construction className="h-5 w-5" />
-                  <h4>Operations & Facilities</h4>
-                </div>
-                {facilitiesLoading ? (
-                  <div className="flex justify-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary opacity-20" /></div>
-                ) : facilities?.length ? (
-                  <div className="grid gap-6 md:grid-cols-2">
-                    {facilities.map((f: any) => (
-                      <div key={f.id} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex flex-col md:flex-row gap-6 items-center transition-all hover:shadow-md">
-                        <div className="relative h-32 w-full md:w-32 rounded-2xl overflow-hidden shrink-0">
-                          {f.imageUrl ? (
-                            <Image src={f.imageUrl} alt={f.name} fill className="object-cover" />
-                          ) : (
-                            <div className="h-full w-full bg-muted flex items-center justify-center text-muted-foreground"><Construction className="h-8 w-8" /></div>
-                          )}
-                        </div>
-                        <div className="space-y-2 text-left">
-                          <h5 className="font-bold text-lg">{f.name}</h5>
-                          <p className="text-sm text-muted-foreground">
-                            {f.description}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground italic">Operational areas coming soon.</p>
-                )}
-              </div>
-
-              {/* Quick Contact Section */}
-              <div className="space-y-8 pt-8 border-t border-primary/10">
-                <div className="flex items-center gap-2 text-primary font-bold">
-                  <Phone className="h-5 w-5" />
-                  <h4>Quick Contact</h4>
-                </div>
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
-                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-start gap-4 h-full">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                      <Phone className="h-6 w-6" />
-                    </div>
-                    <div className="text-left space-y-2">
-                      <p className="text-sm font-bold text-foreground">Call Us</p>
-                      <div className="flex flex-col gap-1">
-                        {['+251932224193', '+251920774757', '+251969058626'].map((num) => (
-                          <div key={num} className="flex items-center gap-2 group/num">
-                            <a href={`tel:${num}`} className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                              {num}
-                            </a>
-                            <button 
-                              onClick={() => handleCopy(num)}
-                              className="p-1 rounded-md hover:bg-muted opacity-0 group-hover/num:opacity-100 transition-opacity"
-                              title="Copy to clipboard"
-                            >
-                              <Copy className="h-3 w-3 text-muted-foreground" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                      <Mail className="h-6 w-6" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-bold text-foreground">Email Us</p>
-                      <p className="text-muted-foreground">contact@wubanchi.com</p>
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                      <MapPin className="h-6 w-6" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-bold text-foreground">Address</p>
-                      <p className="text-muted-foreground text-xs leading-relaxed">Bahir Dar, Ethiopia, Bahir Dar Kebele 05 & 08, and Gonder, Ethiopia, Gondar- Piassa Sub City, Coming soon in Gorgora and Lalibela</p>
-                    </div>
-                  </div>
-                  <Link 
-                    href="http://tiktok.com/@twchicken_fish" 
-                    target="_blank"
-                    className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4 transition-all hover:shadow-md hover:border-primary/20 group"
-                  >
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 448 512"
-                        className="h-6 w-6 fill-current"
-                      >
-                        <path d="M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z" />
-                      </svg>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-bold text-foreground">TikTok</p>
-                      <p className="text-muted-foreground group-hover:text-primary transition-colors">@twchicken_fish</p>
-                    </div>
-                  </Link>
-                </div>
+              <h2 className="text-4xl font-bold md:text-5xl leading-tight">Rooted in Quality, Driven by Care</h2>
+              <div className="flex items-start gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10">
+                 <History className="h-6 w-6 text-primary shrink-0 mt-1" />
+                 <div>
+                    <h4 className="font-bold text-lg">Our History</h4>
+                    <p className="text-muted-foreground">
+                      Founded in 1994, Wubanchi began with a simple mission: to provide truly fresh, organic poultry to our neighbors in Bahir Dar. Today, we carry forward that legacy with modern sustainability and the same family values that have guided us for three generations.
+                    </p>
+                 </div>
               </div>
             </div>
 
-            <div className="relative h-full min-h-[500px] rounded-[2.5rem] overflow-hidden shadow-2xl group">
-              <Image 
-                src={PlaceHolderImages.find(img => img.id === 'farm-story')?.imageUrl || ''} 
-                alt="Farm Story" 
-                fill 
-                className="object-cover transition-transform duration-[2000ms] group-hover:scale-110"
-                data-ai-hint="ethiopian farmers"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              <div className="absolute bottom-10 left-10 text-white space-y-2">
-                <div className="flex items-center gap-3">
-                   <div className="h-px w-12 bg-white/50" />
-                   <p className="font-bold uppercase tracking-widest text-xs opacity-80">Heritage Poultry</p>
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="space-y-3">
+                <div className="h-12 w-12 rounded-2xl bg-accent/10 flex items-center justify-center text-accent">
+                  <Target className="h-6 w-6" />
                 </div>
-                <h3 className="text-3xl font-bold">Quality You Can Taste</h3>
-                <p className="opacity-90 max-w-xs text-sm">Experience three generations of organic farming expertise in every bite.</p>
+                <h4 className="font-bold text-xl">Our Mission</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Our mission is to provide nutritious, safe, and affordable poultry and fish products through innovative and eco-friendly integrated farming practices. We commit to empowering smallholder farmers through training and market linkages, creating jobs, and contributing to the global fight against hunger and poverty.
+                </p>
+              </div>
+              <div className="space-y-3">
+                <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Eye className="h-6 w-6" />
+                </div>
+                <h4 className="font-bold text-xl">Our Vision</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  To be the leading and most trusted integrated farming enterprise in BahirDar, ensuring food security by delivering high-quality, sustainably produced poultry and fish products to every household.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-6 border-t border-primary/10">
+              <div className="flex items-center gap-2 text-primary font-bold">
+                <Sparkles className="h-5 w-5" />
+                <h4>Our Core Values</h4>
+              </div>
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-3">
+                  {coreValues.map((value) => (
+                    <button 
+                      key={value.title} 
+                      onClick={() => setSelectedValue(selectedValue === value.title ? null : value.title)}
+                      className={`px-4 py-2 rounded-full text-xs font-bold border shadow-sm transition-all active:scale-95 ${selectedValue === value.title ? 'bg-primary text-white border-primary' : 'bg-white text-muted-foreground hover:bg-primary/5'}`}
+                    >
+                      {value.title}
+                    </button>
+                  ))}
+                </div>
+                {selectedValue && (
+                  <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <p className="text-sm text-muted-foreground italic">
+                      {coreValues.find(v => v.title === selectedValue)?.desc}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Management Team Section */}
+            <div className="space-y-8 pt-8 border-t border-primary/10">
+              <div className="flex items-center gap-2 text-primary font-bold">
+                <Users className="h-5 w-5" />
+                <h4>Management Team</h4>
+              </div>
+              {managersLoading ? (
+                <div className="flex justify-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary opacity-20" /></div>
+              ) : managers?.length ? (
+                <div className="grid gap-6 sm:grid-cols-2">
+                  {managers.map((m: any) => (
+                    <div key={m.id} className="flex gap-4 items-center p-3 rounded-2xl bg-white shadow-sm border border-gray-50 transition-all hover:shadow-md group">
+                      <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-primary/20 shrink-0">
+                        {m.imageUrl ? (
+                          <Image src={m.imageUrl} alt={m.name} fill className="object-cover transition-transform group-hover:scale-110" />
+                        ) : (
+                          <div className="h-full w-full bg-muted flex items-center justify-center text-muted-foreground"><Users className="h-6 w-6" /></div>
+                        )}
+                      </div>
+                      <div className="space-y-0.5">
+                        <h5 className="font-bold text-sm leading-tight group-hover:text-primary transition-colors">{m.name}</h5>
+                        <p className="text-xs text-primary font-medium">{m.role}</p>
+                        <p className="text-[10px] text-muted-foreground line-clamp-2">{m.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground italic">Management team profiles coming soon.</p>
+              )}
+            </div>
+
+            {/* Operations & Facilities Section */}
+            <div className="space-y-8 pt-8 border-t border-primary/10">
+              <div className="flex items-center gap-2 text-primary font-bold">
+                <Construction className="h-5 w-5" />
+                <h4>Operations & Facilities</h4>
+              </div>
+              {facilitiesLoading ? (
+                <div className="flex justify-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary opacity-20" /></div>
+              ) : facilities?.length ? (
+                <div className="grid gap-6 md:grid-cols-2">
+                  {facilities.map((f: any) => (
+                    <div key={f.id} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex flex-col md:flex-row gap-6 items-center transition-all hover:shadow-md">
+                      <div className="relative h-32 w-full md:w-32 rounded-2xl overflow-hidden shrink-0">
+                        {f.imageUrl ? (
+                          <Image src={f.imageUrl} alt={f.name} fill className="object-cover" />
+                        ) : (
+                          <div className="h-full w-full bg-muted flex items-center justify-center text-muted-foreground"><Construction className="h-8 w-8" /></div>
+                        )}
+                      </div>
+                      <div className="space-y-2 text-left">
+                        <h5 className="font-bold text-lg">{f.name}</h5>
+                        <p className="text-sm text-muted-foreground">
+                          {f.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground italic">Operational areas coming soon.</p>
+              )}
+            </div>
+
+            {/* Quick Contact Section */}
+            <div className="space-y-8 pt-8 border-t border-primary/10">
+              <div className="flex items-center gap-2 text-primary font-bold">
+                <Phone className="h-5 w-5" />
+                <h4>Quick Contact</h4>
+              </div>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
+                <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-start gap-4 h-full">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <Phone className="h-6 w-6" />
+                  </div>
+                  <div className="text-left space-y-2">
+                    <p className="text-sm font-bold text-foreground">Call Us</p>
+                    <div className="flex flex-col gap-1">
+                      {['+251932224193', '+251920774757', '+251969058626'].map((num) => (
+                        <div key={num} className="flex items-center gap-2 group/num">
+                          <a href={`tel:${num}`} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                            {num}
+                          </a>
+                          <button 
+                            onClick={() => handleCopy(num)}
+                            className="p-1 rounded-md hover:bg-muted opacity-0 group-hover/num:opacity-100 transition-opacity"
+                            title="Copy to clipboard"
+                          >
+                            <Copy className="h-3 w-3 text-muted-foreground" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <Mail className="h-6 w-6" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-foreground">Email Us</p>
+                    <p className="text-muted-foreground">contact@wubanchi.com</p>
+                  </div>
+                </div>
+                <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <MapPin className="h-6 w-6" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-foreground">Address</p>
+                    <p className="text-muted-foreground text-xs leading-relaxed">Bahir Dar, Ethiopia, Bahir Dar Kebele 05 & 08, and Gonder, Ethiopia, Gondar- Piassa Sub City, Coming soon in Gorgora and Lalibela</p>
+                  </div>
+                </div>
+                <Link 
+                  href="http://tiktok.com/@twchicken_fish" 
+                  target="_blank"
+                  className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4 transition-all hover:shadow-md hover:border-primary/20 group"
+                >
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 448 512"
+                      className="h-6 w-6 fill-current"
+                    >
+                      <path d="M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z" />
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-foreground">TikTok</p>
+                    <p className="text-muted-foreground group-hover:text-primary transition-colors">@twchicken_fish</p>
+                  </div>
+                </Link>
               </div>
             </div>
           </div>
