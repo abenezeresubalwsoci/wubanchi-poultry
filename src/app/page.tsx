@@ -31,6 +31,28 @@ export default function Home() {
   const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
   const { data: settings } = useDoc(settingsRef);
 
+  // Core Values Data
+  const coreValues = [
+    { 
+      title: "Quality and Safety", 
+      desc: "We adhere to the highest international standards for food safety and animal welfare, ensuring every product is healthy and safe for your family." 
+    },
+    { 
+      title: "Sustainability & Eco-Friendliness", 
+      desc: "Our integrated farming practices minimize waste and protect the local environment of Bahir Dar for future generations." 
+    },
+    { 
+      title: "Social Impact & Inclusivity", 
+      desc: "We actively empower local smallholder farmers and create meaningful job opportunities within our community." 
+    },
+    { 
+      title: "Integrity & Accessibility", 
+      desc: "We believe in fair pricing, transparency in our farming methods, and making premium nutrition accessible to everyone." 
+    }
+  ];
+
+  const [selectedValue, setSelectedValue] = useState<string | null>(null);
+
   // Carousel Logic
   const heroSlides = useMemo(() => {
     const list: HeroSlide[] = [];
@@ -357,12 +379,25 @@ export default function Home() {
                   <Sparkles className="h-5 w-5" />
                   <h4>Our Core Values</h4>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                  {["Quality and Safety", "Sustainability & Eco-Friendliness", "Social Impact & Inclusivity", "Integrity & Accessibility"].map((value) => (
-                    <div key={value} className="bg-white px-4 py-2 rounded-full text-xs font-bold border shadow-sm text-muted-foreground">
-                      {value}
+                <div className="space-y-4">
+                  <div className="flex flex-wrap gap-3">
+                    {coreValues.map((value) => (
+                      <button 
+                        key={value.title} 
+                        onClick={() => setSelectedValue(selectedValue === value.title ? null : value.title)}
+                        className={`px-4 py-2 rounded-full text-xs font-bold border shadow-sm transition-all active:scale-95 ${selectedValue === value.title ? 'bg-primary text-white border-primary' : 'bg-white text-muted-foreground hover:bg-primary/5'}`}
+                      >
+                        {value.title}
+                      </button>
+                    ))}
+                  </div>
+                  {selectedValue && (
+                    <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <p className="text-sm text-muted-foreground italic">
+                        {coreValues.find(v => v.title === selectedValue)?.desc}
+                      </p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
