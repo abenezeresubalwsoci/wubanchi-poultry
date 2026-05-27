@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Plus, Send, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Plus, Send, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useCollection, useFirestore, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, addDoc, serverTimestamp, doc } from "firebase/firestore";
@@ -26,8 +26,27 @@ export default function Home() {
   const { data: settings } = useDoc(settingsRef);
 
   const fallbackHero = PlaceHolderImages.find(img => img.id === 'hero-farm');
-  const heroImageUrl = settings?.heroImageUrl || fallbackHero?.imageUrl;
   
+  // Carousel Logic
+  const heroImages = useMemo(() => {
+    const list = [];
+    if (settings?.heroImageUrl) list.push(settings.heroImageUrl);
+    list.push(fallbackHero?.imageUrl || '');
+    // Add a few more placeholders for variety if needed
+    list.push(PlaceHolderImages.find(img => img.id === 'farm-story')?.imageUrl || '');
+    return list.filter(Boolean);
+  }, [settings?.heroImageUrl, fallbackHero]);
+
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+
+  useEffect(() => {
+    if (heroImages.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length);
+    }, 8000); // 8 seconds as requested
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
+
   const newsQuery = useMemo(() => query(
     collection(db, 'news'), 
     orderBy('createdAt', 'desc'), 
@@ -108,25 +127,43 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-12 pb-16 animate-in fade-in duration-700">
-      {/* Hero Section */}
+      {/* Hero Section Carousel */}
       <section className="relative h-[250px] w-full overflow-hidden">
-        {heroImageUrl && (
-          <Image
-            src={heroImageUrl}
-            alt="Wubanchi Farm Hero"
-            fill
-            className="object-cover transition-transform duration-1000 hover:scale-105"
-            priority
-            data-ai-hint="poultry farm"
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
-        <div className="container relative mx-auto flex h-full flex-col justify-center px-4 md:px-8">
+        {heroImages.map((url, idx) => (
+          <div 
+            key={url + idx}
+            className={`absolute inset-0 transition-opacity duration-[2000ms] ease-in-out ${idx === currentHeroIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+          >
+            <Image
+              src={url}
+              alt={`Wubanchi Farm Hero ${idx + 1}`}
+              fill
+              className="object-cover"
+              priority={idx === 0}
+              data-ai-hint="poultry farm"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+          </div>
+        ))}
+        
+        <div className="container relative mx-auto flex h-full flex-col justify-center px-4 md:px-8 z-20">
           <div className="max-w-2xl space-y-6 text-white animate-in fade-in slide-in-from-left-8 duration-1000">
             <h1 className="text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
               Welcome to <span className="text-primary">Wubanchi</span> Poultry <span className="text-accent">Farming</span>
             </h1>
+            <p className="text-lg opacity-90 max-w-md hidden sm:block">Experience the freshest poultry products in Bahir Dar, raised with love and expertise.</p>
           </div>
+        </div>
+
+        {/* Carousel Indicators */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-30">
+          {heroImages.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentHeroIndex(idx)}
+              className={`h-1.5 rounded-full transition-all duration-500 ${idx === currentHeroIndex ? 'w-8 bg-primary' : 'w-2 bg-white/40'}`}
+            />
+          ))}
         </div>
       </section>
 
@@ -152,7 +189,7 @@ export default function Home() {
                </div>
              ) : newsItems?.length ? (
                newsItems.map((item: any, idx: number) => (
-                 <Card key={item.id} className={`border-none bg-card shadow-lg hover:shadow-xl transition-all cursor-pointer group animate-in fade-in slide-in-from-bottom-4 duration-500 delay-[${idx * 100}ms]`}>
+                 <Card key={item.id} className="border-none bg-card shadow-lg hover:shadow-xl transition-all cursor-pointer group animate-in fade-in slide-in-from-bottom-4 duration-500">
                    <CardContent className="p-6 flex justify-between items-center">
                       <div className="space-y-1">
                         <p className="text-xs font-bold text-primary uppercase tracking-wider">{item.date}</p>
@@ -215,7 +252,7 @@ export default function Home() {
               const imgHint = PlaceHolderImages.find(img => img.id === product.imageId)?.imageHint || 'poultry product';
               
               return (
-                <Link key={product.id} href={`/products/${product.id}`} className={`block animate-in fade-in zoom-in-95 duration-500 delay-[${idx * 150}ms]`}>
+                <Link key={product.id} href={`/products/${product.id}`} className="block animate-in fade-in zoom-in-95 duration-500">
                   <Card className="relative group overflow-hidden border-none bg-white rounded-3xl transition-all hover:shadow-2xl h-full hover:-translate-y-1">
                     {/* Heart Icon - Top Right */}
                     <button className="absolute right-4 top-4 z-10 text-destructive/80 transition-transform hover:scale-125 duration-300" onClick={(e) => e.preventDefault()}>

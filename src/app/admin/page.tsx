@@ -10,12 +10,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, AlertTriangle, MessageSquare } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, AlertTriangle, MessageSquare, Sparkles, Bird } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { firebaseConfig } from '@/firebase/config';
+import { generateFarmHero } from '@/ai/flows/generate-image-flow';
+import Image from 'next/image';
 
 export default function AdminDashboard() {
   const db = useFirestore();
@@ -50,6 +52,8 @@ export default function AdminDashboard() {
   const [logoUrl, setLogoUrl] = useState('');
   const [heroImageUrl, setHeroImageUrl] = useState('');
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('Sunrise over a modern poultry farm with free-range chickens');
 
   useEffect(() => {
     if (settings?.logoUrl) setLogoUrl(settings.logoUrl);
@@ -69,6 +73,20 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     toast({ title: "Signed Out", description: "You have been logged out." });
+  };
+
+  const handleGenerateAIHero = async () => {
+    if (!aiPrompt.trim()) return;
+    setIsGeneratingAI(true);
+    try {
+      const result = await generateFarmHero({ prompt: aiPrompt });
+      setHeroImageUrl(result.imageUrl);
+      toast({ title: "AI Image Generated", description: "You can now save this as your new hero image." });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Generation Failed", description: "AI could not generate the image right now." });
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   const handleProductImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -204,20 +222,17 @@ export default function AdminDashboard() {
   if (!isAuthenticated) {
     return (
       <div className="flex min-h-[80vh] flex-col items-center justify-center px-4 gap-6 animate-in fade-in duration-700">
-        {isPlaceholderConfig && (
-          <Card className="w-full max-w-md border-destructive/50 bg-destructive/5 animate-bounce">
-            <CardContent className="p-4 flex items-center gap-3 text-destructive">
-              <AlertTriangle className="h-5 w-5 shrink-0" />
-              <p className="text-sm font-medium">Warning: Firebase is not configured.</p>
-            </CardContent>
-          </Card>
-        )}
         <Card className="w-full max-w-md border-none shadow-2xl bg-card transition-all hover:shadow-primary/10">
-          <CardHeader className="text-center space-y-2">
-            <div className="mx-auto rounded-full bg-primary/10 p-3 w-fit text-primary animate-in zoom-in-75 duration-700">
-              <Lock className="h-6 w-6" />
+          <CardHeader className="text-center space-y-4">
+            <div className="mx-auto rounded-full bg-primary/10 p-4 w-fit text-primary animate-in zoom-in-75 duration-700">
+               {logoUrl ? (
+                 <div className="relative h-12 w-12 rounded-full overflow-hidden">
+                   <img src={logoUrl} className="h-full w-full object-cover" />
+                 </div>
+               ) : <Lock className="h-8 w-8" />}
             </div>
             <CardTitle className="text-2xl font-bold">Admin Portal</CardTitle>
+            <CardDescription>Secure access for farm managers</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -240,7 +255,14 @@ export default function AdminDashboard() {
   return (
     <div className="container mx-auto px-4 py-12 md:px-8 animate-in fade-in duration-500">
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-4xl font-bold animate-in slide-in-from-left-4 duration-700">Admin Dashboard</h1>
+        <div className="flex items-center gap-4">
+          {logoUrl && (
+            <div className="h-12 w-12 rounded-full overflow-hidden border-2 border-primary/20 shadow-md">
+              <img src={logoUrl} className="h-full w-full object-cover" />
+            </div>
+          )}
+          <h1 className="text-4xl font-bold">Admin Dashboard</h1>
+        </div>
         <Button variant="outline" onClick={handleLogout} className="gap-2 rounded-full transition-all active:scale-90">
           <LogOut className="h-4 w-4" /> Sign Out
         </Button>
@@ -256,61 +278,38 @@ export default function AdminDashboard() {
 
         <TabsContent value="products" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid gap-6 md:grid-cols-3">
-            <Card className="md:col-span-1 border-none bg-card shadow-sm h-fit transition-all hover:shadow-md">
+            <Card className="md:col-span-1 border-none bg-card shadow-sm h-fit">
               <CardHeader><CardTitle>Add Product</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2"><Label>Name</Label><Input value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} className="transition-all focus:ring-1 focus:ring-primary/20" /></div>
+                <div className="space-y-2"><Label>Name</Label><Input value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} /></div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label>Price</Label><Input type="number" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} className="transition-all focus:ring-1 focus:ring-primary/20" /></div>
+                  <div className="space-y-2"><Label>Price</Label><Input type="number" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} /></div>
                   <div className="space-y-2"><Label>Category</Label>
-                    <select className="w-full h-10 rounded-md border p-2 bg-background text-sm transition-all focus:ring-1 focus:ring-primary/20" value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}><option>Eggs</option><option>Meat</option><option>Feed</option><option>Chicks</option></select>
+                    <select className="w-full h-10 rounded-md border p-2 bg-background text-sm" value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}><option>Eggs</option><option>Meat</option><option>Feed</option><option>Chicks</option></select>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
                   <Label>Product Image</Label>
-                  <div className="flex items-center gap-4">
-                    <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 w-full transition-all active:scale-95">
-                      <Upload className="h-4 w-4" />
-                      Upload From Device
-                      <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleProductImageUpload} />
-                    </Button>
-                  </div>
-                  {newProduct.imageUrl && (
-                    <div className="mt-2 relative h-32 w-full rounded-md border overflow-hidden animate-in zoom-in-95">
-                      <img src={newProduct.imageUrl} className="h-full w-full object-cover" />
-                      <Button 
-                        variant="destructive" 
-                        size="icon" 
-                        className="absolute top-1 right-1 h-6 w-6 transition-all active:scale-75" 
-                        onClick={() => setNewProduct(prev => ({...prev, imageUrl: ''}))}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-                  <div className="pt-2">
-                    <Label className="text-[10px] uppercase text-muted-foreground">Or Select Placeholder</Label>
-                    <select className="w-full h-10 rounded-md border p-2 bg-background text-sm mt-1 transition-all focus:ring-1 focus:ring-primary/20" value={newProduct.imageId} onChange={e => setNewProduct({...newProduct, imageId: e.target.value})}>
-                      {PlaceHolderImages.map(img => (
-                        <option key={img.id} value={img.id}>{img.description}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 w-full">
+                    <Upload className="h-4 w-4" /> Upload
+                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleProductImageUpload} />
+                  </Button>
+                  {newProduct.imageUrl && <div className="mt-2 h-32 w-full rounded-md border overflow-hidden"><img src={newProduct.imageUrl} className="h-full w-full object-cover" /></div>}
                 </div>
 
                 <Button onClick={handleAddProduct} className="w-full gap-2 font-bold transition-all active:scale-95"><Plus className="h-4 w-4" /> Add Product</Button>
               </CardContent>
             </Card>
-            <Card className="md:col-span-2 border-none bg-card shadow-sm overflow-hidden transition-all hover:shadow-md">
+            <Card className="md:col-span-2 border-none bg-card shadow-sm overflow-hidden">
               <Table>
                 <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Price</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {products?.map((p: any) => (
-                    <TableRow key={p.id} className="animate-in fade-in duration-300">
+                    <TableRow key={p.id}>
                       <TableCell className="font-medium">{p.name}</TableCell>
                       <TableCell>ETB {p.price.toFixed(2)}</TableCell>
-                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('products', p.id)} className="transition-all active:scale-75 hover:bg-destructive/10"><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
+                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('products', p.id)} className="hover:bg-destructive/10"><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -320,7 +319,7 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="news" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="grid gap-6 md:grid-cols-3">
+           <div className="grid gap-6 md:grid-cols-3">
             <Card className="md:col-span-1 border-none bg-card shadow-sm h-fit">
               <CardHeader><CardTitle>Post News</CardTitle></CardHeader>
               <CardContent className="space-y-4">
@@ -331,7 +330,7 @@ export default function AdminDashboard() {
             </Card>
             <Card className="md:col-span-2 border-none bg-card shadow-sm">
                 <Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Title</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
-                  <TableBody>{news?.map((n: any) => (<TableRow key={n.id} className="animate-in fade-in duration-300"><TableCell className="text-xs">{n.date}</TableCell><TableCell className="font-medium">{n.title}</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('news', n.id)} className="transition-all active:scale-75"><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell></TableRow>))}</TableBody>
+                  <TableBody>{news?.map((n: any) => (<TableRow key={n.id}><TableCell className="text-xs">{n.date}</TableCell><TableCell className="font-medium">{n.title}</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('news', n.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell></TableRow>))}</TableBody>
                 </Table>
             </Card>
           </div>
@@ -345,10 +344,10 @@ export default function AdminDashboard() {
                 <TableHeader><TableRow><TableHead>Customer</TableHead><TableHead>Comment</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {feedback?.map((f: any) => (
-                    <TableRow key={f.id} className="animate-in fade-in duration-300">
+                    <TableRow key={f.id}>
                       <TableCell><div className="font-bold">{f.name}</div><div className="text-xs text-muted-foreground">{f.email}</div></TableCell>
                       <TableCell className="max-w-md truncate">"{f.comment}"</TableCell>
-                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('feedback', f.id)} className="transition-all active:scale-75"><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
+                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('feedback', f.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -359,42 +358,69 @@ export default function AdminDashboard() {
 
         <TabsContent value="settings" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid gap-6 md:grid-cols-2">
-            <Card className="border-none bg-card shadow-sm transition-all hover:shadow-md">
+            <Card className="border-none bg-card shadow-sm h-fit">
               <CardHeader><CardTitle>Logo Management</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 transition-all active:scale-95">
-                    {isSavingSettings ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    Upload Logo
-                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleFileUpload('logo')} disabled={isSavingSettings} />
+                  <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2">
+                    <Upload className="h-4 w-4" /> Upload Logo
+                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleFileUpload('logo')} />
                   </Button>
-                  {logoUrl && <div className="h-10 w-10 rounded border overflow-hidden animate-in zoom-in-75"><img src={logoUrl} className="h-full w-full object-contain" /></div>}
+                  {logoUrl && <div className="h-12 w-12 rounded border overflow-hidden shadow-sm"><img src={logoUrl} className="h-full w-full object-contain" /></div>}
                 </div>
-                <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="Logo URL" disabled={isSavingSettings} className="transition-all focus:ring-1 focus:ring-primary/20" />
+                <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="Logo URL" />
               </CardContent>
             </Card>
 
-            <Card className="border-none bg-card shadow-sm transition-all hover:shadow-md">
-              <CardHeader><CardTitle>Hero Image Management</CardTitle></CardHeader>
+            <Card className="border-none bg-card shadow-sm h-fit">
+              <CardHeader><CardTitle>Hero Image Generator</CardTitle><CardDescription>Create a custom hero image using AI</CardDescription></CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 transition-all active:scale-95">
-                    {isSavingSettings ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    Upload Hero
-                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleFileUpload('hero')} disabled={isSavingSettings} />
-                  </Button>
-                  {heroImageUrl && <div className="h-10 w-20 rounded border overflow-hidden animate-in zoom-in-75"><img src={heroImageUrl} className="h-full w-full object-cover" /></div>}
+                <div className="space-y-2">
+                  <Label>AI Generation Prompt</Label>
+                  <Input 
+                    value={aiPrompt} 
+                    onChange={e => setAiPrompt(e.target.value)} 
+                    placeholder="E.g., Sunrise over a poultry farm..." 
+                  />
                 </div>
-                <Input value={heroImageUrl} onChange={e => setHeroImageUrl(e.target.value)} placeholder="Hero Image URL" disabled={isSavingSettings} className="transition-all focus:ring-1 focus:ring-primary/20" />
+                <Button 
+                  onClick={handleGenerateAIHero} 
+                  disabled={isGeneratingAI}
+                  variant="accent"
+                  className="w-full gap-2 font-bold"
+                >
+                  {isGeneratingAI ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  Generate Hero with AI
+                </Button>
+                {heroImageUrl && (
+                  <div className="mt-4 relative h-40 w-full rounded-lg overflow-hidden border-4 border-white shadow-xl">
+                    <img src={heroImageUrl} className="h-full w-full object-cover" />
+                    <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded">AI Preview</div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            <div className="md:col-span-2">
-              <Button onClick={handleUpdateSettings} className="w-full py-6 text-lg transition-all active:scale-[0.98] shadow-lg" disabled={isSavingSettings}>
-                {isSavingSettings ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Settings className="h-5 w-5 mr-2" />}
-                Save All Branding Settings
-              </Button>
-            </div>
+            <Card className="md:col-span-2 border-none bg-card shadow-sm">
+              <CardHeader><CardTitle>Branding Review</CardTitle></CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex flex-col md:flex-row gap-8">
+                  <div className="flex-1 space-y-2">
+                    <Label>Current Hero URL</Label>
+                    <Input value={heroImageUrl} onChange={e => setHeroImageUrl(e.target.value)} placeholder="Hero Image URL" />
+                  </div>
+                  <div className="w-full md:w-1/3 flex items-center justify-center bg-muted rounded-xl p-4">
+                     {heroImageUrl ? (
+                       <img src={heroImageUrl} className="max-h-32 rounded shadow" />
+                     ) : <div className="text-muted-foreground text-sm flex flex-col items-center"><ImageIcon className="h-8 w-8 mb-2 opacity-20" /> No Hero Set</div>}
+                  </div>
+                </div>
+                <Button onClick={handleUpdateSettings} className="w-full py-6 text-lg font-bold shadow-lg" disabled={isSavingSettings}>
+                  {isSavingSettings ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Settings className="h-5 w-5 mr-2" />}
+                  Save All Branding Changes
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
