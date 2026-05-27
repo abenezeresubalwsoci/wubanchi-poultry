@@ -31,7 +31,8 @@ import {
   Construction,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  Copy
 } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useCollection, useFirestore, useDoc } from "@/firebase";
@@ -195,6 +196,11 @@ export default function Home() {
     
     localStorage.setItem('wubanchi_cart', JSON.stringify(cart));
     toast({ title: "Added to Basket", description: `${product.name} ready for checkout.` });
+  };
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied!", description: `Phone number ${text} copied to clipboard.` });
   };
 
   return (
@@ -509,13 +515,28 @@ export default function Home() {
                   <h4>Quick Contact</h4>
                 </div>
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
-                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-start gap-4 h-full">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
                       <Phone className="h-6 w-6" />
                     </div>
-                    <div className="text-left">
+                    <div className="text-left space-y-2">
                       <p className="text-sm font-bold text-foreground">Call Us</p>
-                      <p className="text-muted-foreground">+251 911 123 456</p>
+                      <div className="flex flex-col gap-1">
+                        {['+251932224193', '+251920774757', '+251969058626'].map((num) => (
+                          <div key={num} className="flex items-center gap-2 group/num">
+                            <a href={`tel:${num}`} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                              {num}
+                            </a>
+                            <button 
+                              onClick={() => handleCopy(num)}
+                              className="p-1 rounded-md hover:bg-muted opacity-0 group-hover/num:opacity-100 transition-opacity"
+                              title="Copy to clipboard"
+                            >
+                              <Copy className="h-3 w-3 text-muted-foreground" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                   <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4">
@@ -533,7 +554,7 @@ export default function Home() {
                     </div>
                     <div className="text-left">
                       <p className="text-sm font-bold text-foreground">Address</p>
-                      <p className="text-muted-foreground">Bahir Dar, Ethiopia, Bahir Dar Kebele 05 & 08, and Gonder, Ethiopia, Gondar- Piassa Sub City, Coming soon in Gorgora and Lalibela</p>
+                      <p className="text-muted-foreground text-xs leading-relaxed">Bahir Dar, Ethiopia, Bahir Dar Kebele 05 & 08, and Gonder, Ethiopia, Gondar- Piassa Sub City, Coming soon in Gorgora and Lalibela</p>
                     </div>
                   </div>
                   <Link 
