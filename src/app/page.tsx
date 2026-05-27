@@ -347,7 +347,7 @@ export default function Home() {
                   </div>
                   <h4 className="font-bold text-xl">Our Vision</h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    To become Ethiopia's benchmark for regenerative poultry farming, recognized for exceptional quality and ethical animal welfare.
+                    To be the leading and most trusted integrated farming enterprise in BahirDar, ensuring food security by delivering high-quality, sustainably produced poultry and fish products to every household.
                   </p>
                 </div>
               </div>
