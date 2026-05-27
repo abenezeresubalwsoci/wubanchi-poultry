@@ -10,7 +10,29 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Plus, Send, CheckCircle2, Bird, History, Target, Eye, Sparkles, Users } from "lucide-react";
+import { 
+  ArrowRight, 
+  Egg, 
+  ShoppingBasket, 
+  Heart, 
+  ShieldCheck, 
+  Newspaper, 
+  Loader2, 
+  MessageSquare, 
+  Plus, 
+  Send, 
+  CheckCircle2, 
+  Bird, 
+  History, 
+  Target, 
+  Eye, 
+  Sparkles, 
+  Users,
+  Construction,
+  Phone,
+  Mail,
+  MapPin
+} from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useCollection, useFirestore, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, addDoc, serverTimestamp, doc } from "firebase/firestore";
@@ -241,7 +263,7 @@ export default function Home() {
                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
                </div>
              ) : newsItems?.length ? (
-               newsItems.map((item: any, idx: number) => (
+               newsItems.map((item: any) => (
                  <Card key={item.id} className="border-none bg-card shadow-lg hover:shadow-xl transition-all cursor-pointer group animate-in fade-in slide-in-from-bottom-4 duration-500">
                    <CardContent className="p-6 flex justify-between items-center">
                       <div className="space-y-1">
@@ -300,7 +322,7 @@ export default function Home() {
           </div>
         ) : featuredProducts?.length ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:gap-8">
-            {featuredProducts.map((product: any, idx: number) => {
+            {featuredProducts.map((product: any) => {
               const displayImageUrl = product.imageUrl || (PlaceHolderImages.find(img => img.id === product.imageId)?.imageUrl) || PlaceHolderImages[0].imageUrl;
               const imgHint = PlaceHolderImages.find(img => img.id === product.imageId)?.imageHint || 'poultry product';
               
@@ -450,7 +472,7 @@ export default function Home() {
               {/* Operations & Facilities Section */}
               <div className="space-y-8 pt-8 border-t border-primary/10">
                 <div className="flex items-center gap-2 text-primary font-bold">
-                  <Target className="h-5 w-5" />
+                  <Construction className="h-5 w-5" />
                   <h4>Operations & Facilities</h4>
                 </div>
                 {facilitiesLoading ? (
@@ -466,7 +488,7 @@ export default function Home() {
                             <div className="h-full w-full bg-muted flex items-center justify-center text-muted-foreground"><Construction className="h-8 w-8" /></div>
                           )}
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2 text-left">
                           <h5 className="font-bold text-lg">{f.name}</h5>
                           <p className="text-sm text-muted-foreground">
                             {f.description}
@@ -476,43 +498,36 @@ export default function Home() {
                     ))}
                   </div>
                 ) : (
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex flex-col md:flex-row gap-6 items-center transition-all hover:shadow-md">
-                      <div className="relative h-32 w-full md:w-32 rounded-2xl overflow-hidden shrink-0">
-                        <Image 
-                          src={PlaceHolderImages.find(img => img.id === 'waste-recycling')?.imageUrl || ''} 
-                          alt="Waste Recycling" 
-                          fill 
-                          className="object-cover"
-                          data-ai-hint="waste recycling"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <h5 className="font-bold text-lg">Waste Recycling Area</h5>
-                        <p className="text-sm text-muted-foreground">
-                          Our eco-friendly waste management system focuses on sustainability, transforming farm byproducts into valuable organic resources.
-                        </p>
-                      </div>
+                  <p className="text-xs text-muted-foreground italic">Operational areas coming soon.</p>
+                )}
+              </div>
+
+              {/* Quick Contact Section */}
+              <div className="space-y-8 pt-8 border-t border-primary/10">
+                <div className="flex items-center gap-2 text-primary font-bold">
+                  <Phone className="h-5 w-5" />
+                  <h4>Quick Contact</h4>
+                </div>
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <Phone className="h-6 w-6" />
                     </div>
-                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex flex-col md:flex-row gap-6 items-center transition-all hover:shadow-md">
-                      <div className="relative h-32 w-full md:w-32 rounded-2xl overflow-hidden shrink-0">
-                        <Image 
-                          src={PlaceHolderImages.find(img => img.id === 'production-store')?.imageUrl || ''} 
-                          alt="Production Store" 
-                          fill 
-                          className="object-cover"
-                          data-ai-hint="warehouse storage"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <h5 className="font-bold text-lg">Production Store Area</h5>
-                        <p className="text-sm text-muted-foreground">
-                          Our modern storage facilities are designed to maintain the highest hygiene standards and preserve the quality of our farm products.
-                        </p>
-                      </div>
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-foreground">Call Us</p>
+                      <p className="text-muted-foreground">+251 911 123 456</p>
                     </div>
                   </div>
-                )}
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <Mail className="h-6 w-6" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-foreground">Email Us</p>
+                      <p className="text-muted-foreground">contact@wubanchi.com</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <Button asChild className="rounded-full px-8 h-14 text-lg font-bold group shadow-xl">
