@@ -358,7 +358,7 @@ export default function Home() {
                   <h4>Our Core Values</h4>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  {["Integrity", "Sustainability", "Quality", "Community First", "Animal Welfare", "Transparency"].map((value) => (
+                  {["Quality and Safety", "Sustainability & Eco-Friendliness", "Social Impact & Inclusivity", "Integrity & Accessibility"].map((value) => (
                     <div key={value} className="bg-white px-4 py-2 rounded-full text-xs font-bold border shadow-sm text-muted-foreground">
                       {value}
                     </div>
