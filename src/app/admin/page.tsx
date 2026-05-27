@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -79,6 +78,48 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     toast({ title: "Signed Out", description: "You have been logged out." });
+  };
+
+  const handleAddProduct = () => {
+    if (!newProduct.name || !newProduct.price) return;
+    const data = {
+      ...newProduct,
+      price: parseFloat(newProduct.price),
+      createdAt: serverTimestamp()
+    };
+    addDoc(collection(db, 'products'), data)
+      .then(() => {
+        setNewProduct({ name: '', price: '', category: 'Eggs', description: '', imageId: 'organic-eggs', imageUrl: '' });
+        toast({ title: "Product Added" });
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'products',
+          operation: 'create',
+          requestResourceData: data
+        }));
+      });
+  };
+
+  const handleAddNews = () => {
+    if (!newNews.title) return;
+    const data = {
+      ...newNews,
+      date: new Date().toLocaleDateString('en-GB'),
+      createdAt: serverTimestamp()
+    };
+    addDoc(collection(db, 'news'), data)
+      .then(() => {
+        setNewNews({ title: '', desc: '', content: '' });
+        toast({ title: "News Posted" });
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'news',
+          operation: 'create',
+          requestResourceData: data
+        }));
+      });
   };
 
   const handleGenerateAIHero = async () => {
@@ -238,7 +279,6 @@ export default function AdminDashboard() {
         </TabsList>
 
         <TabsContent value="products" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* ... existing products content ... */}
           <div className="grid gap-6 md:grid-cols-3">
             <Card className="md:col-span-1 border-none bg-card shadow-sm h-fit">
               <CardHeader><CardTitle>Add Product</CardTitle></CardHeader>
@@ -272,7 +312,7 @@ export default function AdminDashboard() {
                   {products?.map((p: any) => (
                     <TableRow key={p.id}>
                       <TableCell className="font-medium">{p.name}</TableCell>
-                      <TableCell>ETB {p.price.toFixed(2)}</TableCell>
+                      <TableCell>ETB {parseFloat(p.price || 0).toFixed(2)}</TableCell>
                       <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('products', p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
                   ))}
