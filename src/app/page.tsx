@@ -338,7 +338,7 @@ export default function Home() {
                   </div>
                   <h4 className="font-bold text-xl">Our Mission</h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    To deliver premium, organic poultry products while fostering sustainable farming practices that empower our local Bahir Dar community.
+                    Our mission is to provide nutritious, safe, and affordable poultry and fish products through innovative and eco-friendly integrated farming practices. We commit to empowering smallholder farmers through training and market linkages, creating jobs, and contributing to the global fight against hunger and poverty.
                   </p>
                 </div>
                 <div className="space-y-3">
