@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, AlertTriangle, MessageSquare, Sparkles, Bird } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, AlertTriangle, MessageSquare, Sparkles, Bird, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -22,8 +22,6 @@ import Image from 'next/image';
 export default function AdminDashboard() {
   const db = useFirestore();
   const { toast } = useToast();
-
-  const isPlaceholderConfig = firebaseConfig.projectId === 'placeholder-project-id';
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
@@ -50,14 +48,16 @@ export default function AdminDashboard() {
   const [newNews, setNewNews] = useState({ title: '', desc: '', content: '' });
   
   const [logoUrl, setLogoUrl] = useState('');
-  const [heroImageUrl, setHeroImageUrl] = useState('');
+  const [heroImages, setHeroImages] = useState<string[]>([]);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('Sunrise over a modern poultry farm with free-range chickens');
+  const [manualUrl, setManualUrl] = useState('');
 
   useEffect(() => {
     if (settings?.logoUrl) setLogoUrl(settings.logoUrl);
-    if (settings?.heroImageUrl) setHeroImageUrl(settings.heroImageUrl);
+    if (settings?.heroImages) setHeroImages(settings.heroImages);
+    else if (settings?.heroImageUrl) setHeroImages([settings.heroImageUrl]);
   }, [settings]);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -80,13 +80,25 @@ export default function AdminDashboard() {
     setIsGeneratingAI(true);
     try {
       const result = await generateFarmHero({ prompt: aiPrompt });
-      setHeroImageUrl(result.imageUrl);
-      toast({ title: "AI Image Generated", description: "You can now save this as your new hero image." });
+      setHeroImages(prev => [...prev, result.imageUrl]);
+      toast({ title: "AI Image Generated", description: "Image added to carousel collection." });
     } catch (error) {
       toast({ variant: "destructive", title: "Generation Failed", description: "AI could not generate the image right now." });
     } finally {
       setIsGeneratingAI(false);
     }
+  };
+
+  const handleAddManualUrl = () => {
+    if (!manualUrl.trim()) return;
+    setHeroImages(prev => [...prev, manualUrl.trim()]);
+    setManualUrl('');
+    toast({ title: "Image URL Added" });
+  };
+
+  const handleRemoveHeroImage = (index: number) => {
+    setHeroImages(prev => prev.filter((_, i) => i !== index));
+    toast({ title: "Image Removed", variant: "destructive" });
   };
 
   const handleProductImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,13 +163,13 @@ export default function AdminDashboard() {
     setIsSavingSettings(true);
     const data = { 
       logoUrl, 
-      heroImageUrl,
+      heroImages,
       updatedAt: serverTimestamp() 
     };
     
     setDoc(settingsRef, data, { merge: true })
       .then(() => {
-        toast({ title: "Settings Saved", description: "Branding and Hero updated successfully." });
+        toast({ title: "Settings Saved", description: "Branding and Hero Carousel updated successfully." });
       })
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -178,28 +190,12 @@ export default function AdminDashboard() {
         toast({ variant: "destructive", title: "File too large", description: "Please use an image smaller than 800KB." });
         return;
       }
-      setIsSavingSettings(true);
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
         if (type === 'logo') setLogoUrl(base64String);
-        else setHeroImageUrl(base64String);
-        
-        const data = { [type === 'logo' ? 'logoUrl' : 'heroImageUrl']: base64String, updatedAt: serverTimestamp() };
-        setDoc(settingsRef, data, { merge: true })
-          .then(() => {
-            toast({ title: `${type.charAt(0).toUpperCase() + type.slice(1)} Uploaded` });
-          })
-          .catch(async (error) => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: settingsRef.path,
-              operation: 'update',
-              requestResourceData: { [type === 'logo' ? 'logoUrl' : 'heroImageUrl']: 'base64_data' }
-            }));
-          })
-          .finally(() => {
-            setIsSavingSettings(false);
-          });
+        else setHeroImages(prev => [...prev, base64String]);
+        toast({ title: "Image Uploaded", description: "Don't forget to save your changes." });
       };
       reader.readAsDataURL(file);
     }
@@ -373,7 +369,7 @@ export default function AdminDashboard() {
             </Card>
 
             <Card className="border-none bg-card shadow-sm h-fit">
-              <CardHeader><CardTitle>Hero Image Generator</CardTitle><CardDescription>Create a custom hero image using AI</CardDescription></CardHeader>
+              <CardHeader><CardTitle>Hero Image Generator</CardTitle><CardDescription>Create custom hero images using AI</CardDescription></CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>AI Generation Prompt</Label>
@@ -390,33 +386,55 @@ export default function AdminDashboard() {
                   className="w-full gap-2 font-bold"
                 >
                   {isGeneratingAI ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  Generate Hero with AI
+                  Generate & Add to Carousel
                 </Button>
-                {heroImageUrl && (
-                  <div className="mt-4 relative h-40 w-full rounded-lg overflow-hidden border-4 border-white shadow-xl">
-                    <img src={heroImageUrl} className="h-full w-full object-cover" />
-                    <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded">AI Preview</div>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
             <Card className="md:col-span-2 border-none bg-card shadow-sm">
-              <CardHeader><CardTitle>Branding Review</CardTitle></CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex flex-col md:flex-row gap-8">
-                  <div className="flex-1 space-y-2">
-                    <Label>Current Hero URL</Label>
-                    <Input value={heroImageUrl} onChange={e => setHeroImageUrl(e.target.value)} placeholder="Hero Image URL" />
-                  </div>
-                  <div className="w-full md:w-1/3 flex items-center justify-center bg-muted rounded-xl p-4">
-                     {heroImageUrl ? (
-                       <img src={heroImageUrl} className="max-h-32 rounded shadow" />
-                     ) : <div className="text-muted-foreground text-sm flex flex-col items-center"><ImageIcon className="h-8 w-8 mb-2 opacity-20" /> No Hero Set</div>}
-                  </div>
+              <CardHeader><CardTitle>Branding & Carousel Review</CardTitle><CardDescription>Manage all images displayed in your home page hero section</CardDescription></CardHeader>
+              <CardContent className="space-y-8">
+                <div className="grid gap-6 md:grid-cols-2">
+                   <div className="space-y-4">
+                      <Label className="text-lg font-bold">Add Image URL</Label>
+                      <div className="flex gap-2">
+                        <Input value={manualUrl} onChange={e => setManualUrl(e.target.value)} placeholder="https://..." />
+                        <Button onClick={handleAddManualUrl} variant="outline" size="icon"><Plus className="h-4 w-4" /></Button>
+                      </div>
+                      <div className="pt-4">
+                        <Label className="text-lg font-bold">Upload Local File</Label>
+                        <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 w-full mt-2">
+                          <Upload className="h-4 w-4" /> Select File
+                          <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleFileUpload('hero')} />
+                        </Button>
+                      </div>
+                   </div>
+
+                   <div className="space-y-4">
+                      <Label className="text-lg font-bold">Current Carousel Collection ({heroImages.length})</Label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {heroImages.map((url, idx) => (
+                          <div key={idx} className="relative group aspect-video rounded-xl overflow-hidden border-2 border-muted shadow-sm hover:shadow-md transition-all">
+                            <img src={url} className="h-full w-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Button variant="destructive" size="icon" className="h-8 w-8 rounded-full" onClick={() => handleRemoveHeroImage(idx)}>
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        {heroImages.length === 0 && (
+                          <div className="col-span-full border-2 border-dashed border-muted rounded-xl p-8 flex flex-col items-center justify-center text-muted-foreground text-sm">
+                            <ImageIcon className="h-8 w-8 mb-2 opacity-20" />
+                            No custom images added
+                          </div>
+                        )}
+                      </div>
+                   </div>
                 </div>
-                <Button onClick={handleUpdateSettings} className="w-full py-6 text-lg font-bold shadow-lg" disabled={isSavingSettings}>
-                  {isSavingSettings ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Settings className="h-5 w-5 mr-2" />}
+
+                <Button onClick={handleUpdateSettings} className="w-full py-6 text-xl font-bold shadow-xl animate-pulse hover:animate-none" disabled={isSavingSettings}>
+                  {isSavingSettings ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <Settings className="h-6 w-6 mr-2" />}
                   Save All Branding Changes
                 </Button>
               </CardContent>

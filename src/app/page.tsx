@@ -30,12 +30,24 @@ export default function Home() {
   // Carousel Logic
   const heroImages = useMemo(() => {
     const list = [];
-    if (settings?.heroImageUrl) list.push(settings.heroImageUrl);
-    list.push(fallbackHero?.imageUrl || '');
-    // Add a few more placeholders for variety if needed
-    list.push(PlaceHolderImages.find(img => img.id === 'farm-story')?.imageUrl || '');
+    
+    // Check for new multiple images array first
+    if (settings?.heroImages && Array.isArray(settings.heroImages) && settings.heroImages.length > 0) {
+      list.push(...settings.heroImages);
+    } 
+    // Fallback to old single image field
+    else if (settings?.heroImageUrl) {
+      list.push(settings.heroImageUrl);
+    }
+    
+    // Always include fallbacks if list is still small
+    if (list.length < 3) {
+      list.push(fallbackHero?.imageUrl || '');
+      list.push(PlaceHolderImages.find(img => img.id === 'farm-story')?.imageUrl || '');
+    }
+    
     return list.filter(Boolean);
-  }, [settings?.heroImageUrl, fallbackHero]);
+  }, [settings?.heroImages, settings?.heroImageUrl, fallbackHero]);
 
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
@@ -43,7 +55,7 @@ export default function Home() {
     if (heroImages.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length);
-    }, 8000); // 8 seconds as requested
+    }, 8000); // 8 seconds carousel
     return () => clearInterval(interval);
   }, [heroImages.length]);
 
