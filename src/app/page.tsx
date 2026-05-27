@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -409,11 +408,11 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Leadership Section */}
+              {/* Management Team Section */}
               <div className="space-y-8 pt-8 border-t border-primary/10">
                 <div className="flex items-center gap-2 text-primary font-bold">
                   <Users className="h-5 w-5" />
-                  <h4>Leadership Team</h4>
+                  <h4>Management Team</h4>
                 </div>
                 {managersLoading ? (
                   <div className="flex justify-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary opacity-20" /></div>
