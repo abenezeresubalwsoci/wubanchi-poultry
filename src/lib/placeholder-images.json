@@ -35,6 +35,18 @@
       "description": "Generations of farmers working together on the farm",
       "imageUrl": "https://picsum.photos/seed/story1/800/500",
       "imageHint": "farmers poultry"
+    },
+    {
+      "id": "waste-recycling",
+      "description": "Environmentally friendly waste recycling system on the farm",
+      "imageUrl": "https://picsum.photos/seed/waste/600/400",
+      "imageHint": "waste recycling"
+    },
+    {
+      "id": "production-store",
+      "description": "Clean and organized production storage facility",
+      "imageUrl": "https://picsum.photos/seed/store/600/400",
+      "imageHint": "warehouse storage"
     }
   ]
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -83,7 +84,7 @@ export default function Home() {
     if (heroSlides.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentHeroIndex((prev) => (prev + 1) % heroSlides.length);
-    }, 8000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [heroSlides.length]);
 
@@ -438,6 +439,50 @@ export default function Home() {
                 ) : (
                   <p className="text-xs text-muted-foreground italic">Management team profiles coming soon.</p>
                 )}
+              </div>
+
+              {/* Operations & Facilities Section */}
+              <div className="space-y-8 pt-8 border-t border-primary/10">
+                <div className="flex items-center gap-2 text-primary font-bold">
+                  <Target className="h-5 w-5" />
+                  <h4>Operations & Facilities</h4>
+                </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex flex-col md:flex-row gap-6 items-center transition-all hover:shadow-md">
+                    <div className="relative h-32 w-full md:w-32 rounded-2xl overflow-hidden shrink-0">
+                      <Image 
+                        src={PlaceHolderImages.find(img => img.id === 'waste-recycling')?.imageUrl || ''} 
+                        alt="Waste Recycling" 
+                        fill 
+                        className="object-cover"
+                        data-ai-hint="waste recycling"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <h5 className="font-bold text-lg">Waste Recycling Area</h5>
+                      <p className="text-sm text-muted-foreground">
+                        Our eco-friendly waste management system focuses on sustainability, transforming farm byproducts into valuable organic resources.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex flex-col md:flex-row gap-6 items-center transition-all hover:shadow-md">
+                    <div className="relative h-32 w-full md:w-32 rounded-2xl overflow-hidden shrink-0">
+                      <Image 
+                        src={PlaceHolderImages.find(img => img.id === 'production-store')?.imageUrl || ''} 
+                        alt="Production Store" 
+                        fill 
+                        className="object-cover"
+                        data-ai-hint="warehouse storage"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <h5 className="font-bold text-lg">Production Store Area</h5>
+                      <p className="text-sm text-muted-foreground">
+                        Our modern storage facilities are designed to maintain the highest hygiene standards and preserve the quality of our farm products.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <Button asChild className="rounded-full px-8 h-14 text-lg font-bold group shadow-xl">
