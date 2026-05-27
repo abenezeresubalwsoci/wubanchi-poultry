@@ -54,6 +54,19 @@
       },
       "required": ["name", "comment"]
     },
+    "Manager": {
+      "title": "Manager",
+      "description": "A management team member",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "role"]
+    },
     "Settings": {
       "title": "Settings",
       "description": "Site-wide configuration",
@@ -93,6 +106,10 @@
     "/feedback/{feedbackId}": {
       "schema": "#/entities/Feedback",
       "description": "Collection of customer feedback"
+    },
+    "/managers/{managerId}": {
+      "schema": "#/entities/Manager",
+      "description": "Collection of management team members"
     },
     "/settings/{settingId}": {
       "schema": "#/entities/Settings",

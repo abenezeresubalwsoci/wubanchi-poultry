@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -8,9 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, AlertTriangle, MessageSquare, Sparkles, Bird, X, Text } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, AlertTriangle, MessageSquare, Sparkles, Bird, X, Text, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -35,6 +37,7 @@ export default function AdminDashboard() {
   const productsQuery = useMemo(() => query(collection(db, 'products'), orderBy('createdAt', 'desc')), [db]);
   const newsQuery = useMemo(() => query(collection(db, 'news'), orderBy('createdAt', 'desc')), [db]);
   const feedbackQuery = useMemo(() => query(collection(db, 'feedback'), orderBy('createdAt', 'desc')), [db]);
+  const managersQuery = useMemo(() => query(collection(db, 'managers'), orderBy('createdAt', 'desc')), [db]);
   
   const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
   const { data: settings } = useDoc(settingsRef);
@@ -42,6 +45,7 @@ export default function AdminDashboard() {
   const { data: products } = useCollection(productsQuery);
   const { data: news } = useCollection(newsQuery);
   const { data: feedback } = useCollection(feedbackQuery);
+  const { data: managers } = useCollection(managersQuery);
 
   const [newProduct, setNewProduct] = useState({ 
     name: '', 
@@ -52,6 +56,7 @@ export default function AdminDashboard() {
     imageUrl: ''
   });
   const [newNews, setNewNews] = useState({ title: '', desc: '', content: '' });
+  const [newManager, setNewManager] = useState({ name: '', role: '', description: '', imageUrl: '' });
   
   const [logoUrl, setLogoUrl] = useState('');
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
@@ -116,6 +121,26 @@ export default function AdminDashboard() {
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: 'news',
+          operation: 'create',
+          requestResourceData: data
+        }));
+      });
+  };
+
+  const handleAddManager = () => {
+    if (!newManager.name || !newManager.role) return;
+    const data = {
+      ...newManager,
+      createdAt: serverTimestamp()
+    };
+    addDoc(collection(db, 'managers'), data)
+      .then(() => {
+        setNewManager({ name: '', role: '', description: '', imageUrl: '' });
+        toast({ title: "Team Member Added" });
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'managers',
           operation: 'create',
           requestResourceData: data
         }));
@@ -189,7 +214,7 @@ export default function AdminDashboard() {
       });
   };
 
-  const handleFileUpload = (type: 'logo' | 'hero') => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (type: 'logo' | 'hero' | 'manager') => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 800000) {
@@ -200,7 +225,8 @@ export default function AdminDashboard() {
       reader.onloadend = () => {
         const base64String = reader.result as string;
         if (type === 'logo') setLogoUrl(base64String);
-        else setHeroSlides(prev => [...prev, { imageUrl: base64String, title: 'Fresh Arrival', subtitle: 'Straight from the farm' }]);
+        else if (type === 'hero') setHeroSlides(prev => [...prev, { imageUrl: base64String, title: 'Fresh Arrival', subtitle: 'Straight from the farm' }]);
+        else if (type === 'manager') setNewManager(prev => ({ ...prev, imageUrl: base64String }));
         toast({ title: "Image Uploaded", description: "Don't forget to save your changes." });
       };
       reader.readAsDataURL(file);
@@ -274,6 +300,7 @@ export default function AdminDashboard() {
         <TabsList className="bg-muted p-1 flex-wrap h-auto animate-in fade-in duration-700 delay-200">
           <TabsTrigger value="products" className="gap-2 transition-all"><Package className="h-4 w-4" /> Products</TabsTrigger>
           <TabsTrigger value="news" className="gap-2 transition-all"><Newspaper className="h-4 w-4" /> News</TabsTrigger>
+          <TabsTrigger value="team" className="gap-2 transition-all"><Users className="h-4 w-4" /> Management Team</TabsTrigger>
           <TabsTrigger value="feedback" className="gap-2 transition-all"><MessageSquare className="h-4 w-4" /> Feedback</TabsTrigger>
           <TabsTrigger value="settings" className="gap-2 transition-all"><Settings className="h-4 w-4" /> Branding</TabsTrigger>
         </TabsList>
@@ -336,6 +363,40 @@ export default function AdminDashboard() {
                 <Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Title</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                   <TableBody>{news?.map((n: any) => (<TableRow key={n.id}><TableCell className="text-xs">{n.date}</TableCell><TableCell className="font-medium">{n.title}</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('news', n.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell></TableRow>))}</TableBody>
                 </Table>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="team" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="grid gap-6 md:grid-cols-3">
+             <Card className="md:col-span-1 border-none bg-card shadow-sm h-fit">
+              <CardHeader><CardTitle>Add Manager</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2"><Label>Name</Label><Input value={newManager.name} onChange={e => setNewManager({...newManager, name: e.target.value})} /></div>
+                <div className="space-y-2"><Label>Role / Title</Label><Input value={newManager.role} onChange={e => setNewManager({...newManager, role: e.target.value})} /></div>
+                <div className="space-y-2"><Label>Description</Label><Textarea value={newManager.description} onChange={e => setNewManager({...newManager, description: e.target.value})} /></div>
+                <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 w-full">
+                  <Upload className="h-4 w-4" /> Upload Manager Photo
+                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleFileUpload('manager')} />
+                </Button>
+                {newManager.imageUrl && <div className="mt-2 h-32 w-32 rounded-full border overflow-hidden mx-auto"><img src={newManager.imageUrl} className="h-full w-full object-cover" /></div>}
+                <Button onClick={handleAddManager} className="w-full gap-2 font-bold"><Plus className="h-4 w-4" /> Add Team Member</Button>
+              </CardContent>
+            </Card>
+            <Card className="md:col-span-2 border-none bg-card shadow-sm">
+              <Table>
+                <TableHeader><TableRow><TableHead>Photo</TableHead><TableHead>Name</TableHead><TableHead>Role</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {managers?.map((m: any) => (
+                    <TableRow key={m.id}>
+                      <TableCell><div className="h-10 w-10 rounded-full overflow-hidden border bg-muted">{m.imageUrl && <img src={m.imageUrl} className="h-full w-full object-cover" />}</div></TableCell>
+                      <TableCell className="font-medium">{m.name}</TableCell>
+                      <TableCell>{m.role}</TableCell>
+                      <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('managers', m.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </Card>
           </div>
         </TabsContent>

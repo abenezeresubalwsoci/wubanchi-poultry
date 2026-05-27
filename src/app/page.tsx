@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -9,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Plus, Send, CheckCircle2, Bird, History, Target, Eye, Sparkles } from "lucide-react";
+import { ArrowRight, Egg, ShoppingBasket, Heart, ShieldCheck, Newspaper, Loader2, MessageSquare, Plus, Send, CheckCircle2, Bird, History, Target, Eye, Sparkles, Users } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useCollection, useFirestore, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, addDoc, serverTimestamp, doc } from "firebase/firestore";
@@ -102,6 +103,13 @@ export default function Home() {
   ), [db]);
   
   const { data: featuredProducts, loading: productsLoading } = useCollection(productsQuery);
+
+  const managersQuery = useMemo(() => query(
+    collection(db, 'managers'),
+    orderBy('createdAt', 'desc'),
+    limit(4)
+  ), [db]);
+  const { data: managers, loading: managersLoading } = useCollection(managersQuery);
 
   const [feedbackForm, setFeedbackForm] = useState({ name: '', email: '', comment: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -399,6 +407,38 @@ export default function Home() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Leadership Section */}
+              <div className="space-y-8 pt-8 border-t border-primary/10">
+                <div className="flex items-center gap-2 text-primary font-bold">
+                  <Users className="h-5 w-5" />
+                  <h4>Leadership Team</h4>
+                </div>
+                {managersLoading ? (
+                  <div className="flex justify-center py-4"><Loader2 className="h-6 w-6 animate-spin text-primary opacity-20" /></div>
+                ) : managers?.length ? (
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    {managers.map((m: any) => (
+                      <div key={m.id} className="flex gap-4 items-center p-3 rounded-2xl bg-white shadow-sm border border-gray-50 transition-all hover:shadow-md group">
+                        <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-primary/20 shrink-0">
+                          {m.imageUrl ? (
+                            <Image src={m.imageUrl} alt={m.name} fill className="object-cover transition-transform group-hover:scale-110" />
+                          ) : (
+                            <div className="h-full w-full bg-muted flex items-center justify-center text-muted-foreground"><Users className="h-6 w-6" /></div>
+                          )}
+                        </div>
+                        <div className="space-y-0.5">
+                          <h5 className="font-bold text-sm leading-tight group-hover:text-primary transition-colors">{m.name}</h5>
+                          <p className="text-xs text-primary font-medium">{m.role}</p>
+                          <p className="text-[10px] text-muted-foreground line-clamp-2">{m.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground italic">Management team profiles coming soon.</p>
+                )}
               </div>
 
               <Button asChild className="rounded-full px-8 h-14 text-lg font-bold group shadow-xl">
