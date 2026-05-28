@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, AlertTriangle, MessageSquare, Sparkles, Bird, X, Text, Users, Construction } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, AlertTriangle, MessageSquare, Sparkles, Bird, X, Text, Users, Construction, CreditCard, Checkbox } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -25,6 +25,13 @@ interface HeroSlide {
   imageUrl: string;
   title: string;
   subtitle: string;
+}
+
+interface PaymentMethod {
+  id: string;
+  name: string;
+  enabled: boolean;
+  note: string;
 }
 
 export default function AdminDashboard() {
@@ -63,6 +70,12 @@ export default function AdminDashboard() {
   
   const [logoUrl, setLogoUrl] = useState('');
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
+    { id: 'cash', name: 'Cash on Delivery', enabled: true, note: 'Premium Customers Only' },
+    { id: 'cbe', name: 'CBE (Commercial Bank)', enabled: true, note: '' },
+    { id: 'abyssinia', name: 'Abyssinia Bank', enabled: true, note: '' },
+    { id: 'telebirr', name: 'Telebirr', enabled: true, note: '' },
+  ]);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('Sunrise over a modern poultry farm with free-range chickens');
@@ -71,6 +84,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (settings?.logoUrl) setLogoUrl(settings.logoUrl);
     if (settings?.heroSlides) setHeroSlides(settings.heroSlides);
+    if (settings?.paymentMethods) setPaymentMethods(settings.paymentMethods);
   }, [settings]);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -213,17 +227,26 @@ export default function AdminDashboard() {
     });
   };
 
+  const handleUpdatePaymentMethod = (index: number, field: keyof PaymentMethod, value: any) => {
+    setPaymentMethods(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
   const handleUpdateSettings = () => {
     setIsSavingSettings(true);
     const data = { 
       logoUrl, 
       heroSlides,
+      paymentMethods,
       updatedAt: serverTimestamp() 
     };
     
     setDoc(settingsRef, data, { merge: true })
       .then(() => {
-        toast({ title: "Settings Saved", description: "Branding and Hero Carousel updated successfully." });
+        toast({ title: "Settings Saved", description: "Branding, Carousel, and Payments updated successfully." });
       })
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -327,7 +350,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="team" className="gap-2 transition-all"><Users className="h-4 w-4" /> Management Team</TabsTrigger>
           <TabsTrigger value="facilities" className="gap-2 transition-all"><Construction className="h-4 w-4" /> Operations</TabsTrigger>
           <TabsTrigger value="feedback" className="gap-2 transition-all"><MessageSquare className="h-4 w-4" /> Feedback</TabsTrigger>
-          <TabsTrigger value="settings" className="gap-2 transition-all"><Settings className="h-4 w-4" /> Branding</TabsTrigger>
+          <TabsTrigger value="settings" className="gap-2 transition-all"><Settings className="h-4 w-4" /> Branding & Payments</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -491,6 +514,33 @@ export default function AdminDashboard() {
                   {logoUrl && <div className="h-12 w-12 rounded border overflow-hidden shadow-sm"><img src={logoUrl} className="h-full w-full object-contain" /></div>}
                 </div>
                 <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="Logo URL" />
+              </CardContent>
+            </Card>
+
+            <Card className="border-none bg-card shadow-sm h-fit">
+              <CardHeader><CardTitle>Payment Methods</CardTitle><CardDescription>Manage options visible at checkout</CardDescription></CardHeader>
+              <CardContent className="space-y-4">
+                {paymentMethods.map((method, idx) => (
+                  <div key={method.id} className="flex items-center justify-between gap-4 p-3 border rounded-xl bg-muted/20">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={method.enabled} 
+                          onChange={(e) => handleUpdatePaymentMethod(idx, 'enabled', e.target.checked)}
+                          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <span className="font-bold text-sm">{method.name}</span>
+                      </div>
+                      <Input 
+                        className="h-8 text-xs bg-background" 
+                        value={method.note} 
+                        onChange={(e) => handleUpdatePaymentMethod(idx, 'note', e.target.value)}
+                        placeholder="Note (e.g. Premium only)" 
+                      />
+                    </div>
+                  </div>
+                ))}
               </CardContent>
             </Card>
 

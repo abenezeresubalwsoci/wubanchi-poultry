@@ -95,6 +95,18 @@
               "subtitle": { "type": "string" }
             }
           }
+        },
+        "paymentMethods": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "enabled": { "type": "boolean" },
+              "note": { "type": "string" }
+            }
+          }
         }
       }
     }

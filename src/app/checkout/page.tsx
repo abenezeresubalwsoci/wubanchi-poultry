@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -10,8 +11,8 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore } from '@/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useDoc } from '@/firebase';
+import { collection, addDoc, serverTimestamp, doc } from 'firebase/firestore';
 import { ArrowLeft, MapPin, CreditCard, Truck, CheckCircle2, Loader2, Navigation } from 'lucide-react';
 import Link from 'next/link';
 
@@ -24,6 +25,9 @@ export default function CheckoutPage() {
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
+  const { data: settings } = useDoc(settingsRef);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -46,6 +50,19 @@ export default function CheckoutPage() {
   }, [router]);
 
   const total = useMemo(() => cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0), [cartItems]);
+
+  const availablePaymentMethods = useMemo(() => {
+    if (settings?.paymentMethods) {
+      return settings.paymentMethods.filter((m: any) => m.enabled);
+    }
+    // Default Fallbacks
+    return [
+      { id: 'cash', name: 'Cash on Delivery', note: 'Premium Customers Only' },
+      { id: 'cbe', name: 'CBE (Commercial Bank)', note: '' },
+      { id: 'abyssinia', name: 'Abyssinia Bank', note: '' },
+      { id: 'telebirr', name: 'Telebirr', note: '' },
+    ];
+  }, [settings]);
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -184,20 +201,16 @@ export default function CheckoutPage() {
               </CardHeader>
               <CardContent>
                 <RadioGroup value={formData.paymentMethod} onValueChange={val => setFormData({...formData, paymentMethod: val})} className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <RadioGroupItem value="cash" id="cash" className="peer sr-only" />
-                    <Label htmlFor="cash" className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-primary/5 hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all">
-                      <Truck className="mb-3 h-6 w-6" />
-                      <span className="font-bold">Cash on Delivery</span>
-                    </Label>
-                  </div>
-                  <div>
-                    <RadioGroupItem value="telebirr" id="telebirr" className="peer sr-only" />
-                    <Label htmlFor="telebirr" className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-primary/5 hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all">
-                      <CreditCard className="mb-3 h-6 w-6" />
-                      <span className="font-bold">Telebirr / Digital</span>
-                    </Label>
-                  </div>
+                  {availablePaymentMethods.map((method: any) => (
+                    <div key={method.id}>
+                      <RadioGroupItem value={method.id} id={method.id} className="peer sr-only" />
+                      <Label htmlFor={method.id} className="flex flex-col items-center justify-center text-center rounded-xl border-2 border-muted bg-popover p-4 hover:bg-primary/5 hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all h-full">
+                        {method.id === 'cash' ? <Truck className="mb-3 h-6 w-6" /> : <CreditCard className="mb-3 h-6 w-6" />}
+                        <span className="font-bold block">{method.name}</span>
+                        {method.note && <span className="text-[10px] opacity-70 mt-1">{method.note}</span>}
+                      </Label>
+                    </div>
+                  ))}
                 </RadioGroup>
               </CardContent>
             </Card>
