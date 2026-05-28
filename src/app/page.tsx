@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -52,7 +53,7 @@ export default function Home() {
   const { toast } = useToast();
   
   const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
-  const { data: settings } = useDoc(settingsRef);
+  const { data: settings, loading: settingsLoading } = useDoc(settingsRef);
 
   // Core Values Data
   const coreValues = [
@@ -84,7 +85,7 @@ export default function Home() {
       list.push(...settings.heroSlides);
     } 
     
-    if (list.length === 0) {
+    if (list.length === 0 && !settingsLoading) {
       list.push({
         imageUrl: PlaceHolderImages.find(img => img.id === 'hero-farm')?.imageUrl || '',
         title: 'Welcome to Wubanchi',
@@ -98,7 +99,7 @@ export default function Home() {
     }
     
     return list;
-  }, [settings?.heroSlides]);
+  }, [settings?.heroSlides, settingsLoading]);
 
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
@@ -205,46 +206,56 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-16 pb-24 animate-in fade-in duration-700">
       {/* Hero Section */}
-      <section className="relative h-[250px] w-full overflow-hidden">
-        {heroSlides.map((slide, idx) => (
-          <div 
-            key={slide.imageUrl + idx}
-            className={`absolute inset-0 transition-opacity duration-[2000ms] ease-in-out ${idx === currentHeroIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-          >
-            <Image
-              src={slide.imageUrl}
-              alt={slide.title}
-              fill
-              className="object-cover"
-              priority={idx === 0}
-              data-ai-hint="poultry farm"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+      <section className="relative h-[500px] w-full overflow-hidden bg-muted">
+        {settingsLoading ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary opacity-30" />
+          </div>
+        ) : (
+          <>
+            {heroSlides.map((slide, idx) => (
+              <div 
+                key={slide.imageUrl + idx}
+                className={`absolute inset-0 transition-opacity duration-[2000ms] ease-in-out ${idx === currentHeroIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+              >
+                <Image
+                  src={slide.imageUrl}
+                  alt={slide.title}
+                  fill
+                  className="object-cover"
+                  priority={idx === 0}
+                  data-ai-hint="poultry farm"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+                
+                {idx === currentHeroIndex && (
+                  <div className="container relative mx-auto flex h-full flex-col justify-center px-4 md:px-8 z-20">
+                    <div className="max-w-2xl space-y-4 text-white animate-in fade-in slide-in-from-left-12 duration-1000">
+                      <h1 className="text-4xl font-bold leading-tight md:text-5xl lg:text-6xl text-shadow-lg">
+                        {slide.title}
+                      </h1>
+                      <p className="text-lg md:text-xl opacity-90 max-w-lg text-shadow animate-in fade-in slide-in-from-left-12 duration-1000 delay-300">
+                        {slide.subtitle}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
             
-            {idx === currentHeroIndex && (
-              <div className="container relative mx-auto flex h-full flex-col justify-center px-4 md:px-8 z-20">
-                <div className="max-w-2xl space-y-4 text-white animate-in fade-in slide-in-from-left-12 duration-1000">
-                  <h1 className="text-4xl font-bold leading-tight md:text-5xl lg:text-6xl text-shadow-lg">
-                    {slide.title}
-                  </h1>
-                  <p className="text-lg md:text-xl opacity-90 max-w-lg text-shadow animate-in fade-in slide-in-from-left-12 duration-1000 delay-300">
-                    {slide.subtitle}
-                  </p>
-                </div>
+            {heroSlides.length > 1 && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-30">
+                {heroSlides.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentHeroIndex(idx)}
+                    className={`h-2 rounded-full transition-all duration-700 ${idx === currentHeroIndex ? 'w-10 bg-primary shadow-lg shadow-primary/40' : 'w-2 bg-white/40 hover:bg-white/60'}`}
+                  />
+                ))}
               </div>
             )}
-          </div>
-        ))}
-        
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-30">
-          {heroSlides.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentHeroIndex(idx)}
-              className={`h-2 rounded-full transition-all duration-700 ${idx === currentHeroIndex ? 'w-10 bg-primary shadow-lg shadow-primary/40' : 'w-2 bg-white/40 hover:bg-white/60'}`}
-            />
-          ))}
-        </div>
+          </>
+        )}
       </section>
 
       {/* News Box Section */}
@@ -265,7 +276,7 @@ export default function Home() {
           <div className="lg:col-span-2 grid gap-4 sm:grid-cols-2">
              {newsLoading ? (
                <div className="col-span-2 flex items-center justify-center p-8 bg-card rounded-xl">
-                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                 <Loader2 className="h-6 w-6 animate-spin text-primary opacity-20" />
                </div>
              ) : newsItems?.length ? (
                newsItems.map((item: any) => (
@@ -367,7 +378,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 bg-muted/20 rounded-3xl text-center">
-            <p className="text-muted-foreground italic mb-4">No products available at the moment.</p>
+            <p className="text-muted-foreground italic mb-4">No products available at the moment. Add some in the Admin dashboard!</p>
           </div>
         )}
       </section>
@@ -512,7 +523,7 @@ export default function Home() {
                 <Phone className="h-5 w-5" />
                 <h4>Quick Contact</h4>
               </div>
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
+              <div className="grid gap-6 sm:grid-cols-2">
                 <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-start gap-4 h-full">
                   <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
                     <Phone className="h-6 w-6" />
