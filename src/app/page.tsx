@@ -205,8 +205,8 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-16 pb-24 animate-in fade-in duration-700">
-      {/* Hero Section - Decreased height to h-[300px] */}
-      <section className="relative h-[300px] w-full overflow-hidden bg-muted">
+      {/* Hero Section - Compact height */}
+      <section className="relative h-[250px] w-full overflow-hidden bg-muted">
         {settingsLoading ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <Loader2 className="h-12 w-12 animate-spin text-primary opacity-30" />
@@ -231,10 +231,10 @@ export default function Home() {
                 {idx === currentHeroIndex && (
                   <div className="container relative mx-auto flex h-full flex-col justify-center px-4 md:px-8 z-20">
                     <div className="max-w-2xl space-y-4 text-white animate-in fade-in slide-in-from-left-12 duration-1000">
-                      <h1 className="text-4xl font-bold leading-tight md:text-5xl text-shadow-lg">
+                      <h1 className="text-3xl font-bold leading-tight md:text-4xl text-shadow-lg">
                         {slide.title}
                       </h1>
-                      <p className="text-lg opacity-90 max-w-lg text-shadow animate-in fade-in slide-in-from-left-12 duration-1000 delay-300">
+                      <p className="text-base opacity-90 max-w-lg text-shadow animate-in fade-in slide-in-from-left-12 duration-1000 delay-300">
                         {slide.subtitle}
                       </p>
                     </div>
@@ -244,12 +244,12 @@ export default function Home() {
             ))}
             
             {heroSlides.length > 1 && (
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-30">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-30">
                 {heroSlides.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentHeroIndex(idx)}
-                    className={`h-2 rounded-full transition-all duration-700 ${idx === currentHeroIndex ? 'w-10 bg-primary shadow-lg shadow-primary/40' : 'w-2 bg-white/40 hover:bg-white/60'}`}
+                    className={`h-1.5 rounded-full transition-all duration-700 ${idx === currentHeroIndex ? 'w-8 bg-primary shadow-lg shadow-primary/40' : 'w-1.5 bg-white/40 hover:bg-white/60'}`}
                   />
                 ))}
               </div>
