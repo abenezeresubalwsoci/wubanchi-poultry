@@ -4,13 +4,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X, Bird, ShoppingBasket, Info, MessageSquare, Languages, Loader2 } from "lucide-react";
+import { Menu, X, Bird, ShoppingBasket, Info, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useFirestore, useDoc } from "@/firebase";
 import { doc } from "firebase/firestore";
-import { translateToAmharic } from "@/ai/flows/translate-flow";
-import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
   { name: "Products", href: "/products", icon: ShoppingBasket },
@@ -20,10 +18,8 @@ const navItems = [
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isTranslating, setIsTranslating] = useState(false);
   const pathname = usePathname();
   const db = useFirestore();
-  const { toast } = useToast();
   const isAdminPage = pathname === "/admin";
   
   const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
@@ -31,28 +27,6 @@ export default function Navbar() {
 
   const fallbackLogo = PlaceHolderImages.find(img => img.id === 'app-logo');
   const logoUrl = settings?.logoUrl || fallbackLogo?.imageUrl;
-
-  const handleTranslate = async () => {
-    setIsTranslating(true);
-    try {
-      // Find all heading and paragraph elements to translate for demonstration
-      const elements = document.querySelectorAll('h1, h2, h3, p, span.nav-item-text');
-      toast({ title: "Translating...", description: "AI is preparing the Amharic version." });
-      
-      for (let i = 0; i < Math.min(elements.length, 10); i++) {
-        const el = elements[i] as HTMLElement;
-        if (el.innerText.trim()) {
-          const translation = await translateToAmharic(el.innerText);
-          el.innerText = translation;
-        }
-      }
-      toast({ title: "Translation Complete", description: "Page has been partially translated to Amharic." });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Translation Failed", description: "Could not connect to the translation service." });
-    } finally {
-      setIsTranslating(false);
-    }
-  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
@@ -93,16 +67,6 @@ export default function Navbar() {
             ))}
             {!isAdminPage && (
               <div className="flex items-center gap-2 border-l pl-4 ml-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleTranslate} 
-                  disabled={isTranslating}
-                  className="gap-2 text-xs font-bold text-primary hover:text-primary/80 hover:bg-primary/5 rounded-full"
-                >
-                  {isTranslating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Languages className="h-4 w-4" />}
-                  Translate to Amharic
-                </Button>
                 <Button variant="default" asChild className="rounded-full shadow-sm">
                   <Link href="/products">Order Now</Link>
                 </Button>
@@ -116,15 +80,6 @@ export default function Navbar() {
           {/* Mobile Nav Toggle */}
           {!isAdminPage && (
             <div className="flex items-center gap-2 md:hidden">
-               <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={handleTranslate} 
-                  disabled={isTranslating}
-                  className="text-primary rounded-full"
-                >
-                  {isTranslating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Languages className="h-4 w-4" />}
-                </Button>
               <Button
                 variant="ghost"
                 size="icon"
