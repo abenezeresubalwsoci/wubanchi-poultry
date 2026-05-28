@@ -205,8 +205,8 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-16 pb-24 animate-in fade-in duration-700">
-      {/* Hero Section - Decreased height from h-[500px] to h-[400px] */}
-      <section className="relative h-[400px] w-full overflow-hidden bg-muted">
+      {/* Hero Section - Decreased height to h-[300px] */}
+      <section className="relative h-[300px] w-full overflow-hidden bg-muted">
         {settingsLoading ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <Loader2 className="h-12 w-12 animate-spin text-primary opacity-30" />
@@ -231,10 +231,10 @@ export default function Home() {
                 {idx === currentHeroIndex && (
                   <div className="container relative mx-auto flex h-full flex-col justify-center px-4 md:px-8 z-20">
                     <div className="max-w-2xl space-y-4 text-white animate-in fade-in slide-in-from-left-12 duration-1000">
-                      <h1 className="text-4xl font-bold leading-tight md:text-5xl lg:text-6xl text-shadow-lg">
+                      <h1 className="text-4xl font-bold leading-tight md:text-5xl text-shadow-lg">
                         {slide.title}
                       </h1>
-                      <p className="text-lg md:text-xl opacity-90 max-w-lg text-shadow animate-in fade-in slide-in-from-left-12 duration-1000 delay-300">
+                      <p className="text-lg opacity-90 max-w-lg text-shadow animate-in fade-in slide-in-from-left-12 duration-1000 delay-300">
                         {slide.subtitle}
                       </p>
                     </div>
