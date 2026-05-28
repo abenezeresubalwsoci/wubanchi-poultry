@@ -71,7 +71,7 @@ export default function AdminDashboard() {
   const [logoUrl, setLogoUrl] = useState('');
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
-    { id: 'cash', name: 'Cash on Delivery', enabled: false, note: 'Not available for now' },
+    { id: 'cash', name: 'Cash on Delivery', enabled: false, note: 'Only for premium Customers' },
     { id: 'cbe', name: 'CBE (Commercial Bank)', enabled: true, note: '' },
     { id: 'abyssinia', name: 'Abyssinia Bank', enabled: true, note: '' },
     { id: 'telebirr', name: 'Telebirr', enabled: true, note: '' },

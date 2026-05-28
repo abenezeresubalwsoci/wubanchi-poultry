@@ -57,7 +57,7 @@ export default function CheckoutPage() {
     }
     // Default Fallbacks
     return [
-      { id: 'cash', name: 'Cash on Delivery', note: 'Not available for now' },
+      { id: 'cash', name: 'Cash on Delivery', note: 'Only for premium Customers' },
       { id: 'cbe', name: 'CBE (Commercial Bank)', note: '' },
       { id: 'abyssinia', name: 'Abyssinia Bank', note: '' },
       { id: 'telebirr', name: 'Telebirr', note: '' },
