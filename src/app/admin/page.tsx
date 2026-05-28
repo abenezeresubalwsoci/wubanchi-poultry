@@ -32,6 +32,8 @@ interface PaymentMethod {
   name: string;
   enabled: boolean;
   note: string;
+  accountName?: string;
+  accountNumber?: string;
 }
 
 export default function AdminDashboard() {
@@ -71,10 +73,10 @@ export default function AdminDashboard() {
   const [logoUrl, setLogoUrl] = useState('');
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
-    { id: 'cash', name: 'Cash on Delivery', enabled: false, note: 'Only for premium Customers' },
-    { id: 'cbe', name: 'CBE (Commercial Bank)', enabled: true, note: '' },
-    { id: 'abyssinia', name: 'Abyssinia Bank', enabled: true, note: '' },
-    { id: 'telebirr', name: 'Telebirr', enabled: true, note: '' },
+    { id: 'cash', name: 'Cash on Delivery', enabled: false, note: 'Only for premium Customers', accountName: '', accountNumber: '' },
+    { id: 'cbe', name: 'CBE (Commercial Bank)', enabled: true, note: '', accountName: '', accountNumber: '' },
+    { id: 'abyssinia', name: 'Abyssinia Bank', enabled: true, note: '', accountName: '', accountNumber: '' },
+    { id: 'telebirr', name: 'Telebirr', enabled: true, note: '', accountName: '', accountNumber: '' },
   ]);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -521,23 +523,48 @@ export default function AdminDashboard() {
               <CardHeader><CardTitle>Payment Methods</CardTitle><CardDescription>Manage options visible at checkout</CardDescription></CardHeader>
               <CardContent className="space-y-4">
                 {paymentMethods.map((method, idx) => (
-                  <div key={method.id} className="flex items-center justify-between gap-4 p-3 border rounded-xl bg-muted/20">
-                    <div className="flex-1 space-y-2">
+                  <div key={method.id} className="flex flex-col gap-3 p-4 border rounded-xl bg-muted/20">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <input 
-                          type="checkbox" 
+                        <Checkbox 
                           checked={method.enabled} 
-                          onChange={(e) => handleUpdatePaymentMethod(idx, 'enabled', e.target.checked)}
-                          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                          onCheckedChange={(checked) => handleUpdatePaymentMethod(idx, 'enabled', !!checked)}
                         />
                         <span className="font-bold text-sm">{method.name}</span>
                       </div>
-                      <Input 
-                        className="h-8 text-xs bg-background" 
-                        value={method.note} 
-                        onChange={(e) => handleUpdatePaymentMethod(idx, 'note', e.target.value)}
-                        placeholder="Note (e.g. Premium only)" 
-                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] uppercase opacity-50">Note / Subtext</Label>
+                        <Input 
+                          className="h-8 text-xs bg-background" 
+                          value={method.note} 
+                          onChange={(e) => handleUpdatePaymentMethod(idx, 'note', e.target.value)}
+                          placeholder="Note (e.g. Premium only)" 
+                        />
+                      </div>
+                      {method.id !== 'cash' && (
+                        <>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase opacity-50">Account Name</Label>
+                            <Input 
+                              className="h-8 text-xs bg-background" 
+                              value={method.accountName} 
+                              onChange={(e) => handleUpdatePaymentMethod(idx, 'accountName', e.target.value)}
+                              placeholder="e.g. Wubanchi Farm PLC" 
+                            />
+                          </div>
+                          <div className="space-y-1 col-span-2">
+                            <Label className="text-[10px] uppercase opacity-50">Account Number</Label>
+                            <Input 
+                              className="h-8 text-xs bg-background" 
+                              value={method.accountNumber} 
+                              onChange={(e) => handleUpdatePaymentMethod(idx, 'accountNumber', e.target.value)}
+                              placeholder="e.g. 100012345678" 
+                            />
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}

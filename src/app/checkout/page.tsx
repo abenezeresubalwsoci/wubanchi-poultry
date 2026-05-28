@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc } from '@/firebase';
 import { collection, addDoc, serverTimestamp, doc } from 'firebase/firestore';
-import { ArrowLeft, MapPin, CreditCard, Truck, CheckCircle2, Loader2, Navigation } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Truck, CheckCircle2, Loader2, Navigation, Info } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CheckoutPage() {
@@ -36,7 +36,7 @@ export default function CheckoutPage() {
     city: 'Bahir Dar',
     address: '',
     landmark: '',
-    paymentMethod: 'cbe' // Default to a working one
+    paymentMethod: 'cbe' 
   });
 
   useEffect(() => {
@@ -55,7 +55,6 @@ export default function CheckoutPage() {
     if (settings?.paymentMethods) {
       return settings.paymentMethods.filter((m: any) => m.enabled);
     }
-    // Default Fallbacks
     return [
       { id: 'cash', name: 'Cash on Delivery', note: 'Only for premium Customers' },
       { id: 'cbe', name: 'CBE (Commercial Bank)', note: '' },
@@ -63,6 +62,10 @@ export default function CheckoutPage() {
       { id: 'telebirr', name: 'Telebirr', note: '' },
     ];
   }, [settings]);
+
+  const selectedPaymentDetails = useMemo(() => {
+    return availablePaymentMethods.find((m: any) => m.id === formData.paymentMethod);
+  }, [formData.paymentMethod, availablePaymentMethods]);
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +135,6 @@ export default function CheckoutPage() {
 
         <form onSubmit={handlePlaceOrder} className="grid gap-8 lg:grid-cols-5">
           <div className="lg:col-span-3 space-y-8">
-            {/* Delivery Details */}
             <Card className="border-none shadow-sm bg-card animate-in slide-in-from-bottom-4 duration-500">
               <CardHeader className="flex flex-row items-center gap-3">
                 <div className="bg-primary/10 p-2 rounded-lg text-primary"><MapPin className="h-5 w-5" /></div>
@@ -142,7 +144,6 @@ export default function CheckoutPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Map Integration */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between mb-2">
                     <Label className="font-bold flex items-center gap-2">
@@ -190,7 +191,6 @@ export default function CheckoutPage() {
               </CardContent>
             </Card>
 
-            {/* Payment Method */}
             <Card className="border-none shadow-sm bg-card animate-in slide-in-from-bottom-4 duration-500 delay-100">
               <CardHeader className="flex flex-row items-center gap-3">
                 <div className="bg-primary/10 p-2 rounded-lg text-primary"><CreditCard className="h-5 w-5" /></div>
@@ -199,7 +199,7 @@ export default function CheckoutPage() {
                   <CardDescription>Select how you'd like to pay.</CardDescription>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-6">
                 <RadioGroup value={formData.paymentMethod} onValueChange={val => setFormData({...formData, paymentMethod: val})} className="grid gap-4 sm:grid-cols-2">
                   {availablePaymentMethods.map((method: any) => (
                     <div key={method.id}>
@@ -212,6 +212,32 @@ export default function CheckoutPage() {
                     </div>
                   ))}
                 </RadioGroup>
+
+                {selectedPaymentDetails && selectedPaymentDetails.id !== 'cash' && (selectedPaymentDetails.accountName || selectedPaymentDetails.accountNumber) && (
+                  <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 animate-in fade-in zoom-in-95 duration-300">
+                    <div className="flex items-center gap-2 mb-3 text-primary font-bold text-sm">
+                      <Info className="h-4 w-4" />
+                      <span>Payment Details</span>
+                    </div>
+                    <div className="grid gap-2 text-sm">
+                      {selectedPaymentDetails.accountName && (
+                        <div className="flex justify-between border-b border-primary/5 pb-2">
+                          <span className="text-muted-foreground">Account Name:</span>
+                          <span className="font-bold">{selectedPaymentDetails.accountName}</span>
+                        </div>
+                      )}
+                      {selectedPaymentDetails.accountNumber && (
+                        <div className="flex justify-between pt-1">
+                          <span className="text-muted-foreground">Account Number:</span>
+                          <span className="font-bold text-primary">{selectedPaymentDetails.accountNumber}</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-4 text-[10px] text-center text-muted-foreground italic">
+                      Please include your phone number in the transaction note.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

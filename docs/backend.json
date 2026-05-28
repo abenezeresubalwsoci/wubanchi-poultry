@@ -104,7 +104,9 @@
               "id": { "type": "string" },
               "name": { "type": "string" },
               "enabled": { "type": "boolean" },
-              "note": { "type": "string" }
+              "note": { "type": "string" },
+              "accountName": { "type": "string" },
+              "accountNumber": { "type": "string" }
             }
           }
         }
