@@ -15,6 +15,9 @@ import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/fi
 import { ArrowLeft, MapPin, CreditCard, Truck, CheckCircle2, Loader2, Navigation, Info, Upload, Camera } from 'lucide-react';
 import Link from 'next/link';
 
+// Firestore document limit is 1MB. Use 700KB to account for Base64 overhead.
+const MAX_FILE_SIZE = 700 * 1024; 
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -40,8 +43,6 @@ export default function CheckoutPage() {
     landmark: '',
     paymentMethod: 'cbe' 
   });
-
-  const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
   useEffect(() => {
     const savedCart = localStorage.getItem('wubanchi_cart');
@@ -112,7 +113,11 @@ export default function CheckoutPage() {
     if (!file || !orderId) return;
 
     if (file.size > MAX_FILE_SIZE) {
-      toast({ variant: "destructive", title: "File too large", description: "Please upload an image smaller than 2MB." });
+      toast({ 
+        variant: "destructive", 
+        title: "File too large", 
+        description: "Please upload an image smaller than 700KB. Base64 encoding increases file size, and the database limit is 1MB." 
+      });
       return;
     }
 
@@ -127,10 +132,14 @@ export default function CheckoutPage() {
         setProofUploaded(true);
         toast({ title: "Proof Uploaded", description: "Thank you! Our team will verify your payment." });
       } catch (err) {
-        toast({ variant: "destructive", title: "Upload Failed", description: "Could not save payment proof." });
+        toast({ variant: "destructive", title: "Upload Failed", description: "Could not save payment proof. The image might still be too large for the database." });
       } finally {
         setUploadingProof(false);
       }
+    };
+    reader.onerror = () => {
+      toast({ variant: "destructive", title: "Read Error", description: "Could not read the selected image file." });
+      setUploadingProof(false);
     };
     reader.readAsDataURL(file);
   };

@@ -35,6 +35,11 @@ interface PaymentMethod {
   accountNumber?: string;
 }
 
+// Firestore has a 1MB limit per document. 
+// Base64 encoding increases file size by ~33%. 
+// 800KB * 1.33 = ~1.06MB (slightly over, let's use 700KB to be safe)
+const MAX_FILE_SIZE = 700 * 1024; 
+
 export default function AdminDashboard() {
   const db = useFirestore();
   const { toast } = useToast();
@@ -83,8 +88,6 @@ export default function AdminDashboard() {
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('Sunrise over a modern poultry farm with free-range chickens');
   const [manualSlide, setManualSlide] = useState({ url: '', title: '', subtitle: '' });
-
-  const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
   useEffect(() => {
     if (settings?.logoUrl) setLogoUrl(settings.logoUrl);
@@ -271,23 +274,36 @@ export default function AdminDashboard() {
       });
   };
 
-  const handleFileUpload = (type: 'logo' | 'hero' | 'manager' | 'facility') => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const processFile = (file: File, callback: (base64: string) => void) => {
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ 
+        variant: "destructive", 
+        title: "File too large", 
+        description: "Firestore limits documents to 1MB. Please use an image smaller than 700KB (Base64 encoding increases size)." 
+      });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      callback(reader.result as string);
+      toast({ title: "Image Uploaded", description: "Don't forget to save your changes." });
+    };
+    reader.onerror = () => {
+      toast({ variant: "destructive", title: "Upload Failed", description: "Could not read the file." });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileUpload = (type: 'logo' | 'hero' | 'manager' | 'facility' | 'product') => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > MAX_FILE_SIZE) {
-        toast({ variant: "destructive", title: "File too large", description: "Please use an image smaller than 2MB." });
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        if (type === 'logo') setLogoUrl(base64String);
-        else if (type === 'hero') setHeroSlides(prev => [...prev, { imageUrl: base64String, title: 'Fresh Arrival', subtitle: 'Straight from the farm' }]);
-        else if (type === 'manager') setNewManager(prev => ({ ...prev, imageUrl: base64String }));
-        else if (type === 'facility') setNewFacility(prev => ({ ...prev, imageUrl: base64String }));
-        toast({ title: "Image Uploaded", description: "Don't forget to save your changes." });
-      };
-      reader.readAsDataURL(file);
+      processFile(file, (base64) => {
+        if (type === 'logo') setLogoUrl(base64);
+        else if (type === 'hero') setHeroSlides(prev => [...prev, { imageUrl: base64, title: 'Fresh Arrival', subtitle: 'Straight from the farm' }]);
+        else if (type === 'manager') setNewManager(prev => ({ ...prev, imageUrl: base64 }));
+        else if (type === 'facility') setNewFacility(prev => ({ ...prev, imageUrl: base64 }));
+        else if (type === 'product') setNewProduct(prev => ({ ...prev, imageUrl: base64 }));
+      });
     }
   };
 
@@ -453,20 +469,16 @@ export default function AdminDashboard() {
                 </div>
                 <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 w-full">
                   <Upload className="h-4 w-4" /> Upload Product Image
-                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      if (file.size > MAX_FILE_SIZE) {
-                        toast({ variant: "destructive", title: "File too large", description: "Please use an image smaller than 2MB." });
-                        return;
-                      }
-                      const reader = new FileReader();
-                      reader.onloadend = () => setNewProduct(prev => ({ ...prev, imageUrl: reader.result as string }));
-                      reader.readAsDataURL(file);
-                    }
-                  }} />
+                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleFileUpload('product')} />
                 </Button>
-                {newProduct.imageUrl && <div className="mt-2 h-32 w-full rounded-md border overflow-hidden"><img src={newProduct.imageUrl} className="h-full w-full object-cover" /></div>}
+                {newProduct.imageUrl && (
+                  <div className="relative mt-2 h-32 w-full rounded-md border overflow-hidden">
+                    <img src={newProduct.imageUrl} className="h-full w-full object-cover" />
+                    <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 rounded-full" onClick={() => setNewProduct(prev => ({ ...prev, imageUrl: '' }))}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
                 <Button onClick={handleAddProduct} className="w-full gap-2 font-bold"><Plus className="h-4 w-4" /> Add Product</Button>
               </CardContent>
             </Card>
