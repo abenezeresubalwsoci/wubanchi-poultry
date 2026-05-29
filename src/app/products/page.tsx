@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -13,6 +14,8 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+
+export const dynamic = 'force-dynamic';
 
 const CATEGORIES = ["All", "Eggs", "Meat", "Feed", "Chicks"];
 

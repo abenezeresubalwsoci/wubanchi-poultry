@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -39,6 +40,8 @@ import { collection, query, orderBy, limit, addDoc, serverTimestamp, doc } from 
 import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+
+export const dynamic = 'force-dynamic';
 
 interface HeroSlide {
   imageUrl: string;

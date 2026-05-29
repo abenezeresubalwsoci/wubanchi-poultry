@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -20,6 +21,8 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { generateFarmHero } from '@/ai/flows/generate-image-flow';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
+export const dynamic = 'force-dynamic';
+
 interface HeroSlide {
   imageUrl: string;
   title: string;
@@ -35,10 +38,9 @@ interface PaymentMethod {
   accountNumber?: string;
 }
 
-// Firestore has a 1MB limit per document. 
-// Base64 encoding increases file size by ~33%. 
-// 800KB * 1.33 = ~1.06MB (slightly over, let's use 700KB to be safe)
-const MAX_FILE_SIZE = 700 * 1024; 
+// Firestore document size limit is 1MB. Base64 encoding increases file size.
+// 800KB is a safe threshold for the raw file.
+const MAX_FILE_SIZE = 800 * 1024; 
 
 export default function AdminDashboard() {
   const db = useFirestore();
@@ -279,14 +281,13 @@ export default function AdminDashboard() {
       toast({ 
         variant: "destructive", 
         title: "File too large", 
-        description: "Firestore limits documents to 1MB. Please use an image smaller than 700KB (Base64 encoding increases size)." 
+        description: "Firestore limits documents to 1MB. Please use an image smaller than 800KB." 
       });
       return;
     }
     const reader = new FileReader();
     reader.onloadend = () => {
       callback(reader.result as string);
-      toast({ title: "Image Uploaded", description: "Don't forget to save your changes." });
     };
     reader.onerror = () => {
       toast({ variant: "destructive", title: "Upload Failed", description: "Could not read the file." });
