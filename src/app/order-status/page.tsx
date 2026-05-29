@@ -2,25 +2,36 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useFirestore, useDoc } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, Package, CheckCircle2, Truck, Clock, AlertCircle, ShoppingBag } from 'lucide-react';
+import { Search, Package, CheckCircle2, Truck, Clock, AlertCircle, ShoppingBag, Phone } from 'lucide-react';
 import Image from 'next/image';
 
 export default function OrderStatusPage() {
-  const [orderIdInput, setOrderIdInput] = useState('');
-  const [searchId, setSearchId] = useState('');
+  const [phoneInput, setPhoneInput] = useState('');
+  const [searchPhone, setSearchPhone] = useState('');
   const db = useFirestore();
 
-  const orderRef = useMemo(() => (searchId ? doc(db, 'orders', searchId) : null), [db, searchId]);
-  const { data: order, loading } = useDoc(orderRef);
+  // Query orders by customer phone number, showing the most recent one first
+  const ordersQuery = useMemo(() => {
+    if (!searchPhone) return null;
+    return query(
+      collection(db, 'orders'),
+      where('customerPhone', '==', searchPhone),
+      orderBy('createdAt', 'desc'),
+      limit(1)
+    );
+  }, [db, searchPhone]);
+
+  const { data: orders, loading } = useCollection(ordersQuery);
+  const order = orders && orders.length > 0 ? orders[0] : null;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setSearchId(orderIdInput.trim());
+    setSearchPhone(phoneInput.trim());
   };
 
   const statusIcons: Record<string, any> = {
@@ -34,6 +45,7 @@ export default function OrderStatusPage() {
 
   const formatDate = (timestamp: any) => {
     if (!timestamp) return 'N/A';
+    // Firestore timestamp or ISO string
     const date = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
     return date.toLocaleDateString('en-GB', {
       day: 'numeric',
@@ -48,35 +60,36 @@ export default function OrderStatusPage() {
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold">Track Your Order</h1>
           <p className="text-muted-foreground">
-            Enter your Order ID to check the current status and delivery details.
+            Enter your Phone Number used during checkout to check your latest order status.
           </p>
         </div>
 
         <Card className="border-none shadow-lg bg-card overflow-hidden">
           <CardContent className="p-6">
-            <form onSubmit={handleSearch} className="flex gap-2">
+            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
-                  placeholder="Enter Order ID (e.g. zXy123...)" 
+                  placeholder="Enter Phone Number (e.g. +251...)" 
                   className="pl-10 rounded-full bg-background transition-all focus:ring-2 focus:ring-primary/20"
-                  value={orderIdInput}
-                  onChange={(e) => setOrderIdInput(e.target.value)}
+                  value={phoneInput}
+                  onChange={(e) => setPhoneInput(e.target.value)}
+                  type="tel"
                 />
               </div>
-              <Button type="submit" className="rounded-full px-6 font-bold transition-all active:scale-95" disabled={loading}>
-                {loading ? 'Searching...' : 'Track'}
+              <Button type="submit" className="rounded-full px-8 font-bold transition-all active:scale-95 h-10" disabled={loading}>
+                {loading ? 'Searching...' : 'Track Order'}
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        {searchId && !loading && !order && (
+        {searchPhone && !loading && !order && (
           <div className="text-center py-12 bg-muted/20 rounded-3xl animate-in zoom-in-95 duration-500 border-2 border-dashed border-muted">
             <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-            <h3 className="text-xl font-bold">Order Not Found</h3>
-            <p className="text-muted-foreground">We couldn't find an order with ID: <span className="font-mono text-foreground font-bold">{searchId}</span></p>
-            <p className="text-sm mt-2">Please double check the ID provided in your order confirmation.</p>
+            <h3 className="text-xl font-bold">No Recent Orders</h3>
+            <p className="text-muted-foreground">We couldn't find any orders for the phone number: <span className="text-foreground font-bold">{searchPhone}</span></p>
+            <p className="text-sm mt-2">Please ensure you entered the same number used at checkout.</p>
           </div>
         )}
 
@@ -87,10 +100,10 @@ export default function OrderStatusPage() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm font-bold opacity-80 uppercase tracking-widest">
                     <ShoppingBag className="h-4 w-4" />
-                    Track Order
+                    Latest Order
                   </div>
-                  <h2 className="text-2xl font-bold">Order #{order.id?.substring(0, 8).toUpperCase()}</h2>
-                  <p className="text-sm opacity-90">{formatDate(order.createdAt)}</p>
+                  <h2 className="text-2xl font-bold">Order ID: {order.id?.substring(0, 8).toUpperCase()}</h2>
+                  <p className="text-sm opacity-90">Placed on {formatDate(order.createdAt)}</p>
                 </div>
                 <div className="flex items-center gap-4 bg-white/20 p-5 rounded-2xl backdrop-blur-md shadow-inner">
                   <StatusIcon className="h-8 w-8 text-white" />
@@ -106,7 +119,7 @@ export default function OrderStatusPage() {
                   <div className="space-y-5">
                     <h3 className="font-bold flex items-center gap-2 text-lg">
                       <Package className="h-5 w-5 text-primary" />
-                      Order Summary
+                      Items Ordered
                     </h3>
                     <div className="space-y-3">
                       {order.items?.map((item: any, idx: number) => (
