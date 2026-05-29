@@ -569,6 +569,10 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ))}
+                <Button onClick={handleUpdateSettings} disabled={isSavingSettings} className="w-full mt-4">
+                  {isSavingSettings ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}
+                  Update Payment Methods
+                </Button>
               </CardContent>
             </Card>
 
