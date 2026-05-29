@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -554,7 +553,7 @@ export default function Home() {
                   </div>
                   <div className="text-left">
                     <p className="text-sm font-bold text-foreground">Email Us</p>
-                    <p className="text-muted-foreground">contact@wubanchi.com</p>
+                    <p className="text-muted-foreground">wubpoultry@gmail.com</p>
                   </div>
                 </div>
                 <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex items-center gap-4">

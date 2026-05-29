@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -72,7 +71,7 @@ export default function Contact() {
                     <Mail className="h-6 w-6" />
                   </div>
                   <h3 className="font-bold">Email</h3>
-                  <p className="text-sm text-muted-foreground">contact@wubanchi.com</p>
+                  <p className="text-sm text-muted-foreground">wubpoultry@gmail.com</p>
                   <p className="text-xs text-muted-foreground">Expect response in 24h</p>
                 </CardContent>
               </Card>
