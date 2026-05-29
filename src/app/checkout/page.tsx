@@ -12,8 +12,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc } from '@/firebase';
-import { collection, addDoc, serverTimestamp, doc } from 'firebase/firestore';
-import { ArrowLeft, MapPin, CreditCard, Truck, CheckCircle2, Loader2, Navigation, Info } from 'lucide-react';
+import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { ArrowLeft, MapPin, CreditCard, Truck, CheckCircle2, Loader2, Navigation, Info, Upload, Camera } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CheckoutPage() {
@@ -25,6 +25,9 @@ export default function CheckoutPage() {
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [uploadingProof, setUploadingProof] = useState(false);
+  const [proofUploaded, setProofUploaded] = useState(false);
 
   const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
   const { data: settings } = useDoc(settingsRef);
@@ -90,7 +93,8 @@ export default function CheckoutPage() {
     };
 
     try {
-      await addDoc(collection(db, 'orders'), orderData);
+      const docRef = await addDoc(collection(db, 'orders'), orderData);
+      setOrderId(docRef.id);
       localStorage.removeItem('wubanchi_cart');
       setIsSuccess(true);
       toast({ title: "Order Placed!", description: "We'll contact you shortly for delivery." });
@@ -102,20 +106,77 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleUploadProof = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !orderId) return;
+
+    if (file.size > 1024 * 1024) { // 1MB limit
+      toast({ variant: "destructive", title: "File too large", description: "Please upload an image smaller than 1MB." });
+      return;
+    }
+
+    setUploadingProof(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      try {
+        await updateDoc(doc(db, 'orders', orderId), {
+          paymentProofUrl: base64String
+        });
+        setProofUploaded(true);
+        toast({ title: "Proof Uploaded", description: "Thank you! Our team will verify your payment." });
+      } catch (err) {
+        toast({ variant: "destructive", title: "Upload Failed", description: "Could not save payment proof." });
+      } finally {
+        setUploadingProof(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   if (!isLoaded) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" /></div>;
 
   if (isSuccess) {
     return (
-      <div className="container mx-auto px-4 py-24 text-center space-y-8 animate-in zoom-in-95 duration-700">
+      <div className="container mx-auto px-4 py-16 text-center space-y-8 animate-in zoom-in-95 duration-700">
         <div className="mx-auto bg-green-100 p-8 rounded-full w-fit text-green-600 animate-bounce">
           <CheckCircle2 className="h-20 w-20" />
         </div>
         <div className="space-y-4">
           <h1 className="text-4xl font-bold">Order Confirmed!</h1>
           <p className="text-xl text-muted-foreground max-w-lg mx-auto">
-            Thank you for choosing Wubanchi. Your fresh poultry will be on its way soon. We have sent a confirmation to your email.
+            Thank you for choosing Wubanchi. Your order has been registered in our system.
           </p>
         </div>
+
+        {formData.paymentMethod !== 'cash' && (
+          <div className="max-w-xl mx-auto bg-card p-8 rounded-[2.5rem] border-2 border-dashed border-primary/20 space-y-6">
+            <div className="flex items-center justify-center gap-2 text-primary font-bold">
+              <Camera className="h-6 w-6" />
+              <h3>Action Required: Payment Proof</h3>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              Please upload a screenshot or photo of your transaction receipt from <strong>{selectedPaymentDetails?.name}</strong> to finalize your order.
+            </p>
+            
+            {proofUploaded ? (
+              <div className="flex flex-col items-center gap-2 text-green-600 font-bold animate-in zoom-in-95">
+                <CheckCircle2 className="h-10 w-10" />
+                <span>Proof Uploaded Successfully</span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <Button variant="outline" className="relative cursor-pointer overflow-hidden h-14 rounded-full gap-2 border-primary/50" disabled={uploadingProof}>
+                  {uploadingProof ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
+                  {uploadingProof ? 'Uploading...' : 'Select Receipt Image'}
+                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleUploadProof} />
+                </Button>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">This helps our admin verify your order faster</p>
+              </div>
+            )}
+          </div>
+        )}
+
         <Button asChild className="rounded-full px-12 h-14 text-lg font-bold shadow-lg transition-all active:scale-95">
           <Link href="/products">Return to Store</Link>
         </Button>

@@ -36,9 +36,12 @@
       "properties": {
         "customerName": { "type": "string" },
         "customerEmail": { "type": "string" },
+        "customerPhone": { "type": "string" },
         "items": { "type": "array", "items": { "type": "object" } },
         "total": { "type": "number" },
         "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered"] },
+        "paymentMethod": { "type": "string" },
+        "paymentProofUrl": { "type": "string", "description": "Base64 string of the payment receipt" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
     },

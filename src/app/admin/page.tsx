@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useFirestore, useCollection, useDoc } from '@/firebase';
-import { collection, addDoc, deleteDoc, doc, setDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, doc, setDoc, updateDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,15 +12,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, AlertTriangle, MessageSquare, Sparkles, Bird, X, Text, Users, Construction, CreditCard } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, MessageSquare, Sparkles, Bird, X, Text, Users, Construction, CreditCard, Checkbox, Eye, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { firebaseConfig } from '@/firebase/config';
 import { generateFarmHero } from '@/ai/flows/generate-image-flow';
-import Image from 'next/image';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface HeroSlide {
   imageUrl: string;
@@ -49,6 +47,7 @@ export default function AdminDashboard() {
   const feedbackQuery = useMemo(() => query(collection(db, 'feedback'), orderBy('createdAt', 'desc')), [db]);
   const managersQuery = useMemo(() => query(collection(db, 'managers'), orderBy('createdAt', 'desc')), [db]);
   const facilitiesQuery = useMemo(() => query(collection(db, 'facilities'), orderBy('createdAt', 'desc')), [db]);
+  const ordersQuery = useMemo(() => query(collection(db, 'orders'), orderBy('createdAt', 'desc')), [db]);
   
   const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
   const { data: settings } = useDoc(settingsRef);
@@ -58,6 +57,7 @@ export default function AdminDashboard() {
   const { data: feedback } = useCollection(feedbackQuery);
   const { data: managers } = useCollection(managersQuery);
   const { data: facilities } = useCollection(facilitiesQuery);
+  const { data: orders } = useCollection(ordersQuery);
 
   const [newProduct, setNewProduct] = useState({ 
     name: '', 
@@ -103,6 +103,12 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     toast({ title: "Signed Out", description: "You have been logged out." });
+  };
+
+  const handleUpdateOrderStatus = (id: string, status: string) => {
+    updateDoc(doc(db, 'orders', id), { status })
+      .then(() => toast({ title: "Status Updated" }))
+      .catch(console.error);
   };
 
   const handleAddProduct = () => {
@@ -346,8 +352,9 @@ export default function AdminDashboard() {
         </Button>
       </div>
 
-      <Tabs defaultValue="products" className="space-y-6">
+      <Tabs defaultValue="orders" className="space-y-6">
         <TabsList className="bg-muted p-1 flex-wrap h-auto animate-in fade-in duration-700 delay-200">
+          <TabsTrigger value="orders" className="gap-2 transition-all"><ShoppingBag className="h-4 w-4" /> Orders</TabsTrigger>
           <TabsTrigger value="products" className="gap-2 transition-all"><Package className="h-4 w-4" /> Products</TabsTrigger>
           <TabsTrigger value="news" className="gap-2 transition-all"><Newspaper className="h-4 w-4" /> News</TabsTrigger>
           <TabsTrigger value="team" className="gap-2 transition-all"><Users className="h-4 w-4" /> Management Team</TabsTrigger>
@@ -355,6 +362,80 @@ export default function AdminDashboard() {
           <TabsTrigger value="feedback" className="gap-2 transition-all"><MessageSquare className="h-4 w-4" /> Feedback</TabsTrigger>
           <TabsTrigger value="settings" className="gap-2 transition-all"><Settings className="h-4 w-4" /> Branding & Payments</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="orders" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <Card className="border-none bg-card shadow-sm overflow-hidden">
+            <CardHeader>
+              <CardTitle>Customer Orders</CardTitle>
+              <CardDescription>Manage deliveries and verify payment proofs</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Method</TableHead>
+                    <TableHead>Proof</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders?.map((order: any) => (
+                    <TableRow key={order.id}>
+                      <TableCell>
+                        <div className="font-bold">{order.customerName}</div>
+                        <div className="text-xs text-muted-foreground">{order.customerPhone}</div>
+                        <div className="text-[10px] text-muted-foreground">{order.deliveryAddress?.kebele}, {order.deliveryAddress?.landmark}</div>
+                      </TableCell>
+                      <TableCell className="font-bold text-primary">ETB {order.total}</TableCell>
+                      <TableCell className="uppercase text-xs font-bold opacity-60">{order.paymentMethod}</TableCell>
+                      <TableCell>
+                        {order.paymentProofUrl ? (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="gap-2">
+                                <Eye className="h-4 w-4" /> View Proof
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl">
+                              <DialogHeader>
+                                <DialogTitle>Payment Proof - {order.customerName}</DialogTitle>
+                              </DialogHeader>
+                              <div className="relative aspect-video w-full rounded-lg overflow-hidden border">
+                                <img src={order.paymentProofUrl} className="h-full w-full object-contain" />
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        ) : (
+                          <span className="text-[10px] italic text-muted-foreground">No proof uploaded</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <select 
+                          className="bg-muted rounded px-2 py-1 text-xs" 
+                          value={order.status}
+                          onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="processing">Processing</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="delivered">Delivered</option>
+                        </select>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete('orders', order.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="products" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid gap-6 md:grid-cols-3">
