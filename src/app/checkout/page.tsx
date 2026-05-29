@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -41,6 +40,8 @@ export default function CheckoutPage() {
     landmark: '',
     paymentMethod: 'cbe' 
   });
+
+  const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
   useEffect(() => {
     const savedCart = localStorage.getItem('wubanchi_cart');
@@ -110,8 +111,8 @@ export default function CheckoutPage() {
     const file = e.target.files?.[0];
     if (!file || !orderId) return;
 
-    if (file.size > 1024 * 1024) { // 1MB limit
-      toast({ variant: "destructive", title: "File too large", description: "Please upload an image smaller than 1MB." });
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ variant: "destructive", title: "File too large", description: "Please upload an image smaller than 2MB." });
       return;
     }
 

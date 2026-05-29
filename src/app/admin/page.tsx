@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -84,6 +83,8 @@ export default function AdminDashboard() {
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('Sunrise over a modern poultry farm with free-range chickens');
   const [manualSlide, setManualSlide] = useState({ url: '', title: '', subtitle: '' });
+
+  const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
   useEffect(() => {
     if (settings?.logoUrl) setLogoUrl(settings.logoUrl);
@@ -273,8 +274,8 @@ export default function AdminDashboard() {
   const handleFileUpload = (type: 'logo' | 'hero' | 'manager' | 'facility') => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 800000) {
-        toast({ variant: "destructive", title: "File too large", description: "Please use an image smaller than 800KB." });
+      if (file.size > MAX_FILE_SIZE) {
+        toast({ variant: "destructive", title: "File too large", description: "Please use an image smaller than 2MB." });
         return;
       }
       const reader = new FileReader();
@@ -455,6 +456,10 @@ export default function AdminDashboard() {
                   <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
+                      if (file.size > MAX_FILE_SIZE) {
+                        toast({ variant: "destructive", title: "File too large", description: "Please use an image smaller than 2MB." });
+                        return;
+                      }
                       const reader = new FileReader();
                       reader.onloadend = () => setNewProduct(prev => ({ ...prev, imageUrl: reader.result as string }));
                       reader.readAsDataURL(file);
