@@ -1,10 +1,11 @@
+
 "use client";
 
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X, Bird, ShoppingBasket, Info, MessageSquare } from "lucide-react";
+import { Menu, X, Bird, ShoppingBasket, Info, MessageSquare, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useFirestore, useDoc } from "@/firebase";
@@ -12,6 +13,7 @@ import { doc } from "firebase/firestore";
 
 const navItems = [
   { name: "Products", href: "/products", icon: ShoppingBasket },
+  { name: "Order Status", href: "/order-status", icon: ClipboardList },
   { name: "About", href: "/about", icon: Info },
   { name: "Contact", href: "/contact", icon: MessageSquare },
 ];
