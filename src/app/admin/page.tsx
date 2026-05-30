@@ -115,6 +115,19 @@ export default function AdminDashboard() {
       .catch(console.error);
   };
 
+  const handleUpdateProduct = (id: string, updates: any) => {
+    const docRef = doc(db, 'products', id);
+    updateDoc(docRef, updates)
+      .then(() => toast({ title: "Product Updated" }))
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'update',
+          requestResourceData: updates
+        }));
+      });
+  };
+
   const handleAddProduct = () => {
     if (!newProduct.name || !newProduct.price) return;
     const data = {
@@ -491,13 +504,30 @@ export default function AdminDashboard() {
             </Card>
             <Card className="md:col-span-2 border-none bg-card shadow-sm overflow-hidden">
               <Table>
-                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Price</TableHead><TableHead>Min Qty</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Price</TableHead><TableHead>Min Qty (Edit)</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {products?.map((p: any) => (
                     <TableRow key={p.id}>
                       <TableCell className="font-medium">{p.name}</TableCell>
                       <TableCell>ETB {parseFloat(p.price || 0).toFixed(2)}</TableCell>
-                      <TableCell>{p.minAmount || 1}</TableCell>
+                      <TableCell>
+                        <Input 
+                          type="number" 
+                          className="w-20 h-8 text-xs bg-muted/50" 
+                          defaultValue={p.minAmount || 1}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleUpdateProduct(p.id, { minAmount: parseFloat((e.target as HTMLInputElement).value) });
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const val = parseFloat(e.target.value);
+                            if (val !== p.minAmount) {
+                              handleUpdateProduct(p.id, { minAmount: val });
+                            }
+                          }}
+                        />
+                      </TableCell>
                       <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('products', p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
                   ))}
