@@ -46,6 +46,7 @@ export default function AdminDashboard() {
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
+  // Queries for real-time data
   const productsQuery = useMemo(() => query(collection(db, 'products'), orderBy('createdAt', 'desc')), [db]);
   const newsQuery = useMemo(() => query(collection(db, 'news'), orderBy('createdAt', 'desc')), [db]);
   const feedbackQuery = useMemo(() => query(collection(db, 'feedback'), orderBy('createdAt', 'desc')), [db]);
@@ -64,7 +65,7 @@ export default function AdminDashboard() {
   const { data: feedback } = useCollection(feedbackQuery);
   const { data: managers } = useCollection(managersQuery);
   const { data: facilities } = useCollection(facilitiesQuery);
-  const { data: orders } = useCollection(ordersQuery);
+  const { data: orders, error: ordersError } = useCollection(ordersQuery);
 
   const [newProduct, setNewProduct] = useState({ 
     name: '', 
@@ -458,6 +459,11 @@ export default function AdminDashboard() {
         </TabsList>
 
         <TabsContent value="orders" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {ordersError && (
+             <div className="p-4 bg-destructive/10 text-destructive rounded-xl text-sm italic mb-4">
+                Note: Waiting for security rules re-deployment to access order data.
+             </div>
+          )}
           <Card className="border-none bg-card shadow-sm overflow-hidden">
             <CardHeader>
               <CardTitle>Customer Orders</CardTitle>
@@ -525,6 +531,13 @@ export default function AdminDashboard() {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {(!orders || orders.length === 0) && !ordersError && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-12 text-muted-foreground italic">
+                        No orders found yet.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

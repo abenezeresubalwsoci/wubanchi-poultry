@@ -140,7 +140,7 @@
     },
     "/orders/{orderId}": {
       "schema": "#/entities/Order",
-      "description": "Collection of customer orders"
+      "description": "Collection of customer orders for admin management"
     },
     "/feedback/{feedbackId}": {
       "schema": "#/entities/Feedback",
