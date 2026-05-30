@@ -470,6 +470,10 @@ export default function AdminDashboard() {
                   <Label>Min Order Amount</Label>
                   <Input type="number" value={newProduct.minAmount} onChange={e => setNewProduct({...newProduct, minAmount: e.target.value})} placeholder="e.g. 10" />
                 </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} placeholder="Describe the product..." />
+                </div>
                 <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 w-full">
                   <Upload className="h-4 w-4" /> Upload Product Image
                   <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleFileUpload('product')} />
