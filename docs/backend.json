@@ -13,7 +13,8 @@
         "imageId": { "type": "string" },
         "imageUrl": { "type": "string", "description": "Base64 or URL for custom device-uploaded image" },
         "tag": { "type": "string" },
-        "inStock": { "type": "boolean" }
+        "inStock": { "type": "boolean" },
+        "minAmount": { "type": "number", "description": "Minimum quantity required for purchase" }
       },
       "required": ["name", "category", "price"]
     },

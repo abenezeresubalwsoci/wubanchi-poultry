@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useDoc, useFirestore } from '@/firebase';
@@ -9,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { ChevronLeft, Minus, Plus, MoreVertical, Loader2 } from 'lucide-react';
+import { ChevronLeft, Minus, Plus, MoreVertical, Loader2, Info } from 'lucide-react';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -21,6 +22,13 @@ export default function ProductDetailPage() {
   const { data: product, loading } = useDoc(productRef);
   
   const [quantity, setQuantity] = useState(1);
+
+  // Sync initial quantity with minAmount when product loads
+  useEffect(() => {
+    if (product?.minAmount) {
+      setQuantity(parseFloat(product.minAmount));
+    }
+  }, [product]);
 
   if (loading) {
     return (
@@ -41,6 +49,7 @@ export default function ProductDetailPage() {
     );
   }
 
+  const minQty = parseFloat(product.minAmount || '1');
   const displayImageUrl = product.imageUrl || (PlaceHolderImages.find(img => img.id === product.imageId)?.imageUrl) || PlaceHolderImages[0].imageUrl;
   const imgHint = PlaceHolderImages.find(img => img.id === product.imageId)?.imageHint || 'poultry product';
 
@@ -126,6 +135,14 @@ export default function ProductDetailPage() {
           </Badge>
         </div>
 
+        {/* Min Qty Alert */}
+        {minQty > 1 && (
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary animate-in zoom-in-95 duration-500">
+            <Info className="h-5 w-5 shrink-0" />
+            <p className="text-sm font-bold">Minimum purchase requirement: {minQty} units</p>
+          </div>
+        )}
+
         {/* Description */}
         <div className="space-y-2">
           <p className="text-muted-foreground leading-relaxed animate-in fade-in duration-1000 delay-700">
@@ -139,7 +156,7 @@ export default function ProductDetailPage() {
           <div className="container mx-auto max-w-2xl flex items-center justify-between gap-6">
             <div className="flex items-center gap-4 bg-gray-100 rounded-full p-1 shadow-inner">
               <button 
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                onClick={() => setQuantity(Math.max(minQty, quantity - 1))}
                 className="h-10 w-10 flex items-center justify-center rounded-full bg-primary text-white shadow-md active:scale-75 transition-all hover:bg-primary/90"
               >
                 <Minus className="h-5 w-5" />

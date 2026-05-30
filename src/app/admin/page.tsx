@@ -11,11 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, MessageSquare, Sparkles, Bird, X, Text, Users, Construction, CreditCard, Eye, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, MessageSquare, Sparkles, X, Text, Users, Construction, CreditCard, Eye, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { generateFarmHero } from '@/ai/flows/generate-image-flow';
@@ -38,8 +36,6 @@ interface PaymentMethod {
   accountNumber?: string;
 }
 
-// Firestore document size limit is 1MB. Base64 encoding increases file size.
-// 800KB is a safe threshold for the raw file.
 const MAX_FILE_SIZE = 800 * 1024; 
 
 export default function AdminDashboard() {
@@ -72,7 +68,8 @@ export default function AdminDashboard() {
     category: 'Eggs', 
     description: '',
     imageId: 'organic-eggs',
-    imageUrl: ''
+    imageUrl: '',
+    minAmount: '1'
   });
   const [newNews, setNewNews] = useState({ title: '', desc: '', content: '' });
   const [newManager, setNewManager] = useState({ name: '', role: '', description: '', imageUrl: '' });
@@ -123,11 +120,12 @@ export default function AdminDashboard() {
     const data = {
       ...newProduct,
       price: parseFloat(newProduct.price),
+      minAmount: parseFloat(newProduct.minAmount || '1'),
       createdAt: serverTimestamp()
     };
     addDoc(collection(db, 'products'), data)
       .then(() => {
-        setNewProduct({ name: '', price: '', category: 'Eggs', description: '', imageId: 'organic-eggs', imageUrl: '' });
+        setNewProduct({ name: '', price: '', category: 'Eggs', description: '', imageId: 'organic-eggs', imageUrl: '', minAmount: '1' });
         toast({ title: "Product Added" });
       })
       .catch(async (error) => {
@@ -468,6 +466,10 @@ export default function AdminDashboard() {
                     <select className="w-full h-10 rounded-md border p-2 bg-background text-sm" value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}><option>Eggs</option><option>Meat</option><option>Feed</option><option>Chicks</option></select>
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <Label>Min Order Amount</Label>
+                  <Input type="number" value={newProduct.minAmount} onChange={e => setNewProduct({...newProduct, minAmount: e.target.value})} placeholder="e.g. 10" />
+                </div>
                 <Button variant="outline" className="relative cursor-pointer overflow-hidden gap-2 w-full">
                   <Upload className="h-4 w-4" /> Upload Product Image
                   <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={handleFileUpload('product')} />
@@ -485,12 +487,13 @@ export default function AdminDashboard() {
             </Card>
             <Card className="md:col-span-2 border-none bg-card shadow-sm overflow-hidden">
               <Table>
-                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Price</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Price</TableHead><TableHead>Min Qty</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {products?.map((p: any) => (
                     <TableRow key={p.id}>
                       <TableCell className="font-medium">{p.name}</TableCell>
                       <TableCell>ETB {parseFloat(p.price || 0).toFixed(2)}</TableCell>
+                      <TableCell>{p.minAmount || 1}</TableCell>
                       <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => handleDelete('products', p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                     </TableRow>
                   ))}

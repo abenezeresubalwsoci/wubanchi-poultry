@@ -50,6 +50,7 @@ export default function ProductCatalog() {
     
     const existing = cart.find((item: any) => item.id === product.id);
     const displayImageUrl = product.imageUrl || (PlaceHolderImages.find(img => img.id === product.imageId)?.imageUrl) || PlaceHolderImages[0].imageUrl;
+    const initialQty = parseFloat(product.minAmount || '1');
     
     if (existing) {
       existing.quantity += 1;
@@ -59,7 +60,7 @@ export default function ProductCatalog() {
         name: product.name,
         price: product.price,
         image: displayImageUrl,
-        quantity: 1
+        quantity: initialQty
       });
     }
     
@@ -118,6 +119,7 @@ export default function ProductCatalog() {
           {filteredProducts.map((product, idx) => {
             const displayImageUrl = product.imageUrl || (PlaceHolderImages.find(img => img.id === product.imageId)?.imageUrl) || PlaceHolderImages[0].imageUrl;
             const imgHint = PlaceHolderImages.find(img => img.id === product.imageId)?.imageHint || 'poultry product';
+            const minQty = product.minAmount || 1;
             
             return (
               <Link key={product.id} href={`/products/${product.id}`} className={`block h-full animate-in fade-in zoom-in-95 duration-500 delay-[${idx % 8 * 100}ms]`}>
@@ -145,6 +147,7 @@ export default function ProductCatalog() {
                     <div className="space-y-1 mb-4">
                       <h3 className="text-lg font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors">{product.name}</h3>
                       <p className="text-sm text-muted-foreground">{product.category}</p>
+                      {minQty > 1 && <p className="text-[10px] text-primary font-bold">Min: {minQty} units</p>}
                     </div>
                     
                     <div className="flex items-center justify-between">

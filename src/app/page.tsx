@@ -183,6 +183,7 @@ export default function Home() {
     
     const existing = cart.find((item: any) => item.id === product.id);
     const displayImageUrl = product.imageUrl || (PlaceHolderImages.find(img => img.id === product.imageId)?.imageUrl) || PlaceHolderImages[0].imageUrl;
+    const initialQty = parseFloat(product.minAmount || '1');
     
     if (existing) {
       existing.quantity += 1;
@@ -192,7 +193,7 @@ export default function Home() {
         name: product.name,
         price: product.price,
         image: displayImageUrl,
-        quantity: 1
+        quantity: initialQty
       });
     }
     
@@ -343,6 +344,7 @@ export default function Home() {
             {featuredProducts.map((product: any) => {
               const displayImageUrl = product.imageUrl || (PlaceHolderImages.find(img => img.id === product.imageId)?.imageUrl) || PlaceHolderImages[0].imageUrl;
               const imgHint = PlaceHolderImages.find(img => img.id === product.imageId)?.imageHint || 'poultry product';
+              const minQty = product.minAmount || 1;
               
               return (
                 <Link key={product.id} href={`/products/${product.id}`} className="block animate-in fade-in zoom-in-95 duration-500">
@@ -365,6 +367,7 @@ export default function Home() {
                       <div className="space-y-1 mb-4">
                         <h3 className="text-xl font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors">{product.name}</h3>
                         <p className="text-sm text-muted-foreground">{product.category}</p>
+                        {minQty > 1 && <p className="text-[10px] text-primary font-bold">Min: {minQty} units</p>}
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xl font-bold text-foreground">ETB {(product.price || 0).toFixed(2)}</span>
