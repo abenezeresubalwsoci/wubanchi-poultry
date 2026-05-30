@@ -115,6 +115,15 @@
           }
         }
       }
+    },
+    "AdminSettings": {
+      "title": "Admin Settings",
+      "description": "Secure admin login credentials",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string" },
+        "password": { "type": "string" }
+      }
     }
   },
   "auth": {
@@ -148,6 +157,10 @@
     "/settings/{settingId}": {
       "schema": "#/entities/Settings",
       "description": "Site-wide configuration settings"
+    },
+    "/adminSettings/{settingId}": {
+      "schema": "#/entities/AdminSettings",
+      "description": "Admin authentication document"
     }
   }
 }

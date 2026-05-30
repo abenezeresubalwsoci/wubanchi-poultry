@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useFirestore, useCollection, useDoc } from '@/firebase';
-import { collection, addDoc, deleteDoc, doc, setDoc, updateDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, doc, setDoc, updateDoc, serverTimestamp, query, orderBy, getDoc } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, MessageSquare, Sparkles, X, Text, Users, Construction, CreditCard, Eye, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, ShoppingBag, Newspaper, Package, Lock, LogOut, Upload, Settings, Image as ImageIcon, Loader2, MessageSquare, Sparkles, X, Text, Users, Construction, CreditCard, Eye, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -44,6 +44,7 @@ export default function AdminDashboard() {
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const productsQuery = useMemo(() => query(collection(db, 'products'), orderBy('createdAt', 'desc')), [db]);
   const newsQuery = useMemo(() => query(collection(db, 'news'), orderBy('createdAt', 'desc')), [db]);
@@ -54,6 +55,9 @@ export default function AdminDashboard() {
   
   const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
   const { data: settings } = useDoc(settingsRef);
+
+  const adminAuthRef = useMemo(() => doc(db, 'adminSettings', 'auth'), [db]);
+  const { data: adminAuth } = useDoc(adminAuthRef);
 
   const { data: products } = useCollection(productsQuery);
   const { data: news } = useCollection(newsQuery);
@@ -88,24 +92,81 @@ export default function AdminDashboard() {
   const [aiPrompt, setAiPrompt] = useState('Sunrise over a modern poultry farm with free-range chickens');
   const [manualSlide, setManualSlide] = useState({ url: '', title: '', subtitle: '' });
 
+  // Admin Credential Change State
+  const [newAdminUsername, setNewAdminUsername] = useState('');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [isUpdatingAuth, setIsUpdatingAuth] = useState(false);
+
   useEffect(() => {
     if (settings?.logoUrl) setLogoUrl(settings.logoUrl);
     if (settings?.heroSlides) setHeroSlides(settings.heroSlides);
     if (settings?.paymentMethods) setPaymentMethods(settings.paymentMethods);
   }, [settings]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (adminAuth?.username) setNewAdminUsername(adminAuth.username);
+  }, [adminAuth]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginForm.username === 'admin' && loginForm.password === 'admin') {
-      setIsAuthenticated(true);
-      toast({ title: "Login Successful", description: "Welcome to the Admin Dashboard." });
-    } else {
-      toast({ variant: "destructive", title: "Login Failed", description: "Invalid credentials." });
+    setIsLoggingIn(true);
+    
+    try {
+      const authSnap = await getDoc(adminAuthRef);
+      const dbAuth = authSnap.exists() ? authSnap.data() : { username: 'admin', password: 'admin' };
+
+      if (loginForm.username === dbAuth.username && loginForm.password === dbAuth.password) {
+        setIsAuthenticated(true);
+        toast({ title: "Login Successful", description: "Welcome to the Admin Dashboard." });
+      } else {
+        toast({ variant: "destructive", title: "Login Failed", description: "Invalid credentials." });
+      }
+    } catch (err) {
+      // Fallback for first time setup or permissions
+      if (loginForm.username === 'admin' && loginForm.password === 'admin') {
+        setIsAuthenticated(true);
+        toast({ title: "Login Successful", description: "Using default credentials." });
+      } else {
+        toast({ variant: "destructive", title: "Login Failed", description: "Could not verify credentials." });
+      }
+    } finally {
+      setIsLoggingIn(false);
     }
+  };
+
+  const handleUpdateAdminAuth = () => {
+    if (!newAdminUsername || !newAdminPassword) {
+      toast({ variant: "destructive", title: "Error", description: "Both username and password are required." });
+      return;
+    }
+    
+    setIsUpdatingAuth(true);
+    const data = {
+      username: newAdminUsername,
+      password: newAdminPassword,
+      updatedAt: serverTimestamp()
+    };
+
+    setDoc(adminAuthRef, data, { merge: true })
+      .then(() => {
+        toast({ title: "Credentials Updated", description: "Please use these the next time you log in." });
+        setNewAdminPassword('');
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: adminAuthRef.path,
+          operation: 'update',
+          requestResourceData: data
+        }));
+      })
+      .finally(() => {
+        setIsUpdatingAuth(false);
+      });
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setLoginForm({ username: '', password: '' });
     toast({ title: "Signed Out", description: "You have been logged out." });
   };
 
@@ -358,7 +419,10 @@ export default function AdminDashboard() {
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="admin" required className="transition-all focus:ring-2 focus:ring-primary/20" />
               </div>
-              <Button type="submit" className="w-full font-bold transition-all active:scale-95 shadow-lg">Login</Button>
+              <Button type="submit" disabled={isLoggingIn} className="w-full font-bold transition-all active:scale-95 shadow-lg">
+                {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Login
+              </Button>
             </form>
           </CardContent>
         </Card>
@@ -390,7 +454,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="team" className="gap-2 transition-all"><Users className="h-4 w-4" /> Management Team</TabsTrigger>
           <TabsTrigger value="facilities" className="gap-2 transition-all"><Construction className="h-4 w-4" /> Operations</TabsTrigger>
           <TabsTrigger value="feedback" className="gap-2 transition-all"><MessageSquare className="h-4 w-4" /> Feedback</TabsTrigger>
-          <TabsTrigger value="settings" className="gap-2 transition-all"><Settings className="h-4 w-4" /> Branding & Payments</TabsTrigger>
+          <TabsTrigger value="settings" className="gap-2 transition-all"><Settings className="h-4 w-4" /> Branding & Security</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orders" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -641,8 +705,35 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="settings" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <TabsContent value="settings" className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
           <div className="grid gap-6 md:grid-cols-2">
+            <Card className="border-none bg-card shadow-sm h-fit">
+              <CardHeader><CardTitle>Admin Credentials</CardTitle><CardDescription>Update your login username and password</CardDescription></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Username</Label>
+                  <Input 
+                    value={newAdminUsername} 
+                    onChange={e => setNewAdminUsername(e.target.value)} 
+                    placeholder="Enter new username" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>New Password</Label>
+                  <Input 
+                    type="password"
+                    value={newAdminPassword} 
+                    onChange={e => setNewAdminPassword(e.target.value)} 
+                    placeholder="Enter new password" 
+                  />
+                </div>
+                <Button onClick={handleUpdateAdminAuth} disabled={isUpdatingAuth} className="w-full gap-2">
+                  {isUpdatingAuth ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                  Update Credentials
+                </Button>
+              </CardContent>
+            </Card>
+
             <Card className="border-none bg-card shadow-sm h-fit">
               <CardHeader><CardTitle>Logo Management</CardTitle></CardHeader>
               <CardContent className="space-y-4">
