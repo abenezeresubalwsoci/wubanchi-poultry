@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -72,6 +71,7 @@ export default function ProductDetailPage() {
     }
     
     localStorage.setItem('wubanchi_cart', JSON.stringify(cart));
+    window.dispatchEvent(new Event('cart-updated'));
 
     toast({
       title: "Added to Selection",

@@ -28,6 +28,7 @@ export default function CartPage() {
   useEffect(() => {
     if (isLoaded) {
       localStorage.setItem('wubanchi_cart', JSON.stringify(cartItems));
+      window.dispatchEvent(new Event('cart-updated'));
     }
   }, [cartItems, isLoaded]);
 

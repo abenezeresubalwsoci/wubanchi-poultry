@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -198,6 +197,7 @@ export default function Home() {
     }
     
     localStorage.setItem('wubanchi_cart', JSON.stringify(cart));
+    window.dispatchEvent(new Event('cart-updated'));
     toast({ title: "Added to Basket", description: `${product.name} ready for checkout.` });
   };
 
