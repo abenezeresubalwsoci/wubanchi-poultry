@@ -1,9 +1,8 @@
-
 'use client';
 
 import { useMemo, useState } from 'react';
 import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
-import { doc, collection, query, where, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,8 +45,7 @@ export default function UserDashboard() {
     if (!user) return null;
     return query(
       collection(db, 'submissions'),
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', user.uid)
     );
   }, [db, user]);
 
@@ -55,13 +53,31 @@ export default function UserDashboard() {
     if (!user) return null;
     return query(
       collection(db, 'payouts'),
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', user.uid)
     );
   }, [db, user]);
 
   const { data: allSubmissions, loading: subsLoading } = useCollection(submissionsQuery);
   const { data: allPayouts, loading: payoutsLoading } = useCollection(payoutsQuery);
+
+  // Client-side sorting to eliminate the need for composite Firestore indexes
+  const sortedSubmissions = useMemo(() => {
+    if (!allSubmissions) return [];
+    return [...allSubmissions].sort((a: any, b: any) => {
+      const timeA = a.createdAt?.seconds || 0;
+      const timeB = b.createdAt?.seconds || 0;
+      return timeB - timeA;
+    });
+  }, [allSubmissions]);
+
+  const sortedPayouts = useMemo(() => {
+    if (!allPayouts) return [];
+    return [...allPayouts].sort((a: any, b: any) => {
+      const timeA = a.createdAt?.seconds || 0;
+      const timeB = b.createdAt?.seconds || 0;
+      return timeB - timeA;
+    });
+  }, [allPayouts]);
 
   const activeBalance = profile?.activeBalance ?? 0;
   const holdBalance = profile?.holdBalance ?? 0;
@@ -202,7 +218,7 @@ export default function UserDashboard() {
             <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
               {subsLoading ? (
                 <div className="flex py-12 justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary opacity-20" /></div>
-              ) : allSubmissions?.length ? (
+              ) : sortedSubmissions.length ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left">
                     <thead className="bg-muted text-muted-foreground text-[10px] uppercase font-bold">
@@ -214,7 +230,7 @@ export default function UserDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {allSubmissions.map((sub: any) => (
+                      {sortedSubmissions.map((sub: any) => (
                         <tr key={sub.id} className="hover:bg-muted/5 transition-colors">
                           <td className="p-4 font-semibold">{sub.accountEmail}</td>
                           <td className="p-4 text-muted-foreground">
@@ -249,7 +265,7 @@ export default function UserDashboard() {
             <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
               {payoutsLoading ? (
                 <div className="flex py-12 justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary opacity-20" /></div>
-              ) : allPayouts?.length ? (
+              ) : sortedPayouts.length ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left">
                     <thead className="bg-muted text-muted-foreground text-[10px] uppercase font-bold">
@@ -261,7 +277,7 @@ export default function UserDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {allPayouts.map((po: any) => (
+                      {sortedPayouts.map((po: any) => (
                         <tr key={po.id} className="hover:bg-muted/5 transition-colors">
                           <td className="p-4 text-[10px] font-mono font-bold text-muted-foreground">#{po.id.substring(0, 8).toUpperCase()}</td>
                           <td className="p-4 text-[10px] font-mono">{po.usdtAddress}</td>

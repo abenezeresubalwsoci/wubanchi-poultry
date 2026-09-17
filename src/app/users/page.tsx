@@ -1,10 +1,9 @@
-
 'use client';
 
 import { useMemo, useState } from 'react';
 import { useUser, useFirestore, useCollection } from '@/firebase';
-import { collection, doc, query, orderBy, setDoc, serverTimestamp } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { collection, doc, query, setDoc, serverTimestamp } from 'firebase/firestore';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,28 +12,19 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { 
   Users, 
-  ShieldCheck, 
   DollarSign, 
   Loader2, 
   Lock, 
   Search, 
-  Filter, 
   History, 
   CheckCircle2, 
-  AlertCircle,
   Eye,
-  TrendingUp,
   Wallet
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * Master User Ledger
- * Displays all website users information in one place.
- * Publicly accessible within the app.
- */
 export default function MasterUserLedger() {
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
@@ -48,33 +38,35 @@ export default function MasterUserLedger() {
   const [updatingUser, setUpdatingUser] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Live queries
+  // Live queries without orderBy to completely bypass Firestore index limits
   const usersQuery = useMemo(() => {
     if (!user) return null;
-    return query(collection(db, 'users'), orderBy('updatedAt', 'desc'));
+    return query(collection(db, 'users'));
   }, [db, user]);
 
   const submissionsQuery = useMemo(() => {
     if (!user) return null;
-    return query(collection(db, 'submissions'), orderBy('createdAt', 'desc'));
+    return query(collection(db, 'submissions'));
   }, [db, user]);
 
   const payoutsQuery = useMemo(() => {
     if (!user) return null;
-    return query(collection(db, 'payouts'), orderBy('createdAt', 'desc'));
+    return query(collection(db, 'payouts'));
   }, [db, user]);
 
   const { data: userProfiles, loading: usersLoading } = useCollection(usersQuery);
   const { data: allSubmissions } = useCollection(submissionsQuery);
   const { data: allPayouts } = useCollection(payoutsQuery);
 
+  // Client side filtration and custom chronological memory sort
   const filteredUsers = useMemo(() => {
     if (!userProfiles) return [];
-    return userProfiles.filter((p: any) => 
+    const base = userProfiles.filter((p: any) => 
       p.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
       p.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.telegramChatId?.includes(searchTerm)
     );
+    return [...base].sort((a: any, b: any) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
   }, [userProfiles, searchTerm]);
 
   // Aggregate stats per user
@@ -124,11 +116,17 @@ export default function MasterUserLedger() {
   }, [userProfiles, historyViewUserId]);
 
   const selectedUserSubmissions = useMemo(() => {
-    return allSubmissions?.filter((s: any) => s.userId === historyViewUserId);
+    if (!allSubmissions || !historyViewUserId) return [];
+    return allSubmissions
+      .filter((s: any) => s.userId === historyViewUserId)
+      .sort((a: any, b: any) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
   }, [allSubmissions, historyViewUserId]);
 
   const selectedUserPayouts = useMemo(() => {
-    return allPayouts?.filter((p: any) => p.userId === historyViewUserId);
+    if (!allPayouts || !historyViewUserId) return [];
+    return allPayouts
+      .filter((p: any) => p.userId === historyViewUserId)
+      .sort((a: any, b: any) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
   }, [allPayouts, historyViewUserId]);
 
   if (authLoading) return <div className="flex min-h-[70vh] items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" /></div>;

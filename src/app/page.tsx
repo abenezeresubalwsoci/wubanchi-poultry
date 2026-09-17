@@ -1,9 +1,8 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useAuth, useDoc } from '@/firebase';
-import { collection, addDoc, doc, setDoc, query, where, orderBy, serverTimestamp, increment } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, query, where, serverTimestamp, increment } from 'firebase/firestore';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,17 +63,26 @@ export default function Home() {
     }
   }, [profile]);
 
-  // Load user submissions
+  // Load user submissions without orderBy to avoid index limitations
   const submissionsQuery = useMemo(() => {
     if (!user) return null;
     return query(
       collection(db, 'submissions'),
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', user.uid)
     );
   }, [db, user]);
 
   const { data: submissions, loading: listLoading } = useCollection(submissionsQuery);
+
+  // Sort submissions client side
+  const sortedSubmissions = useMemo(() => {
+    if (!submissions) return [];
+    return [...submissions].sort((a: any, b: any) => {
+      const timeA = a.createdAt?.seconds || 0;
+      const timeB = b.createdAt?.seconds || 0;
+      return timeB - timeA;
+    });
+  }, [submissions]);
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -438,9 +446,9 @@ export default function Home() {
             <div className="flex py-12 justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary opacity-20" />
             </div>
-          ) : submissions?.length ? (
+          ) : sortedSubmissions.length ? (
             <div className="grid gap-4">
-              {submissions.map((sub: any) => {
+              {sortedSubmissions.map((sub: any) => {
                 const statusStyles: Record<string, string> = {
                   pending: 'bg-amber-100 text-amber-700 border-amber-200',
                   approved: 'bg-green-100 text-green-700 border-green-200',
