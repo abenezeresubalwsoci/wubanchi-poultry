@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, CheckCircle2, AlertCircle, Clock, Upload, Mail, Lock, ShieldCheck, Key } from 'lucide-react';
+import { Loader2, Plus, CheckCircle2, AlertCircle, Clock, Upload, Mail, Lock, ShieldCheck } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +26,7 @@ export default function Home() {
   // Authentication states
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
+  const [repeatPassword, setRepeatPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [authLoadingAction, setAuthLoadingAction] = useState(false);
 
@@ -63,6 +64,15 @@ export default function Home() {
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!authEmail || !authPassword) return;
+
+    if (isRegistering && authPassword !== repeatPassword) {
+      toast({
+        variant: 'destructive',
+        title: 'Registration Error',
+        description: 'Passwords do not match. Please verify your input.'
+      });
+      return;
+    }
 
     setAuthLoadingAction(true);
     try {
@@ -213,6 +223,24 @@ export default function Home() {
                 </div>
               </div>
 
+              {isRegistering && (
+                <div className="space-y-1">
+                  <Label htmlFor="repeatPassword">Confirm Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="repeatPassword"
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      className="pl-10 text-sm"
+                      value={repeatPassword}
+                      onChange={(e) => setRepeatPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+
               <Button type="submit" disabled={authLoadingAction} className="w-full rounded-xl font-bold py-2.5">
                 {authLoadingAction && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 {isRegistering ? 'Register Now' : 'Sign In Account'}
@@ -222,7 +250,10 @@ export default function Home() {
             <div className="mt-4 pt-4 border-t text-center">
               <button
                 type="button"
-                onClick={() => setIsRegistering(!isRegistering)}
+                onClick={() => {
+                  setIsRegistering(!isRegistering);
+                  setRepeatPassword('');
+                }}
                 className="text-xs text-primary font-semibold hover:underline"
               >
                 {isRegistering ? 'Already have an account? Sign In' : "Don't have an account? Register"}
