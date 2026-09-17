@@ -80,8 +80,8 @@ export default function UserDashboard() {
       return;
     }
 
-    if (amt < 5) {
-      toast({ variant: 'destructive', title: 'Minimum Payout', description: 'The minimum withdrawal amount is $5.00.' });
+    if (amt < 12) {
+      toast({ variant: 'destructive', title: 'Minimum Payout', description: 'The minimum withdrawal amount is $12.00.' });
       return;
     }
 
@@ -299,7 +299,7 @@ export default function UserDashboard() {
                       type="number"
                       step="0.01"
                       required
-                      placeholder="5.00"
+                      placeholder="12.00"
                       className="pl-10"
                       value={payoutAmount}
                       onChange={(e) => setPayoutAmount(e.target.value)}
@@ -313,17 +313,17 @@ export default function UserDashboard() {
 
                 <Button 
                   type="submit" 
-                  disabled={requesting || activeBalance < 5} 
+                  disabled={requesting || activeBalance < 12} 
                   className="w-full rounded-xl font-bold py-6 shadow-lg active:scale-[0.98] transition-all"
                 >
                   {requesting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ArrowUpRight className="h-4 w-4 mr-2" />}
                   Confirm Withdrawal
                 </Button>
 
-                {activeBalance < 5 && (
+                {activeBalance < 12 && (
                   <div className="flex items-center gap-2 p-3 bg-amber-50 text-amber-700 rounded-xl border border-amber-200 text-[10px] font-bold leading-tight">
                     <AlertCircle className="h-4 w-4 shrink-0" />
-                    A minimum active balance of $5.00 is required for payout fulfillment.
+                    A minimum active balance of $12.00 is required for payout fulfillment.
                   </div>
                 )}
               </form>
