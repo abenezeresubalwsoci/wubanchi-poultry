@@ -1,9 +1,8 @@
-
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, User, LogOut, Layers } from 'lucide-react';
+import { Home, Wallet, LogOut, Layers } from 'lucide-react';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
@@ -44,8 +43,8 @@ export default function Navbar() {
                     pathname === '/dashboard' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
                   }`}
                 >
-                  <User className="h-4 w-4" />
-                  <span>Profile</span>
+                  <Wallet className="h-4 w-4" />
+                  <span>Wallet</span>
                 </Link>
               </div>
             )}
@@ -88,8 +87,8 @@ export default function Navbar() {
                 pathname === '/dashboard' ? 'text-primary font-bold' : 'text-muted-foreground'
               }`}
             >
-              <User className="h-5 w-5" />
-              <span>Profile</span>
+              <Wallet className="h-5 w-5" />
+              <span>Wallet</span>
             </Link>
           </div>
         )}
