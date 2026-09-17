@@ -1,123 +1,141 @@
+'use client';
 
-"use client";
-
-import Link from "next/link";
-import Image from "next/image";
-import { useState, useMemo } from "react";
-import { usePathname } from "next/navigation";
-import { Menu, X, Bird, ShoppingBasket, Info, MessageSquare, ClipboardList } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { useFirestore, useDoc } from "@/firebase";
-import { doc } from "firebase/firestore";
-
-const navItems = [
-  { name: "Products", href: "/products", icon: ShoppingBasket },
-  { name: "Order Status", href: "/order-status", icon: ClipboardList },
-  { name: "About", href: "/about", icon: Info },
-  { name: "Contact", href: "/contact", icon: MessageSquare },
-];
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Home, Wallet, ShieldAlert, LogOut, Layers } from 'lucide-react';
+import { useAuth, useUser, useFirestore } from '@/firebase';
+import { signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { Button } from '@/components/ui/button';
+import { useDoc } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { useMemo } from 'react';
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const auth = useAuth();
+  const { user } = useUser();
   const db = useFirestore();
-  const isAdminPage = pathname === "/admin";
-  
-  const settingsRef = useMemo(() => doc(db, 'settings', 'general'), [db]);
-  const { data: settings } = useDoc(settingsRef);
 
-  const fallbackLogo = PlaceHolderImages.find(img => img.id === 'app-logo');
-  const logoUrl = settings?.logoUrl || fallbackLogo?.imageUrl;
+  const userProfileRef = useMemo(() => {
+    return user ? doc(db, 'users', user.uid) : null;
+  }, [db, user]);
+
+  const { data: profile } = useDoc(userProfileRef);
+
+  const handleLogin = () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider).catch(console.error);
+  };
+
+  const handleLogout = () => {
+    signOut(auth).catch(console.error);
+  };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-      <div className="container mx-auto px-4 md:px-8">
+    <nav className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
-            <div className="flex items-center justify-center rounded-full overflow-hidden h-10 w-10 text-primary-foreground">
-              {logoUrl ? (
-                <div className="relative w-full h-full">
-                  <Image 
-                    src={logoUrl} 
-                    alt="Wubanchi Logo" 
-                    fill
-                    className="object-cover"
-                    data-ai-hint="poultry logo"
-                  />
-                </div>
-              ) : (
-                <div className="bg-primary p-2 rounded-full">
-                  <Bird className="h-6 w-6" />
-                </div>
-              )}
-            </div>
-            <span className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Wubanchi</span>
-          </Link>
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary">
+              <Layers className="h-6 w-6 text-primary" />
+              <span>EarnSub</span>
+            </Link>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex md:items-center md:gap-4 lg:gap-6">
-            {!isAdminPage && navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                <item.icon className="h-4 w-4" />
-                <span className="nav-item-text">{item.name}</span>
-              </Link>
-            ))}
-            {!isAdminPage && (
-              <div className="flex items-center gap-2 border-l pl-4 ml-2">
-                <Button variant="default" asChild className="rounded-full shadow-sm">
-                  <Link href="/products">Order Now</Link>
-                </Button>
+            {user && (
+              <div className="hidden sm:flex items-center gap-4">
+                <Link
+                  href="/"
+                  className={`flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-md transition-colors ${
+                    pathname === '/' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  <Home className="h-4 w-4" />
+                  <span>Home</span>
+                </Link>
+                <Link
+                  href="/wallet"
+                  className={`flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-md transition-colors ${
+                    pathname === '/wallet' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  <Wallet className="h-4 w-4" />
+                  <span>Wallet</span>
+                </Link>
+                {profile?.isAdmin && (
+                  <Link
+                    href="/admin"
+                    className={`flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-md text-destructive transition-colors ${
+                      pathname === '/admin' ? 'bg-destructive/10' : 'hover:bg-muted'
+                    }`}
+                  >
+                    <ShieldAlert className="h-4 w-4" />
+                    <span>Admin Panel</span>
+                  </Link>
+                )}
               </div>
             )}
-            {isAdminPage && (
-              <span className="text-sm font-bold text-primary uppercase tracking-widest">Admin Portal</span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {user ? (
+              <div className="flex items-center gap-3">
+                <div className="hidden md:flex flex-col text-right">
+                  <span className="text-sm font-semibold">{user.displayName}</span>
+                  <span className="text-xs text-muted-foreground">{user.email}</span>
+                </div>
+                {user.photoURL && (
+                  <img
+                    src={user.photoURL}
+                    alt="Profile"
+                    className="h-9 w-9 rounded-full border border-primary/20"
+                  />
+                )}
+                <Button variant="ghost" size="icon" onClick={handleLogout} title="Log Out">
+                  <LogOut className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                </Button>
+              </div>
+            ) : (
+              <Button onClick={handleLogin} className="rounded-full font-bold px-6">
+                Continue with Google
+              </Button>
             )}
           </div>
-
-          {/* Mobile Nav Toggle */}
-          {!isAdminPage && (
-            <div className="flex items-center gap-2 md:hidden">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsOpen(!isOpen)}
-                className="text-foreground"
-              >
-                {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </Button>
-            </div>
-          )}
         </div>
-      </div>
 
-      {/* Mobile Nav Menu */}
-      {isOpen && !isAdminPage && (
-        <div className="md:hidden border-t bg-white animate-in slide-in-from-top-2 duration-200">
-          <div className="space-y-1 px-4 py-4">
-            {navItems.map((item) => (
+        {user && (
+          <div className="flex sm:hidden border-t py-2 justify-around">
+            <Link
+              href="/"
+              className={`flex flex-col items-center gap-1 text-xs px-3 py-1 rounded-md ${
+                pathname === '/' ? 'text-primary font-bold' : 'text-muted-foreground'
+              }`}
+            >
+              <Home className="h-5 w-5" />
+              <span>Home</span>
+            </Link>
+            <Link
+              href="/wallet"
+              className={`flex flex-col items-center gap-1 text-xs px-3 py-1 rounded-md ${
+                pathname === '/wallet' ? 'text-primary font-bold' : 'text-muted-foreground'
+              }`}
+            >
+              <Wallet className="h-5 w-5" />
+              <span>Wallet</span>
+            </Link>
+            {profile?.isAdmin && (
               <Link
-                key={item.name}
-                href={item.href}
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium text-foreground transition-colors hover:bg-muted"
+                href="/admin"
+                className={`flex flex-col items-center gap-1 text-xs px-3 py-1 rounded-md ${
+                  pathname === '/admin' ? 'text-destructive font-bold' : 'text-muted-foreground'
+                }`}
               >
-                <item.icon className="h-5 w-5 text-primary" />
-                <span className="nav-item-text">{item.name}</span>
+                <ShieldAlert className="h-5 w-5" />
+                <span>Admin</span>
               </Link>
-            ))}
-            <div className="pt-4 px-3 space-y-3">
-              <Button className="w-full rounded-full" asChild>
-                <Link href="/products" onClick={() => setIsOpen(false)}>Shop Products</Link>
-              </Button>
-            </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </nav>
   );
 }

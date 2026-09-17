@@ -1,47 +1,16 @@
-
 {
   "placeholderImages": [
     {
-      "id": "app-logo",
-      "description": "Wubanchi Farm Logo",
-      "imageUrl": "https://picsum.photos/seed/wubanchi-logo/200/200",
-      "imageHint": "farm logo"
+      "id": "google-icon",
+      "description": "Google Identity Brand Icon",
+      "imageUrl": "https://picsum.photos/seed/google/40/40",
+      "imageHint": "google logo"
     },
     {
-      "id": "hero-farm",
-      "description": "Sunrise over a beautiful poultry farm with chickens roaming freely",
-      "imageUrl": "https://share.google/hJW6K0SE4T0Z71KYO",
-      "imageHint": "poultry farm"
-    },
-    {
-      "id": "organic-eggs",
-      "description": "A basket of fresh brown organic eggs",
-      "imageUrl": "https://picsum.photos/seed/eggs1/600/400",
-      "imageHint": "fresh eggs"
-    },
-    {
-      "id": "whole-chicken",
-      "description": "High quality fresh whole broiler chicken prepared for cooking",
-      "imageUrl": "https://picsum.photos/seed/meat1/600/400",
-      "imageHint": "raw chicken"
-    },
-    {
-      "id": "poultry-feed",
-      "description": "Nutritious organic grain feed for poultry",
-      "imageUrl": "https://picsum.photos/seed/feed1/600/400",
-      "imageHint": "chicken feed"
-    },
-    {
-      "id": "day-old-chicks",
-      "description": "Cute fluffy yellow day-old chicks in a brooder",
-      "imageUrl": "https://picsum.photos/seed/chicks1/600/400",
-      "imageHint": "baby chicks"
-    },
-    {
-      "id": "farm-story",
-      "description": "Generations of farmers working together on the farm",
-      "imageUrl": "https://picsum.photos/seed/story1/800/500",
-      "imageHint": "farmers poultry"
+      "id": "wallet-hero",
+      "description": "Financial success digital graphics",
+      "imageUrl": "https://picsum.photos/seed/wallet/600/400",
+      "imageHint": "wallet growth"
     }
   ]
 }

@@ -2,18 +2,19 @@
   "entities": {
     "UserProfile": {
       "title": "User Profile",
-      "description": "Information about a registered Telegram user",
+      "description": "Information about a user including their active and hold balances",
       "type": "object",
       "properties": {
-        "telegramId": { "type": "string" },
-        "username": { "type": "string" },
-        "firstName": { "type": "string" },
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
         "photoUrl": { "type": "string" },
         "holdBalance": { "type": "number", "default": 0 },
         "activeBalance": { "type": "number", "default": 0 },
+        "isAdmin": { "type": "boolean", "default": false },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["telegramId", "username"]
+      "required": ["userId", "email"]
     },
     "Submission": {
       "title": "Submission",
@@ -21,19 +22,19 @@
       "type": "object",
       "properties": {
         "userId": { "type": "string" },
-        "username": { "type": "string" },
-        "email": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "accountEmail": { "type": "string" },
         "password": { "type": "string" },
         "qrCodeUrl": { "type": "string", "description": "Base64 encoded string of the uploaded QR code image" },
         "earnings": { "type": "number", "default": 1.12 },
         "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["userId", "email", "password"]
+      "required": ["userId", "accountEmail", "password"]
     }
   },
   "auth": {
-    "providers": ["anonymous"]
+    "providers": ["google"]
   },
   "firestore": {
     "/users/{userId}": {
