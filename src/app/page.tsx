@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useUser, useFirestore, useCollection, useAuth } from '@/firebase';
+import { useUser, useFirestore, useCollection, useAuth, useDoc } from '@/firebase';
 import { collection, addDoc, doc, setDoc, query, where, orderBy, serverTimestamp, increment } from 'firebase/firestore';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, CheckCircle2, AlertCircle, Clock, Upload, Mail, Lock, ShieldCheck } from 'lucide-react';
+import { Loader2, Plus, CheckCircle2, AlertCircle, Clock, Upload, Mail, Lock, ShieldCheck, Send } from 'lucide-react';
 import { notifySubmission } from '@/lib/telegram-actions';
 
 export const dynamic = 'force-dynamic';
@@ -38,7 +38,14 @@ export default function Home() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Telegram Chat ID state
+  const [telegramChatId, setTelegramChatId] = useState('');
+  const [savingChatId, setSavingChatId] = useState(false);
+
   // Sync user profile state
+  const userDocRef = useMemo(() => (user ? doc(db, 'users', user.uid) : null), [db, user]);
+  const { data: profile } = useDoc(userDocRef);
+
   useEffect(() => {
     if (user) {
       const userRef = doc(db, 'users', user.uid);
@@ -50,6 +57,12 @@ export default function Home() {
       }, { merge: true }).catch(console.error);
     }
   }, [user, db]);
+
+  useEffect(() => {
+    if (profile?.telegramChatId) {
+      setTelegramChatId(profile.telegramChatId);
+    }
+  }, [profile]);
 
   // Load user submissions
   const submissionsQuery = useMemo(() => {
@@ -115,6 +128,32 @@ export default function Home() {
       toast({ title: 'QR Code attached successfully.' });
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleSaveChatId = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !userDocRef) return;
+
+    setSavingChatId(true);
+    const data = {
+      telegramChatId,
+      updatedAt: serverTimestamp()
+    };
+
+    setDoc(userDocRef, data, { merge: true })
+      .then(() => {
+        toast({ title: 'Telegram ID Saved', description: 'Your chat ID has been updated.' });
+      })
+      .catch((error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: userDocRef.path,
+          operation: 'update',
+          requestResourceData: data
+        }));
+      })
+      .finally(() => {
+        setSavingChatId(false);
+      });
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -352,6 +391,36 @@ export default function Home() {
                 <Button type="submit" disabled={submitting} className="w-full rounded-xl font-bold py-5 shadow-md active:scale-[0.98]">
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   Submit Application
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Telegram Settings Card */}
+          <Card className="border shadow-md bg-white rounded-2xl overflow-hidden">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-bold flex items-center gap-2">
+                <Send className="h-5 w-5 text-primary" />
+                Telegram Integration
+              </CardTitle>
+              <CardDescription>Link your Telegram ID to receive rewards alerts.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSaveChatId} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="chatId">Chat ID</Label>
+                  <Input
+                    id="chatId"
+                    placeholder="E.g. 123456789"
+                    value={telegramChatId}
+                    onChange={(e) => setTelegramChatId(e.target.value)}
+                    className="text-sm"
+                  />
+                  <p className="text-[10px] text-muted-foreground">Find your ID by messaging @userinfobot on Telegram.</p>
+                </div>
+                <Button type="submit" disabled={savingChatId} className="w-full rounded-xl text-xs h-9">
+                  {savingChatId ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : null}
+                  Save Telegram ID
                 </Button>
               </form>
             </CardContent>
