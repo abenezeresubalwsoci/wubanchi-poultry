@@ -42,10 +42,11 @@
       "properties": {
         "userId": { "type": "string" },
         "amount": { "type": "number" },
+        "usdtAddress": { "type": "string", "description": "USDT BEP20 wallet address" },
         "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["userId", "amount"]
+      "required": ["userId", "amount", "usdtAddress"]
     }
   },
   "auth": {

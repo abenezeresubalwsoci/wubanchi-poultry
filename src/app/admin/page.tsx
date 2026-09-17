@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -209,9 +210,13 @@ export default function AdminDashboard() {
             <CardContent className="p-0">
               {payoutsLoading ? <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary opacity-20" /></div> : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left"><thead className="bg-muted text-muted-foreground text-xs uppercase font-bold"><tr><th className="p-4">Request ID</th><th className="p-4">Amount</th><th className="p-4">Status</th><th className="p-4 text-right">Actions</th></tr></thead><tbody className="divide-y">{allPayouts?.map((po: any) => (
+                  <table className="w-full text-sm text-left"><thead className="bg-muted text-muted-foreground text-xs uppercase font-bold"><tr><th className="p-4">Request ID</th><th className="p-4">Destination Address</th><th className="p-4">Amount</th><th className="p-4">Status</th><th className="p-4 text-right">Actions</th></tr></thead><tbody className="divide-y">{allPayouts?.map((po: any) => (
                     <tr key={po.id} className="hover:bg-muted/20">
                       <td className="p-4 font-mono text-[10px]">#{po.id.substring(0, 8).toUpperCase()}</td>
+                      <td className="p-4">
+                        <span className="text-[10px] font-bold block text-muted-foreground uppercase">USDT BEP20</span>
+                        <code className="text-xs bg-muted px-1.5 py-0.5 rounded border">{po.usdtAddress}</code>
+                      </td>
                       <td className="p-4 font-bold text-emerald-600">${parseFloat(po.amount).toFixed(2)}</td>
                       <td className="p-4"><span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${po.status === 'approved' ? 'bg-green-100 text-green-700' : po.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{po.status || 'pending'}</span></td>
                       <td className="p-4 text-right">{po.status === 'pending' && <div className="flex gap-2 justify-end"><Button variant="outline" size="sm" onClick={() => handlePayoutAction(po, 'approved')} className="text-green-600">Approve</Button><Button variant="outline" size="sm" onClick={() => handlePayoutAction(po, 'rejected')} className="text-destructive">Reject</Button></div>}</td>

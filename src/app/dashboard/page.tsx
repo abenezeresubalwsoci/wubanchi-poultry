@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -20,7 +21,8 @@ import {
   CreditCard,
   ShieldCheck,
   TrendingUp,
-  Clock
+  Clock,
+  Hash
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -31,6 +33,7 @@ export default function UserDashboard() {
   const { toast } = useToast();
 
   const [payoutAmount, setPayoutAmount] = useState('');
+  const [usdtAddress, setUsdtAddress] = useState('');
   const [requesting, setRequesting] = useState(false);
 
   const userProfileRef = useMemo(() => {
@@ -75,6 +78,11 @@ export default function UserDashboard() {
       return;
     }
 
+    if (!usdtAddress.trim()) {
+      toast({ variant: 'destructive', title: 'Address Required', description: 'Please enter your USDT BEP20 address.' });
+      return;
+    }
+
     if (amt > activeBalance) {
       toast({ variant: 'destructive', title: 'Insufficient Funds', description: 'Amount exceeds active balance.' });
       return;
@@ -89,6 +97,7 @@ export default function UserDashboard() {
     const payoutData = {
       userId: user.uid,
       amount: amt,
+      usdtAddress: usdtAddress.trim(),
       status: 'pending',
       createdAt: serverTimestamp()
     };
@@ -97,6 +106,7 @@ export default function UserDashboard() {
       .then(() => {
         toast({ title: 'Payout Requested', description: `$${amt.toFixed(2)} withdrawal is pending review.` });
         setPayoutAmount('');
+        setUsdtAddress('');
       })
       .catch(() => {
         toast({ variant: 'destructive', title: 'Request Failed', description: 'Communication error with server.' });
@@ -245,7 +255,7 @@ export default function UserDashboard() {
                     <thead className="bg-muted text-muted-foreground text-[10px] uppercase font-bold">
                       <tr>
                         <th className="p-4">Request ID</th>
-                        <th className="p-4">Date</th>
+                        <th className="p-4">Address</th>
                         <th className="p-4">Amount</th>
                         <th className="p-4">Status</th>
                       </tr>
@@ -254,9 +264,7 @@ export default function UserDashboard() {
                       {allPayouts.map((po: any) => (
                         <tr key={po.id} className="hover:bg-muted/5 transition-colors">
                           <td className="p-4 text-[10px] font-mono font-bold text-muted-foreground">#{po.id.substring(0, 8).toUpperCase()}</td>
-                          <td className="p-4 text-muted-foreground">
-                            {po.createdAt ? new Date(po.createdAt.seconds * 1000).toLocaleDateString() : 'Pending'}
-                          </td>
+                          <td className="p-4 text-[10px] font-mono">{po.usdtAddress}</td>
                           <td className="p-4 font-bold text-emerald-600">${parseFloat(po.amount).toFixed(2)}</td>
                           <td className="p-4">
                             <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
@@ -308,6 +316,21 @@ export default function UserDashboard() {
                   <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
                     <span className="text-muted-foreground">Available:</span>
                     <span className="text-emerald-600">${parseFloat(activeBalance as any).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="usdtAddress">USDT BEP20 Address</Label>
+                  <div className="relative">
+                    <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="usdtAddress"
+                      required
+                      placeholder="0x..."
+                      className="pl-10"
+                      value={usdtAddress}
+                      onChange={(e) => setUsdtAddress(e.target.value)}
+                    />
                   </div>
                 </div>
 

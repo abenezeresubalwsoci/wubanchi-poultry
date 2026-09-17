@@ -327,6 +327,7 @@ export default function MasterUserLedger() {
                   <thead className="bg-muted text-[9px] uppercase font-bold text-muted-foreground">
                     <tr>
                       <th className="p-3">Payout ID</th>
+                      <th className="p-3">Address</th>
                       <th className="p-3">Status</th>
                       <th className="p-3 text-right">Amount</th>
                     </tr>
@@ -335,6 +336,7 @@ export default function MasterUserLedger() {
                     {selectedUserPayouts?.map((p: any) => (
                       <tr key={p.id}>
                         <td className="p-3 font-mono text-[9px]">#{p.id.substring(0, 8).toUpperCase()}</td>
+                        <td className="p-3 font-mono text-[8px] truncate max-w-[150px]">{p.usdtAddress}</td>
                         <td className="p-3">
                            <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase border ${
                             p.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
@@ -348,7 +350,7 @@ export default function MasterUserLedger() {
                       </tr>
                     ))}
                     {!selectedUserPayouts?.length && (
-                      <tr><td colSpan={3} className="p-4 text-center italic text-muted-foreground">No payouts requested.</td></tr>
+                      <tr><td colSpan={4} className="p-4 text-center italic text-muted-foreground">No payouts requested.</td></tr>
                     )}
                   </tbody>
                 </table>
