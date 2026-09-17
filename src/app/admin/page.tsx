@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useUser, useFirestore, useCollection } from '@/firebase';
+import { useUser, useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, doc, query, orderBy, setDoc, increment } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,29 +35,19 @@ export default function AdminDashboard() {
   const { data: userProfiles, loading: usersLoading } = useCollection(usersQuery);
   const { data: allSubmissions, loading: subsLoading } = useCollection(submissionsQuery);
 
-  // Check admin state from custom profile
-  const userProfileRef = useMemo(() => {
-    return user ? doc(db, 'users', user.uid) : null;
-  }, [db, user]);
-  
-  const { data: currentUserProfile } = useCollection(
-    user ? query(collection(db, 'users'), orderBy('updatedAt', 'desc')) : null
-  );
+  // Check admin state directly from the user's document
+  const userDocRef = useMemo(() => (user ? doc(db, 'users', user.uid) : null), [db, user]);
+  const { data: profile, loading: profileLoading } = useDoc(userDocRef);
 
-  const isAdmin = useMemo(() => {
-    const matched = currentUserProfile?.find((u: any) => u.id === user?.uid);
-    return matched?.isAdmin === true;
-  }, [currentUserProfile, user]);
+  const isAdmin = profile?.isAdmin === true;
 
   const handleApprove = (submission: any) => {
     const subRef = doc(db, 'submissions', submission.id);
     const userRef = doc(db, 'users', submission.userId);
 
-    // 1. Move funds from Hold balance to Active balance
-    // Deduct $1.12 from Hold pool, add $1.12 to Active pool
     const earningValue = submission.earnings || 1.12;
-
     const dataUpdates = { status: 'approved' };
+
     setDoc(subRef, dataUpdates, { merge: true })
       .then(async () => {
         await setDoc(userRef, {
@@ -86,7 +77,6 @@ export default function AdminDashboard() {
     const dataUpdates = { status: 'rejected' };
     setDoc(subRef, dataUpdates, { merge: true })
       .then(async () => {
-        // Remove from hold balance pool as submission failed criteria
         await setDoc(userRef, {
           holdBalance: increment(-earningValue)
         }, { merge: true });
@@ -114,7 +104,8 @@ export default function AdminDashboard() {
     const userRef = doc(db, 'users', balanceEditUserId);
     const dataUpdates = {
       holdBalance: parseFloat(editHoldBalance || '0'),
-      activeBalance: parseFloat(editActiveBalance || '0')
+      activeBalance: parseFloat(editActiveBalance || '0'),
+      updatedAt: new Date().toISOString()
     };
 
     setDoc(userRef, dataUpdates, { merge: true })
@@ -133,6 +124,14 @@ export default function AdminDashboard() {
         setUpdatingUser(false);
       });
   };
+
+  if (profileLoading) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
+      </div>
+    );
+  }
 
   if (!user || !isAdmin) {
     return (
@@ -172,7 +171,6 @@ export default function AdminDashboard() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Tab 1: Submissions review */}
         <TabsContent value="submissions" className="space-y-4">
           <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
             <CardHeader>
@@ -272,7 +270,6 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
 
-        {/* Tab 2: User Accounts / Balance Override */}
         <TabsContent value="accounts" className="space-y-4">
           <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
             <CardHeader>
@@ -338,7 +335,6 @@ export default function AdminDashboard() {
                                       onChange={(e) => setEditHoldBalance(e.target.value)}
                                     />
                                   </div>
-
                                   <div className="space-y-1">
                                     <Label>Active Balance ($)</Label>
                                     <Input
@@ -349,7 +345,6 @@ export default function AdminDashboard() {
                                       onChange={(e) => setEditActiveBalance(e.target.value)}
                                     />
                                   </div>
-
                                   <Button type="submit" disabled={updatingUser} className="w-full rounded-xl font-bold">
                                     {updatingUser ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Override Assets State'}
                                   </Button>

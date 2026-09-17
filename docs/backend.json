@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -12,7 +13,8 @@
         "holdBalance": { "type": "number", "default": 0 },
         "activeBalance": { "type": "number", "default": 0 },
         "isAdmin": { "type": "boolean", "default": false },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "email"]
     },
@@ -34,16 +36,16 @@
     }
   },
   "auth": {
-    "providers": ["google"]
+    "providers": ["password"]
   },
   "firestore": {
     "/users/{userId}": {
       "schema": "#/entities/UserProfile",
-      "description": "Collection of user profiles and wallet balances"
+      "description": "Collection of user profiles and wallet balances. Users can read/write their own doc, admins can manage all."
     },
     "/submissions/{submissionId}": {
       "schema": "#/entities/Submission",
-      "description": "Collection of account submissions for admin verification"
+      "description": "Collection of account submissions for admin verification. Users can create and read their own, admins can list and update all."
     }
   }
 }
