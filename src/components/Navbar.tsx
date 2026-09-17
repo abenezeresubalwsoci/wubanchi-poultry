@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Wallet, ShieldAlert, LogOut, Layers } from 'lucide-react';
 import { useAuth, useUser, useFirestore } from '@/firebase';
-import { signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { useDoc } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -21,11 +21,6 @@ export default function Navbar() {
   }, [db, user]);
 
   const { data: profile } = useDoc(userProfileRef);
-
-  const handleLogin = () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider).catch(console.error);
-  };
 
   const handleLogout = () => {
     signOut(auth).catch(console.error);
@@ -80,24 +75,18 @@ export default function Navbar() {
             {user ? (
               <div className="flex items-center gap-3">
                 <div className="hidden md:flex flex-col text-right">
-                  <span className="text-sm font-semibold">{user.displayName}</span>
+                  <span className="text-sm font-semibold">{user.displayName || user.email}</span>
                   <span className="text-xs text-muted-foreground">{user.email}</span>
                 </div>
-                {user.photoURL && (
-                  <img
-                    src={user.photoURL}
-                    alt="Profile"
-                    className="h-9 w-9 rounded-full border border-primary/20"
-                  />
-                )}
-                <Button variant="ghost" size="icon" onClick={handleLogout} title="Log Out">
-                  <LogOut className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="rounded-full gap-2 border">
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
                 </Button>
               </div>
             ) : (
-              <Button onClick={handleLogin} className="rounded-full font-bold px-6">
-                Continue with Google
-              </Button>
+              <span className="text-xs text-muted-foreground font-medium bg-muted px-3 py-1.5 rounded-full">
+                Secure Session Gate
+              </span>
             )}
           </div>
         </div>
