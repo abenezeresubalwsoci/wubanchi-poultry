@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  User, 
   Wallet, 
   CheckCircle2, 
   ArrowUpRight, 
@@ -19,7 +18,6 @@ import {
   Loader2,
   History,
   CreditCard,
-  Send,
   ShieldCheck,
   TrendingUp,
   Clock
