@@ -37,6 +37,21 @@ const telegramBotFlow = ai.defineFlow(
     outputSchema: TelegramBotOutputSchema,
   },
   async (input) => {
+    // Handle the /start command specifically
+    if (input.trim().toLowerCase() === '/start') {
+      return `🚀 <b>Welcome to the EarnSub Official Bot!</b>
+
+I am your automated assistant for the EarnSub account processing platform. 
+
+<b>How can I help you?</b>
+• Ask about how to submit account details.
+• Inquire about the $1.12 per submission reward.
+• Learn about the difference between Hold and Active balances.
+• Get help with your wallet or account verification.
+
+Simply type your question below to get started!`;
+    }
+
     const { output } = await botPrompt(input);
     return output || "I'm sorry, I couldn't process that request.";
   }
