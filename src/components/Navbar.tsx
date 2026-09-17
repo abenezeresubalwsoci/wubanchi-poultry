@@ -1,8 +1,9 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Wallet, LogOut, Layers } from 'lucide-react';
+import { Home, User, LogOut, Layers } from 'lucide-react';
 import { useAuth, useUser, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
@@ -48,13 +49,13 @@ export default function Navbar() {
                   <span>Home</span>
                 </Link>
                 <Link
-                  href="/wallet"
+                  href="/users"
                   className={`flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-md transition-colors ${
-                    pathname === '/wallet' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
+                    pathname === '/users' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
                   }`}
                 >
-                  <Wallet className="h-4 w-4" />
-                  <span>Wallet</span>
+                  <User className="h-4 w-4" />
+                  <span>Profile</span>
                 </Link>
               </div>
             )}
@@ -92,13 +93,13 @@ export default function Navbar() {
               <span>Home</span>
             </Link>
             <Link
-              href="/wallet"
+              href="/users"
               className={`flex flex-col items-center gap-1 text-xs px-3 py-1 rounded-md ${
-                pathname === '/wallet' ? 'text-primary font-bold' : 'text-muted-foreground'
+                pathname === '/users' ? 'text-primary font-bold' : 'text-muted-foreground'
               }`}
             >
-              <Wallet className="h-5 w-5" />
-              <span>Wallet</span>
+              <User className="h-5 w-5" />
+              <span>Profile</span>
             </Link>
           </div>
         )}

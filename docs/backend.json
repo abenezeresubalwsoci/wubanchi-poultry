@@ -34,6 +34,18 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "accountEmail", "password"]
+    },
+    "PayoutRequest": {
+      "title": "Payout Request",
+      "description": "A request by a user to withdraw funds",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "amount"]
     }
   },
   "auth": {
@@ -42,11 +54,15 @@
   "firestore": {
     "/users/{userId}": {
       "schema": "#/entities/UserProfile",
-      "description": "Collection of user profiles and wallet balances. Users can read/write their own doc, admins can manage all."
+      "description": "Collection of user profiles and wallet balances."
     },
     "/submissions/{submissionId}": {
       "schema": "#/entities/Submission",
-      "description": "Collection of account submissions for admin verification. Users can create and read their own, admins can list and update all."
+      "description": "Collection of account submissions."
+    },
+    "/payouts/{payoutId}": {
+      "schema": "#/entities/PayoutRequest",
+      "description": "Collection of withdrawal requests."
     }
   }
 }
