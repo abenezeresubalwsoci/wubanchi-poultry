@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -173,7 +172,27 @@ export default function AdminDashboard() {
                   <table className="w-full text-sm text-left"><thead className="bg-muted text-muted-foreground text-xs uppercase font-bold"><tr><th className="p-4">User Email</th><th className="p-4">Target Login</th><th className="p-4">Status</th><th className="p-4 text-right">Actions</th></tr></thead><tbody className="divide-y">{allSubmissions?.map((sub: any) => (
                     <tr key={sub.id} className="hover:bg-muted/20">
                       <td className="p-4 font-semibold text-xs">{sub.userEmail}</td>
-                      <td className="p-4"><span className="font-bold block">{sub.accountEmail}</span><span className="text-[10px] font-mono opacity-50">{sub.password}</span></td>
+                      <td className="p-4">
+                        <span className="font-bold block">{sub.accountEmail}</span>
+                        <span className="text-[10px] font-mono opacity-60 block">{sub.password}</span>
+                        {sub.qrCodeUrl && (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button className="text-[11px] text-primary font-bold mt-1.5 hover:underline flex items-center gap-1 bg-primary/5 px-2 py-0.5 rounded w-fit">
+                                🖼️ View Attached Proof / QR
+                              </button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                              <DialogHeader>
+                                <DialogTitle>Attached Document Proof</DialogTitle>
+                              </DialogHeader>
+                              <div className="flex justify-center p-2 bg-muted/50 rounded-xl mt-2">
+                                <img src={sub.qrCodeUrl} alt="Submission proof image" className="max-h-[60vh] object-contain rounded-lg shadow-sm" />
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+                      </td>
                       <td className="p-4"><span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${sub.status === 'approved' ? 'bg-green-100 text-green-700' : sub.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{sub.status || 'pending'}</span></td>
                       <td className="p-4 text-right">{sub.status === 'pending' && <div className="flex gap-2 justify-end"><Button variant="outline" size="sm" onClick={() => handleApprove(sub)} className="text-green-600"><Check className="h-4 w-4" /></Button><Button variant="outline" size="sm" onClick={() => handleReject(sub)} className="text-destructive"><X className="h-4 w-4" /></Button></div>}</td>
                     </tr>
