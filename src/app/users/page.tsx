@@ -2,348 +2,240 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
-import { doc, collection, query, where, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection } from '@/firebase';
+import { collection, doc, query, orderBy, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  User, 
-  Wallet, 
-  Clock, 
-  CheckCircle2, 
-  ArrowUpRight, 
-  Send, 
-  AlertCircle, 
-  ArrowDownCircle, 
-  ListFilter,
-  Loader2,
-  History,
-  CreditCard
-} from 'lucide-react';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { Users, ShieldCheck, DollarSign, Loader2, Lock, Search, Filter } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export const dynamic = 'force-dynamic';
 
-export default function UserDashboard() {
+/**
+ * Hidden Master User Ledger
+ * Displays all website users information in one place.
+ * Protected by portal login.
+ */
+export default function MasterUserLedger() {
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
 
-  const [payoutAmount, setPayoutAmount] = useState('');
-  const [requesting, setRequesting] = useState(false);
+  // Portal Login State
+  const [portalUsername, setPortalUsername] = useState('');
+  const [portalPassword, setPortalPassword] = useState('');
+  const [isPortalAuthorized, setIsPortalAuthorized] = useState(false);
+  const [isAuthorizing, setIsAuthorizing] = useState(false);
 
-  const userProfileRef = useMemo(() => {
-    return user ? doc(db, 'users', user.uid) : null;
-  }, [db, user]);
+  // Management State
+  const [balanceEditUserId, setBalanceEditUserId] = useState<string | null>(null);
+  const [editHoldBalance, setEditHoldBalance] = useState('');
+  const [editActiveBalance, setEditActiveBalance] = useState('');
+  const [updatingUser, setUpdatingUser] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: profile } = useDoc(userProfileRef);
+  // Live query for all users
+  const usersQuery = useMemo(() => {
+    if (!user || !isPortalAuthorized) return null;
+    return query(collection(db, 'users'), orderBy('updatedAt', 'desc'));
+  }, [db, user, isPortalAuthorized]);
 
-  const submissionsQuery = useMemo(() => {
-    if (!user) return null;
-    return query(
-      collection(db, 'submissions'),
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+  const { data: userProfiles, loading: usersLoading } = useCollection(usersQuery);
+
+  const filteredUsers = useMemo(() => {
+    if (!userProfiles) return [];
+    return userProfiles.filter((p: any) => 
+      p.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      p.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.telegramChatId?.includes(searchTerm)
     );
-  }, [db, user]);
+  }, [userProfiles, searchTerm]);
 
-  const payoutsQuery = useMemo(() => {
-    if (!user) return null;
-    return query(
-      collection(db, 'payouts'),
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
-    );
-  }, [db, user]);
-
-  const { data: allSubmissions, loading: subsLoading } = useCollection(submissionsQuery);
-  const { data: allPayouts, loading: payoutsLoading } = useCollection(payoutsQuery);
-
-  const activeBalance = profile?.activeBalance ?? 0;
-  const holdBalance = profile?.holdBalance ?? 0;
-  const totalBalance = (activeBalance as number) + (holdBalance as number);
-  const telegramChatId = profile?.telegramChatId || 'Not connected';
-
-  const handleRequestPayout = async (e: React.FormEvent) => {
+  const handlePortalLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
-
-    const amt = parseFloat(payoutAmount);
-    if (isNaN(amt) || amt <= 0) {
-      toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Please specify a real numeric amount.' });
-      return;
+    if (portalUsername === 'abeni' && portalPassword === 'abeni123') {
+      setIsAuthorizing(true);
+      setIsPortalAuthorized(true);
+      toast({ title: 'Master Ledger Access Granted', description: 'Session initialized.' });
+      setIsAuthorizing(false);
+    } else {
+      toast({ variant: 'destructive', title: 'Access Denied', description: 'Invalid master credentials.' });
     }
-
-    if (amt > activeBalance) {
-      toast({ variant: 'destructive', title: 'Insufficient Funds', description: 'Amount exceeds active balance.' });
-      return;
-    }
-
-    if (amt < 5) {
-      toast({ variant: 'destructive', title: 'Minimum Payout', description: 'The minimum withdrawal amount is $5.00.' });
-      return;
-    }
-
-    setRequesting(true);
-    const payoutData = {
-      userId: user.uid,
-      amount: amt,
-      status: 'pending',
-      createdAt: serverTimestamp()
-    };
-
-    addDoc(collection(db, 'payouts'), payoutData)
-      .then(() => {
-        toast({ title: 'Payout Requested', description: `$${amt.toFixed(2)} withdrawal is pending review.` });
-        setPayoutAmount('');
-      })
-      .catch(() => {
-        toast({ variant: 'destructive', title: 'Request Failed', description: 'Communication error with server.' });
-      })
-      .finally(() => {
-        setRequesting(false);
-      });
   };
 
-  if (authLoading) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary opacity-30" />
-      </div>
-    );
-  }
+  const handleManualBalanceChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!balanceEditUserId) return;
+    setUpdatingUser(true);
+    const userRef = doc(db, 'users', balanceEditUserId);
+    const dataUpdates = { 
+      holdBalance: parseFloat(editHoldBalance || '0'), 
+      activeBalance: parseFloat(editActiveBalance || '0'), 
+      updatedAt: serverTimestamp() 
+    };
 
-  if (!user) {
+    setDoc(userRef, dataUpdates, { merge: true })
+      .then(() => { 
+        toast({ title: 'Balance updated successfully.' }); 
+        setBalanceEditUserId(null); 
+      })
+      .catch((error) => errorEmitter.emit('permission-error', new FirestorePermissionError({ 
+        path: userRef.path, 
+        operation: 'update', 
+        requestResourceData: dataUpdates 
+      })))
+      .finally(() => setUpdatingUser(false));
+  };
+
+  if (authLoading) return <div className="flex min-h-[70vh] items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" /></div>;
+
+  if (!user) return (
+    <div className="container mx-auto px-4 py-20 text-center max-w-md space-y-4">
+      <div className="bg-amber-100 text-amber-600 w-14 h-14 rounded-full flex items-center justify-center mx-auto"><Lock className="h-6 w-6" /></div>
+      <h2 className="text-2xl font-bold">Authentication Required</h2>
+      <p className="text-muted-foreground text-sm">Please log in to your account first.</p>
+    </div>
+  );
+
+  if (!isPortalAuthorized) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center max-w-md italic text-muted-foreground">
-        Please authenticate via the home gateway to access your dashboard.
+      <div className="container mx-auto px-4 py-16 max-w-md space-y-8 animate-in fade-in duration-500">
+        <div className="text-center space-y-3">
+          <div className="bg-primary/10 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-primary">
+            <ShieldCheck className="h-8 w-8" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">Master Ledger Gateway</h1>
+          <p className="text-muted-foreground text-sm">This is a hidden management portal for system users.</p>
+        </div>
+        <Card className="border shadow-lg bg-white rounded-xl overflow-hidden">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold">Portal Sign In</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handlePortalLogin} className="space-y-4">
+              <div className="space-y-1">
+                <Label>Username</Label>
+                <Input required placeholder="Username" value={portalUsername} onChange={(e) => setPortalUsername(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label>Password</Label>
+                <Input type="password" required placeholder="••••••••" value={portalPassword} onChange={(e) => setPortalPassword(e.target.value)} />
+              </div>
+              <Button type="submit" disabled={isAuthorizing} className="w-full">
+                {isAuthorizing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : 'Open Ledger'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 lg:px-8 max-w-6xl space-y-10 animate-in fade-in duration-500">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Financial Dashboard</h1>
-        <p className="text-muted-foreground">Detailed overview of your profile, balances, and history.</p>
+    <div className="container mx-auto px-4 py-8 lg:px-8 max-w-7xl space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Users className="h-8 w-8 text-primary" />
+            Master User Ledger
+          </h1>
+          <p className="text-muted-foreground text-sm">Complete overview of all registered website users and their financial status.</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => setIsPortalAuthorized(false)} className="rounded-full">Lock Session</Button>
       </div>
 
-      {/* Profile & Balance Information Table */}
+      <div className="flex items-center gap-4 bg-white p-4 rounded-xl border shadow-sm">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search by name, email, or chat ID..." 
+            className="pl-10 border-none bg-muted/50 focus-visible:ring-1" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <Button variant="ghost" size="icon" className="shrink-0"><Filter className="h-4 w-4" /></Button>
+      </div>
+
       <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
-        <CardHeader className="bg-muted/30">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <User className="h-5 w-5 text-primary" />
-            Profile & Balance Summary
-          </CardTitle>
-        </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-bold">
-                <tr>
-                  <th className="p-4 border-b">Parameter</th>
-                  <th className="p-4 border-b">Detail</th>
-                  <th className="p-4 border-b">Status / Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                <tr>
-                  <td className="p-4 font-semibold">User Identification</td>
-                  <td className="p-4">
-                    <div className="flex flex-col">
-                      <span className="font-bold">{profile?.displayName || 'User'}</span>
-                      <span className="text-xs text-muted-foreground">{profile?.email}</span>
-                    </div>
-                  </td>
-                  <td className="p-4"><span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Active Profile</span></td>
-                </tr>
-                <tr>
-                  <td className="p-4 font-semibold">Telegram Chat ID</td>
-                  <td className="p-4 font-mono">{telegramChatId}</td>
-                  <td className="p-4">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${profile?.telegramChatId ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                      {profile?.telegramChatId ? 'Connected' : 'Action Required'}
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="p-4 font-semibold text-amber-600">Hold Balance</td>
-                  <td className="p-4 font-bold text-amber-600">${parseFloat(holdBalance as any).toFixed(2)}</td>
-                  <td className="p-4 text-xs text-muted-foreground italic">Pending verification</td>
-                </tr>
-                <tr>
-                  <td className="p-4 font-semibold text-emerald-600">Active Balance</td>
-                  <td className="p-4 font-bold text-emerald-600">${parseFloat(activeBalance as any).toFixed(2)}</td>
-                  <td className="p-4 text-xs text-emerald-600 font-bold">Withdrawable</td>
-                </tr>
-                <tr className="bg-primary/5">
-                  <td className="p-4 font-bold text-primary">Total Cumulative Assets</td>
-                  <td className="p-4 font-extrabold text-primary text-lg">${totalBalance.toFixed(2)}</td>
-                  <td className="p-4 font-bold text-primary text-xs uppercase tracking-widest">Aggregate</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          {usersLoading ? (
+            <div className="flex justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" /></div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-muted text-muted-foreground text-xs uppercase font-bold">
+                  <tr>
+                    <th className="p-4">User Details</th>
+                    <th className="p-4">Telegram Chat ID</th>
+                    <th className="p-4">Hold Balance</th>
+                    <th className="p-4">Active Balance</th>
+                    <th className="p-4">Last Activity</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {filteredUsers.map((prof: any) => (
+                    <tr key={prof.id} className="hover:bg-muted/20">
+                      <td className="p-4">
+                        <span className="font-bold block">{prof.displayName || 'Unnamed'}</span>
+                        <span className="text-[10px] opacity-50">{prof.email}</span>
+                      </td>
+                      <td className="p-4">
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${prof.telegramChatId ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                          {prof.telegramChatId || 'Not Linked'}
+                        </span>
+                      </td>
+                      <td className="p-4 font-bold text-amber-600">${parseFloat(prof.holdBalance ?? 0).toFixed(2)}</td>
+                      <td className="p-4 font-bold text-emerald-600">${parseFloat(prof.activeBalance ?? 0).toFixed(2)}</td>
+                      <td className="p-4 text-xs text-muted-foreground">
+                        {prof.updatedAt ? new Date(prof.updatedAt.seconds * 1000).toLocaleDateString() : 'N/A'}
+                      </td>
+                      <td className="p-4 text-right">
+                        <Dialog open={balanceEditUserId === prof.id} onOpenChange={(open) => { if (open) { setBalanceEditUserId(prof.id); setEditHoldBalance(String(prof.holdBalance ?? 0)); setEditActiveBalance(String(prof.activeBalance ?? 0)); } else { setBalanceEditUserId(null); } }}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8 rounded-full">
+                              <DollarSign className="h-3 w-3" /> Adjust
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-sm">
+                            <DialogHeader>
+                              <DialogTitle>Manual Adjust: {prof.displayName}</DialogTitle>
+                            </DialogHeader>
+                            <form onSubmit={handleManualBalanceChange} className="space-y-4 pt-2">
+                              <div className="space-y-1">
+                                <Label>Hold Balance ($)</Label>
+                                <Input type="number" step="0.01" required value={editHoldBalance} onChange={(e) => setEditHoldBalance(e.target.value)} />
+                              </div>
+                              <div className="space-y-1">
+                                <Label>Active Balance ($)</Label>
+                                <Input type="number" step="0.01" required value={editActiveBalance} onChange={(e) => setEditActiveBalance(e.target.value)} />
+                              </div>
+                              <Button type="submit" disabled={updatingUser} className="w-full">
+                                {updatingUser ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply Changes'}
+                              </Button>
+                            </form>
+                          </DialogContent>
+                        </Dialog>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredUsers.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-muted-foreground italic">No users found matching your search.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      <div className="grid gap-10 lg:grid-cols-12">
-        {/* Task & Payout Ledger Column */}
-        <div className="lg:col-span-8 space-y-10">
-          <section className="space-y-4">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <ListFilter className="h-5 w-5 text-primary" />
-              Task Submission History
-            </h3>
-            <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
-              {subsLoading ? (
-                <div className="flex py-12 justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary opacity-20" /></div>
-              ) : allSubmissions?.length ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-bold">
-                      <tr>
-                        <th className="p-4">Account Reference</th>
-                        <th className="p-4">Date Submitted</th>
-                        <th className="p-4">Verification Status</th>
-                        <th className="p-4 text-right">Reward</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {allSubmissions.map((sub: any) => (
-                        <tr key={sub.id} className="hover:bg-muted/5 transition-colors">
-                          <td className="p-4 font-semibold">{sub.accountEmail}</td>
-                          <td className="p-4 text-muted-foreground">
-                            {sub.createdAt ? new Date(sub.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}
-                          </td>
-                          <td className="p-4">
-                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
-                              sub.status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
-                              sub.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
-                              'bg-amber-50 text-amber-700 border-amber-200'
-                            }`}>
-                              {sub.status || 'pending'}
-                            </span>
-                          </td>
-                          <td className="p-4 text-right font-bold text-primary">${parseFloat(sub.earnings || 1.12).toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-12 italic text-muted-foreground text-sm">No tasks recorded in your ledger.</div>
-              )}
-            </Card>
-          </section>
-
-          <section className="space-y-4">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <History className="h-5 w-5 text-emerald-600" />
-              Payout Request Record
-            </h3>
-            <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
-              {payoutsLoading ? (
-                <div className="flex py-12 justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary opacity-20" /></div>
-              ) : allPayouts?.length ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-bold">
-                      <tr>
-                        <th className="p-4">Request ID</th>
-                        <th className="p-4">Date</th>
-                        <th className="p-4">Amount</th>
-                        <th className="p-4">Fulfillment Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {allPayouts.map((po: any) => (
-                        <tr key={po.id} className="hover:bg-muted/5 transition-colors">
-                          <td className="p-4 text-[10px] font-mono font-bold text-muted-foreground">#{po.id.substring(0, 8).toUpperCase()}</td>
-                          <td className="p-4 text-muted-foreground">
-                            {po.createdAt ? new Date(po.createdAt.seconds * 1000).toLocaleDateString() : 'Pending'}
-                          </td>
-                          <td className="p-4 font-bold text-emerald-600">${parseFloat(po.amount).toFixed(2)}</td>
-                          <td className="p-4">
-                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
-                              po.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                              po.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
-                              'bg-blue-50 text-blue-700 border-blue-200'
-                            }`}>
-                              {po.status || 'processing'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-12 italic text-muted-foreground text-sm">No withdrawal requests found.</div>
-              )}
-            </Card>
-          </section>
-        </div>
-
-        {/* Withdrawal Action Column */}
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="border shadow-xl bg-card rounded-2xl overflow-hidden sticky top-24">
-            <CardHeader className="bg-primary/5 pb-4">
-              <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <ArrowDownCircle className="h-5 w-5 text-primary" />
-                Initialize Payout
-              </CardTitle>
-              <CardDescription>Withdraw your active funds securely.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <form onSubmit={handleRequestPayout} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Withdrawal Amount (USD)</Label>
-                  <div className="relative">
-                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="amount"
-                      type="number"
-                      step="0.01"
-                      required
-                      placeholder="5.00"
-                      className="pl-10"
-                      value={payoutAmount}
-                      onChange={(e) => setPayoutAmount(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
-                    <span className="text-muted-foreground">Available:</span>
-                    <span className="text-emerald-600">${parseFloat(activeBalance as any).toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <Button 
-                  type="submit" 
-                  disabled={requesting || activeBalance < 5} 
-                  className="w-full rounded-xl font-bold py-6 shadow-lg active:scale-[0.98] transition-all"
-                >
-                  {requesting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ArrowUpRight className="h-4 w-4 mr-2" />}
-                  Confirm Withdrawal
-                </Button>
-
-                {activeBalance < 5 && (
-                  <div className="flex items-center gap-2 p-3 bg-amber-50 text-amber-700 rounded-xl border border-amber-200 text-[10px] font-bold leading-tight">
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                    A minimum active balance of $5.00 is required for payout fulfillment.
-                  </div>
-                )}
-                
-                <p className="text-[10px] text-center text-muted-foreground italic px-4">
-                  Payouts are reviewed by staff within 24-48 business hours.
-                </p>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
     </div>
   );
 }

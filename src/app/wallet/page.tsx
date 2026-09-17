@@ -6,13 +6,13 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
 /**
- * Redirects legacy /wallet URL to the new /users dashboard.
+ * Redirects legacy /wallet URL to the new /dashboard dashboard.
  */
 export default function WalletRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/users');
+    router.replace('/dashboard');
   }, [router]);
 
   return (

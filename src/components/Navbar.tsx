@@ -4,24 +4,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, User, LogOut, Layers } from 'lucide-react';
-import { useAuth, useUser, useFirestore } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
-import { useDoc } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { useMemo } from 'react';
 
 export default function Navbar() {
   const pathname = usePathname();
   const auth = useAuth();
   const { user } = useUser();
-  const db = useFirestore();
-
-  const userProfileRef = useMemo(() => {
-    return user ? doc(db, 'users', user.uid) : null;
-  }, [db, user]);
-
-  const { data: profile } = useDoc(userProfileRef);
 
   const handleLogout = () => {
     signOut(auth).catch(console.error);
@@ -49,9 +39,9 @@ export default function Navbar() {
                   <span>Home</span>
                 </Link>
                 <Link
-                  href="/users"
+                  href="/dashboard"
                   className={`flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-md transition-colors ${
-                    pathname === '/users' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
+                    pathname === '/dashboard' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
                   }`}
                 >
                   <User className="h-4 w-4" />
@@ -93,9 +83,9 @@ export default function Navbar() {
               <span>Home</span>
             </Link>
             <Link
-              href="/users"
+              href="/dashboard"
               className={`flex flex-col items-center gap-1 text-xs px-3 py-1 rounded-md ${
-                pathname === '/users' ? 'text-primary font-bold' : 'text-muted-foreground'
+                pathname === '/dashboard' ? 'text-primary font-bold' : 'text-muted-foreground'
               }`}
             >
               <User className="h-5 w-5" />
