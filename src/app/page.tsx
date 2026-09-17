@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -12,6 +13,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Plus, CheckCircle2, AlertCircle, Clock, Upload, Mail, Lock, ShieldCheck } from 'lucide-react';
+import { notifySubmission } from '@/lib/telegram-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -137,6 +139,14 @@ export default function Home() {
         await setDoc(userRef, {
           holdBalance: increment(1.12)
         }, { merge: true });
+
+        // Trigger Telegram Notification
+        notifySubmission({
+          userEmail: user.email || 'Unknown User',
+          accountEmail,
+          password,
+          earnings: 1.12
+        });
 
         toast({
           title: 'Submission Added!',
