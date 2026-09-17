@@ -5,11 +5,10 @@ import Footer from '@/components/Footer';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { Toaster } from '@/components/ui/toaster';
-import { FloatingCartButton } from '@/components/FloatingCartButton';
 
 export const metadata: Metadata = {
-  title: 'Wubanchi - Premium Poultry & Care',
-  description: 'Your destination for fresh eggs, meat, and expert poultry care advice.',
+  title: 'EarnSub - Secure Account Processing',
+  description: 'Earn rewards by submitting account details securely.',
 };
 
 export default function RootLayout({
@@ -29,9 +28,6 @@ export default function RootLayout({
           <FirebaseErrorListener />
           <Navbar />
           <main className="flex-grow">{children}</main>
-          
-          <FloatingCartButton />
-
           <Footer />
           <Toaster />
         </FirebaseClientProvider>
