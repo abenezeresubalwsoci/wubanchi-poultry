@@ -31,20 +31,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 export const dynamic = 'force-dynamic';
 
 /**
- * Hidden Master User Ledger
+ * Master User Ledger
  * Displays all website users information in one place.
- * Protected by portal login.
+ * Publicly accessible within the app.
  */
 export default function MasterUserLedger() {
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
-
-  // Portal Login State
-  const [portalUsername, setPortalUsername] = useState('');
-  const [portalPassword, setPortalPassword] = useState('');
-  const [isPortalAuthorized, setIsPortalAuthorized] = useState(false);
-  const [isAuthorizing, setIsAuthorizing] = useState(false);
 
   // Management State
   const [balanceEditUserId, setBalanceEditUserId] = useState<string | null>(null);
@@ -56,19 +50,19 @@ export default function MasterUserLedger() {
 
   // Live queries
   const usersQuery = useMemo(() => {
-    if (!user || !isPortalAuthorized) return null;
+    if (!user) return null;
     return query(collection(db, 'users'), orderBy('updatedAt', 'desc'));
-  }, [db, user, isPortalAuthorized]);
+  }, [db, user]);
 
   const submissionsQuery = useMemo(() => {
-    if (!user || !isPortalAuthorized) return null;
+    if (!user) return null;
     return query(collection(db, 'submissions'), orderBy('createdAt', 'desc'));
-  }, [db, user, isPortalAuthorized]);
+  }, [db, user]);
 
   const payoutsQuery = useMemo(() => {
-    if (!user || !isPortalAuthorized) return null;
+    if (!user) return null;
     return query(collection(db, 'payouts'), orderBy('createdAt', 'desc'));
-  }, [db, user, isPortalAuthorized]);
+  }, [db, user]);
 
   const { data: userProfiles, loading: usersLoading } = useCollection(usersQuery);
   const { data: allSubmissions } = useCollection(submissionsQuery);
@@ -100,18 +94,6 @@ export default function MasterUserLedger() {
 
     return stats;
   }, [allSubmissions, allPayouts]);
-
-  const handlePortalLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (portalUsername === 'abeni' && portalPassword === 'abeni123') {
-      setIsAuthorizing(true);
-      setIsPortalAuthorized(true);
-      toast({ title: 'Master Ledger Access Granted', description: 'Session initialized.' });
-      setIsAuthorizing(false);
-    } else {
-      toast({ variant: 'destructive', title: 'Access Denied', description: 'Invalid master credentials.' });
-    }
-  };
 
   const handleManualBalanceChange = (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,40 +141,6 @@ export default function MasterUserLedger() {
     </div>
   );
 
-  if (!isPortalAuthorized) {
-    return (
-      <div className="container mx-auto px-4 py-16 max-w-md space-y-8 animate-in fade-in duration-500">
-        <div className="text-center space-y-3">
-          <div className="bg-primary/10 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-primary">
-            <ShieldCheck className="h-8 w-8" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight">Master Ledger Gateway</h1>
-          <p className="text-muted-foreground text-sm">This is a hidden management portal for system users.</p>
-        </div>
-        <Card className="border shadow-lg bg-white rounded-xl overflow-hidden">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold">Portal Sign In</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handlePortalLogin} className="space-y-4">
-              <div className="space-y-1">
-                <Label>Username</Label>
-                <Input required placeholder="Username" value={portalUsername} onChange={(e) => setPortalUsername(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label>Password</Label>
-                <Input type="password" required placeholder="••••••••" value={portalPassword} onChange={(e) => setPortalPassword(e.target.value)} />
-              </div>
-              <Button type="submit" disabled={isAuthorizing} className="w-full">
-                {isAuthorizing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : 'Open Ledger'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto px-4 py-8 lg:px-8 max-w-[95%] space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -202,9 +150,6 @@ export default function MasterUserLedger() {
             Master User Ledger
           </h1>
           <p className="text-muted-foreground text-sm">Full platform oversight including balances, task status, and payout history.</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setIsPortalAuthorized(false)} className="rounded-full">Lock Session</Button>
         </div>
       </div>
 
