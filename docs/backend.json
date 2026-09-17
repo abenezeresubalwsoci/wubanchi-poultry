@@ -1,166 +1,48 @@
-
 {
   "entities": {
-    "Product": {
-      "title": "Product",
-      "description": "A farm product for sale",
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Information about a registered Telegram user",
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
-        "category": { "type": "string", "enum": ["Eggs", "Meat", "Feed", "Chicks"] },
-        "price": { "type": "number" },
-        "description": { "type": "string" },
-        "imageId": { "type": "string" },
-        "imageUrl": { "type": "string", "description": "Base64 or URL for custom device-uploaded image" },
-        "tag": { "type": "string" },
-        "inStock": { "type": "boolean" },
-        "minAmount": { "type": "number", "description": "Minimum quantity required for purchase" }
-      },
-      "required": ["name", "category", "price"]
-    },
-    "NewsItem": {
-      "title": "News Item",
-      "description": "A news update or announcement for the farm",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "desc": { "type": "string" },
-        "date": { "type": "string" },
-        "content": { "type": "string" }
-      },
-      "required": ["title", "date"]
-    },
-    "Order": {
-      "title": "Order",
-      "description": "A customer order",
-      "type": "object",
-      "properties": {
-        "customerName": { "type": "string" },
-        "customerEmail": { "type": "string" },
-        "customerPhone": { "type": "string" },
-        "items": { "type": "array", "items": { "type": "object" } },
-        "total": { "type": "number" },
-        "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered"] },
-        "paymentMethod": { "type": "string" },
-        "paymentProofUrl": { "type": "string", "description": "Base64 string of the payment receipt" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      }
-    },
-    "Feedback": {
-      "title": "Feedback",
-      "description": "Customer feedback and comments",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "email": { "type": "string" },
-        "comment": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "comment"]
-    },
-    "Manager": {
-      "title": "Manager",
-      "description": "A management team member",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "role": { "type": "string" },
-        "description": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "role"]
-    },
-    "Facility": {
-      "title": "Facility",
-      "description": "A farm facility or operation area",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "description"]
-    },
-    "Settings": {
-      "title": "Settings",
-      "description": "Site-wide configuration",
-      "type": "object",
-      "properties": {
-        "logoUrl": { "type": "string" },
-        "heroSlides": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "imageUrl": { "type": "string" },
-              "title": { "type": "string" },
-              "subtitle": { "type": "string" }
-            }
-          }
-        },
-        "paymentMethods": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": { "type": "string" },
-              "name": { "type": "string" },
-              "enabled": { "type": "boolean" },
-              "note": { "type": "string" },
-              "accountName": { "type": "string" },
-              "accountNumber": { "type": "string" }
-            }
-          }
-        }
-      }
-    },
-    "AdminSettings": {
-      "title": "Admin Settings",
-      "description": "Secure admin login credentials",
-      "type": "object",
-      "properties": {
+        "telegramId": { "type": "string" },
         "username": { "type": "string" },
-        "password": { "type": "string" }
-      }
+        "firstName": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "holdBalance": { "type": "number", "default": 0 },
+        "activeBalance": { "type": "number", "default": 0 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["telegramId", "username"]
+    },
+    "Submission": {
+      "title": "Submission",
+      "description": "An account or detail submission by a user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "username": { "type": "string" },
+        "email": { "type": "string" },
+        "password": { "type": "string" },
+        "qrCodeUrl": { "type": "string", "description": "Base64 encoded string of the uploaded QR code image" },
+        "earnings": { "type": "number", "default": 1.12 },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "email", "password"]
     }
   },
   "auth": {
-    "providers": ["google.com"]
+    "providers": ["anonymous"]
   },
   "firestore": {
-    "/products/{productId}": {
-      "schema": "#/entities/Product",
-      "description": "Collection of farm products"
+    "/users/{userId}": {
+      "schema": "#/entities/UserProfile",
+      "description": "Collection of user profiles and wallet balances"
     },
-    "/news/{newsId}": {
-      "schema": "#/entities/NewsItem",
-      "description": "Collection of farm news and updates"
-    },
-    "/orders/{orderId}": {
-      "schema": "#/entities/Order",
-      "description": "Collection of customer orders for admin management"
-    },
-    "/feedback/{feedbackId}": {
-      "schema": "#/entities/Feedback",
-      "description": "Collection of customer feedback"
-    },
-    "/managers/{managerId}": {
-      "schema": "#/entities/Manager",
-      "description": "Collection of management team members"
-    },
-    "/facilities/{facilityId}": {
-      "schema": "#/entities/Facility",
-      "description": "Collection of farm facilities and operations"
-    },
-    "/settings/{settingId}": {
-      "schema": "#/entities/Settings",
-      "description": "Site-wide configuration settings"
-    },
-    "/adminSettings/{settingId}": {
-      "schema": "#/entities/AdminSettings",
-      "description": "Admin authentication document"
+    "/submissions/{submissionId}": {
+      "schema": "#/entities/Submission",
+      "description": "Collection of account submissions for admin verification"
     }
   }
 }
