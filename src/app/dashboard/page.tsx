@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -20,7 +19,10 @@ import {
   Loader2,
   History,
   CreditCard,
-  Send
+  Send,
+  ShieldCheck,
+  TrendingUp,
+  Clock
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -117,82 +119,77 @@ export default function UserDashboard() {
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-20 text-center max-w-md italic text-muted-foreground">
-        Please authenticate via the home gateway to access your dashboard.
+        Please authenticate via the home gateway to access your wallet.
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-8 lg:px-8 max-w-6xl space-y-10 animate-in fade-in duration-500">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Financial Dashboard</h1>
-        <p className="text-muted-foreground">Detailed overview of your profile, balances, and history.</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">My Wallet</h1>
+          <p className="text-muted-foreground">Manage your earnings, check balances, and request withdrawals.</p>
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-xs font-bold">
+          <ShieldCheck className="h-4 w-4" />
+          <span>Telegram ID: {telegramChatId}</span>
+        </div>
       </div>
 
-      <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
-        <CardHeader className="bg-muted/30">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <User className="h-5 w-5 text-primary" />
-            Profile & Balance Summary
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-bold">
-                <tr>
-                  <th className="p-4 border-b">Parameter</th>
-                  <th className="p-4 border-b">Detail</th>
-                  <th className="p-4 border-b">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                <tr>
-                  <td className="p-4 font-semibold">User Identification</td>
-                  <td className="p-4">
-                    <div className="flex flex-col">
-                      <span className="font-bold">{profile?.displayName || 'User'}</span>
-                      <span className="text-xs text-muted-foreground">{profile?.email}</span>
-                    </div>
-                  </td>
-                  <td className="p-4"><span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Active Profile</span></td>
-                </tr>
-                <tr>
-                  <td className="p-4 font-semibold">Telegram Chat ID</td>
-                  <td className="p-4 font-mono">{telegramChatId}</td>
-                  <td className="p-4">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${profile?.telegramChatId ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                      {profile?.telegramChatId ? 'Connected' : 'Action Required'}
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="p-4 font-semibold text-amber-600">Hold Balance</td>
-                  <td className="p-4 font-bold text-amber-600">${parseFloat(holdBalance as any).toFixed(2)}</td>
-                  <td className="p-4 text-xs text-muted-foreground italic">Pending verification</td>
-                </tr>
-                <tr>
-                  <td className="p-4 font-semibold text-emerald-600">Active Balance</td>
-                  <td className="p-4 font-bold text-emerald-600">${parseFloat(activeBalance as any).toFixed(2)}</td>
-                  <td className="p-4 text-xs text-emerald-600 font-bold">Withdrawable</td>
-                </tr>
-                <tr className="bg-primary/5">
-                  <td className="p-4 font-bold text-primary">Total Cumulative Assets</td>
-                  <td className="p-4 font-extrabold text-primary text-lg">${totalBalance.toFixed(2)}</td>
-                  <td className="p-4 font-bold text-primary text-xs uppercase tracking-widest text-center">Aggregate</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="border shadow-sm bg-white overflow-hidden group">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Active Balance</p>
+                <h2 className="text-3xl font-bold text-emerald-600">${parseFloat(activeBalance as any).toFixed(2)}</h2>
+              </div>
+              <div className="h-12 w-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+                <Wallet className="h-6 w-6" />
+              </div>
+            </div>
+            <p className="text-[10px] text-emerald-600 font-bold mt-4 uppercase">Ready for withdrawal</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border shadow-sm bg-white overflow-hidden group">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hold Balance</p>
+                <h2 className="text-3xl font-bold text-amber-600">${parseFloat(holdBalance as any).toFixed(2)}</h2>
+              </div>
+              <div className="h-12 w-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
+                <Clock className="h-6 w-6" />
+              </div>
+            </div>
+            <p className="text-[10px] text-amber-600 font-bold mt-4 uppercase">Verification in progress</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border shadow-sm bg-primary text-primary-foreground overflow-hidden group">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-primary-foreground/70 uppercase tracking-widest">Total Assets</p>
+                <h2 className="text-3xl font-bold">${totalBalance.toFixed(2)}</h2>
+              </div>
+              <div className="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                <TrendingUp className="h-6 w-6" />
+              </div>
+            </div>
+            <p className="text-[10px] text-white/80 font-bold mt-4 uppercase">Aggregate value</p>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid gap-10 lg:grid-cols-12">
         <div className="lg:col-span-8 space-y-10">
           <section className="space-y-4">
             <h3 className="text-xl font-bold flex items-center gap-2">
               <ListFilter className="h-5 w-5 text-primary" />
-              Task Submission History
+              Recent Submissions
             </h3>
             <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
               {subsLoading ? (
@@ -200,11 +197,11 @@ export default function UserDashboard() {
               ) : allSubmissions?.length ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left">
-                    <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-bold">
+                    <thead className="bg-muted text-muted-foreground text-[10px] uppercase font-bold">
                       <tr>
                         <th className="p-4">Account Reference</th>
-                        <th className="p-4">Date Submitted</th>
-                        <th className="p-4">Verification Status</th>
+                        <th className="p-4">Date</th>
+                        <th className="p-4">Status</th>
                         <th className="p-4 text-right">Reward</th>
                       </tr>
                     </thead>
@@ -231,7 +228,7 @@ export default function UserDashboard() {
                   </table>
                 </div>
               ) : (
-                <div className="text-center py-12 italic text-muted-foreground text-sm">No tasks recorded in your ledger.</div>
+                <div className="text-center py-12 italic text-muted-foreground text-sm">No submissions recorded.</div>
               )}
             </Card>
           </section>
@@ -239,7 +236,7 @@ export default function UserDashboard() {
           <section className="space-y-4">
             <h3 className="text-xl font-bold flex items-center gap-2">
               <History className="h-5 w-5 text-emerald-600" />
-              Payout Request Record
+              Withdrawal History
             </h3>
             <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
               {payoutsLoading ? (
@@ -247,12 +244,12 @@ export default function UserDashboard() {
               ) : allPayouts?.length ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left">
-                    <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-bold">
+                    <thead className="bg-muted text-muted-foreground text-[10px] uppercase font-bold">
                       <tr>
                         <th className="p-4">Request ID</th>
                         <th className="p-4">Date</th>
                         <th className="p-4">Amount</th>
-                        <th className="p-4">Fulfillment Status</th>
+                        <th className="p-4">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -278,7 +275,7 @@ export default function UserDashboard() {
                   </table>
                 </div>
               ) : (
-                <div className="text-center py-12 italic text-muted-foreground text-sm">No withdrawal requests found.</div>
+                <div className="text-center py-12 italic text-muted-foreground text-sm">No payout requests found.</div>
               )}
             </Card>
           </section>
