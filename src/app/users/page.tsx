@@ -20,7 +20,8 @@ import {
   ArrowDownCircle, 
   ListFilter,
   Loader2,
-  History
+  History,
+  CreditCard
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -62,7 +63,7 @@ export default function UserDashboard() {
 
   const activeBalance = profile?.activeBalance ?? 0;
   const holdBalance = profile?.holdBalance ?? 0;
-  const totalBalance = activeBalance + holdBalance;
+  const totalBalance = (activeBalance as number) + (holdBalance as number);
   const telegramChatId = profile?.telegramChatId || 'Not connected';
 
   const handleRequestPayout = async (e: React.FormEvent) => {
@@ -77,6 +78,11 @@ export default function UserDashboard() {
 
     if (amt > activeBalance) {
       toast({ variant: 'destructive', title: 'Insufficient Funds', description: 'Amount exceeds active balance.' });
+      return;
+    }
+
+    if (amt < 5) {
+      toast({ variant: 'destructive', title: 'Minimum Payout', description: 'The minimum withdrawal amount is $5.00.' });
       return;
     }
 
@@ -118,74 +124,78 @@ export default function UserDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 lg:px-8 max-w-6xl space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-            <User className="h-8 w-8" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">{profile?.displayName || 'User Profile'}</h1>
-            <p className="text-sm text-muted-foreground">{profile?.email}</p>
-          </div>
-        </div>
-        
-        <div className="bg-card p-4 rounded-2xl border shadow-sm flex items-center gap-3 w-full md:w-auto">
-          <Send className="h-6 w-6 text-primary shrink-0" />
-          <div>
-            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider block">Telegram Chat ID</span>
-            <span className="text-sm font-mono font-bold text-foreground">{telegramChatId}</span>
-          </div>
-        </div>
+    <div className="container mx-auto px-4 py-8 lg:px-8 max-w-6xl space-y-10 animate-in fade-in duration-500">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Financial Dashboard</h1>
+        <p className="text-muted-foreground">Detailed overview of your profile, balances, and history.</p>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-3">
-        <Card className="border-none shadow-md bg-white rounded-2xl overflow-hidden relative group">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <Clock className="h-4 w-4 text-amber-500" />
-              Hold Balance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-extrabold tracking-tight text-amber-600">${parseFloat(holdBalance as any).toFixed(2)}</div>
-            <p className="text-[10px] text-muted-foreground mt-1">Pending admin confirmation</p>
-          </CardContent>
-        </Card>
+      {/* Profile & Balance Information Table */}
+      <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
+        <CardHeader className="bg-muted/30">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <User className="h-5 w-5 text-primary" />
+            Profile & Balance Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-bold">
+                <tr>
+                  <th className="p-4 border-b">Parameter</th>
+                  <th className="p-4 border-b">Detail</th>
+                  <th className="p-4 border-b">Status / Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                <tr>
+                  <td className="p-4 font-semibold">User Identification</td>
+                  <td className="p-4">
+                    <div className="flex flex-col">
+                      <span className="font-bold">{profile?.displayName || 'User'}</span>
+                      <span className="text-xs text-muted-foreground">{profile?.email}</span>
+                    </div>
+                  </td>
+                  <td className="p-4"><span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Active Profile</span></td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-semibold">Telegram Chat ID</td>
+                  <td className="p-4 font-mono">{telegramChatId}</td>
+                  <td className="p-4">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${profile?.telegramChatId ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {profile?.telegramChatId ? 'Connected' : 'Action Required'}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-semibold text-amber-600">Hold Balance</td>
+                  <td className="p-4 font-bold text-amber-600">${parseFloat(holdBalance as any).toFixed(2)}</td>
+                  <td className="p-4 text-xs text-muted-foreground italic">Pending verification</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-semibold text-emerald-600">Active Balance</td>
+                  <td className="p-4 font-bold text-emerald-600">${parseFloat(activeBalance as any).toFixed(2)}</td>
+                  <td className="p-4 text-xs text-emerald-600 font-bold">Withdrawable</td>
+                </tr>
+                <tr className="bg-primary/5">
+                  <td className="p-4 font-bold text-primary">Total Cumulative Assets</td>
+                  <td className="p-4 font-extrabold text-primary text-lg">${totalBalance.toFixed(2)}</td>
+                  <td className="p-4 font-bold text-primary text-xs uppercase tracking-widest">Aggregate</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card className="border-none shadow-md bg-white rounded-2xl overflow-hidden relative group">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              Active Balance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-extrabold tracking-tight text-emerald-600">${parseFloat(activeBalance as any).toFixed(2)}</div>
-            <p className="text-[10px] text-muted-foreground mt-1">Ready for withdrawal</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-lg bg-primary text-primary-foreground rounded-2xl overflow-hidden relative group">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-widest text-primary-100 flex items-center gap-1.5">
-              <Wallet className="h-4 w-4" />
-              Total Assets
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-extrabold tracking-tight">${totalBalance.toFixed(2)}</div>
-            <p className="text-[10px] text-primary-200 mt-1">Sum of all cumulative earnings</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-12">
-        <div className="lg:col-span-8 space-y-8">
-          <div className="space-y-4">
+      <div className="grid gap-10 lg:grid-cols-12">
+        {/* Task & Payout Ledger Column */}
+        <div className="lg:col-span-8 space-y-10">
+          <section className="space-y-4">
             <h3 className="text-xl font-bold flex items-center gap-2">
               <ListFilter className="h-5 w-5 text-primary" />
-              Task Submission Ledger
+              Task Submission History
             </h3>
             <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
               {subsLoading ? (
@@ -193,19 +203,21 @@ export default function UserDashboard() {
               ) : allSubmissions?.length ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left">
-                    <thead className="bg-muted text-muted-foreground text-xs uppercase font-bold">
+                    <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-bold">
                       <tr>
-                        <th className="p-4">Account</th>
-                        <th className="p-4">Date</th>
-                        <th className="p-4">Status</th>
-                        <th className="p-4 text-right">Value</th>
+                        <th className="p-4">Account Reference</th>
+                        <th className="p-4">Date Submitted</th>
+                        <th className="p-4">Verification Status</th>
+                        <th className="p-4 text-right">Reward</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
                       {allSubmissions.map((sub: any) => (
                         <tr key={sub.id} className="hover:bg-muted/5 transition-colors">
                           <td className="p-4 font-semibold">{sub.accountEmail}</td>
-                          <td className="p-4 text-muted-foreground">{sub.createdAt ? new Date(sub.createdAt.seconds * 1000).toLocaleDateString() : 'Pending'}</td>
+                          <td className="p-4 text-muted-foreground">
+                            {sub.createdAt ? new Date(sub.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}
+                          </td>
                           <td className="p-4">
                             <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
                               sub.status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
@@ -222,15 +234,15 @@ export default function UserDashboard() {
                   </table>
                 </div>
               ) : (
-                <div className="text-center py-12 italic text-muted-foreground text-sm">No task history found.</div>
+                <div className="text-center py-12 italic text-muted-foreground text-sm">No tasks recorded in your ledger.</div>
               )}
             </Card>
-          </div>
+          </section>
 
-          <div className="space-y-4">
+          <section className="space-y-4">
             <h3 className="text-xl font-bold flex items-center gap-2">
               <History className="h-5 w-5 text-emerald-600" />
-              Payout History
+              Payout Request Record
             </h3>
             <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
               {payoutsLoading ? (
@@ -238,18 +250,22 @@ export default function UserDashboard() {
               ) : allPayouts?.length ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left">
-                    <thead className="bg-muted text-muted-foreground text-xs uppercase font-bold">
+                    <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-bold">
                       <tr>
-                        <th className="p-4">Date Requested</th>
+                        <th className="p-4">Request ID</th>
+                        <th className="p-4">Date</th>
                         <th className="p-4">Amount</th>
-                        <th className="p-4">Status</th>
+                        <th className="p-4">Fulfillment Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
                       {allPayouts.map((po: any) => (
                         <tr key={po.id} className="hover:bg-muted/5 transition-colors">
-                          <td className="p-4 text-muted-foreground">{po.createdAt ? new Date(po.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}</td>
-                          <td className="p-4 font-bold">${parseFloat(po.amount).toFixed(2)}</td>
+                          <td className="p-4 text-[10px] font-mono font-bold text-muted-foreground">#{po.id.substring(0, 8).toUpperCase()}</td>
+                          <td className="p-4 text-muted-foreground">
+                            {po.createdAt ? new Date(po.createdAt.seconds * 1000).toLocaleDateString() : 'Pending'}
+                          </td>
+                          <td className="p-4 font-bold text-emerald-600">${parseFloat(po.amount).toFixed(2)}</td>
                           <td className="p-4">
                             <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
                               po.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
@@ -265,49 +281,64 @@ export default function UserDashboard() {
                   </table>
                 </div>
               ) : (
-                <div className="text-center py-12 italic text-muted-foreground text-sm">No payout records found.</div>
+                <div className="text-center py-12 italic text-muted-foreground text-sm">No withdrawal requests found.</div>
               )}
             </Card>
-          </div>
+          </section>
         </div>
 
+        {/* Withdrawal Action Column */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="border shadow-xl bg-card rounded-2xl overflow-hidden sticky top-24">
             <CardHeader className="bg-primary/5 pb-4">
               <CardTitle className="text-lg font-bold flex items-center gap-2">
                 <ArrowDownCircle className="h-5 w-5 text-primary" />
-                Withdraw Funds
+                Initialize Payout
               </CardTitle>
-              <CardDescription>Minimum withdrawal: $5.00</CardDescription>
+              <CardDescription>Withdraw your active funds securely.</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <form onSubmit={handleRequestPayout} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Withdrawal Amount ($)</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    placeholder="Enter amount"
-                    value={payoutAmount}
-                    onChange={(e) => setPayoutAmount(e.target.value)}
-                  />
-                  <p className="text-[10px] text-muted-foreground">Available active balance: ${parseFloat(activeBalance as any).toFixed(2)}</p>
+                  <Label htmlFor="amount">Withdrawal Amount (USD)</Label>
+                  <div className="relative">
+                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="amount"
+                      type="number"
+                      step="0.01"
+                      required
+                      placeholder="5.00"
+                      className="pl-10"
+                      value={payoutAmount}
+                      onChange={(e) => setPayoutAmount(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                    <span className="text-muted-foreground">Available:</span>
+                    <span className="text-emerald-600">${parseFloat(activeBalance as any).toFixed(2)}</span>
+                  </div>
                 </div>
+
                 <Button 
                   type="submit" 
                   disabled={requesting || activeBalance < 5} 
-                  className="w-full rounded-xl font-bold py-5 shadow-lg active:scale-[0.98]"
+                  className="w-full rounded-xl font-bold py-6 shadow-lg active:scale-[0.98] transition-all"
                 >
-                  {requesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUpRight className="h-4 w-4" />}
-                  Request Payout
+                  {requesting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ArrowUpRight className="h-4 w-4 mr-2" />}
+                  Confirm Withdrawal
                 </Button>
+
                 {activeBalance < 5 && (
                   <div className="flex items-center gap-2 p-3 bg-amber-50 text-amber-700 rounded-xl border border-amber-200 text-[10px] font-bold leading-tight">
                     <AlertCircle className="h-4 w-4 shrink-0" />
-                    You need at least $5.00 in your active balance to request a payout.
+                    A minimum active balance of $5.00 is required for payout fulfillment.
                   </div>
                 )}
+                
+                <p className="text-[10px] text-center text-muted-foreground italic px-4">
+                  Payouts are reviewed by staff within 24-48 business hours.
+                </p>
               </form>
             </CardContent>
           </Card>
