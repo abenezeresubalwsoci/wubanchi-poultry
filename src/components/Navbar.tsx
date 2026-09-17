@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Wallet, ShieldAlert, LogOut, Layers } from 'lucide-react';
+import { Home, Wallet, LogOut, Layers } from 'lucide-react';
 import { useAuth, useUser, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
@@ -56,17 +56,6 @@ export default function Navbar() {
                   <Wallet className="h-4 w-4" />
                   <span>Wallet</span>
                 </Link>
-                {profile?.isAdmin && (
-                  <Link
-                    href="/admin"
-                    className={`flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-md text-destructive transition-colors ${
-                      pathname === '/admin' ? 'bg-destructive/10' : 'hover:bg-muted'
-                    }`}
-                  >
-                    <ShieldAlert className="h-4 w-4" />
-                    <span>Admin Panel</span>
-                  </Link>
-                )}
               </div>
             )}
           </div>
@@ -111,17 +100,6 @@ export default function Navbar() {
               <Wallet className="h-5 w-5" />
               <span>Wallet</span>
             </Link>
-            {profile?.isAdmin && (
-              <Link
-                href="/admin"
-                className={`flex flex-col items-center gap-1 text-xs px-3 py-1 rounded-md ${
-                  pathname === '/admin' ? 'text-destructive font-bold' : 'text-muted-foreground'
-                }`}
-              >
-                <ShieldAlert className="h-5 w-5" />
-                <span>Admin</span>
-              </Link>
-            )}
           </div>
         )}
       </div>
