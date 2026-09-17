@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -28,18 +27,25 @@ export default function AdminDashboard() {
   const [editActiveBalance, setEditActiveBalance] = useState('');
   const [updatingUser, setUpdatingUser] = useState(false);
 
-  // Live collections queries
-  const usersQuery = useMemo(() => query(collection(db, 'users'), orderBy('updatedAt', 'desc')), [db]);
-  const submissionsQuery = useMemo(() => query(collection(db, 'submissions'), orderBy('createdAt', 'desc')), [db]);
-
-  const { data: userProfiles, loading: usersLoading } = useCollection(usersQuery);
-  const { data: allSubmissions, loading: subsLoading } = useCollection(submissionsQuery);
-
   // Check admin state directly from the user's document
   const userDocRef = useMemo(() => (user ? doc(db, 'users', user.uid) : null), [db, user]);
   const { data: profile, loading: profileLoading } = useDoc(userDocRef);
 
   const isAdmin = profile?.isAdmin === true;
+
+  // Live collections queries - only active if the user is confirmed as admin
+  const usersQuery = useMemo(() => {
+    if (!user || !isAdmin) return null;
+    return query(collection(db, 'users'), orderBy('updatedAt', 'desc'));
+  }, [db, user, isAdmin]);
+
+  const submissionsQuery = useMemo(() => {
+    if (!user || !isAdmin) return null;
+    return query(collection(db, 'submissions'), orderBy('createdAt', 'desc'));
+  }, [db, user, isAdmin]);
+
+  const { data: userProfiles, loading: usersLoading } = useCollection(usersQuery);
+  const { data: allSubmissions, loading: subsLoading } = useCollection(submissionsQuery);
 
   const handleApprove = (submission: any) => {
     const subRef = doc(db, 'submissions', submission.id);
