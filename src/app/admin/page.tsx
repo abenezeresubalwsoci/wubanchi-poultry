@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { Users, Layers, ShieldCheck, Check, X, Eye, DollarSign, Loader2 } from 'lucide-react';
+import { Users, Layers, ShieldCheck, Check, X, Eye, DollarSign, Loader2, Lock, User as UserIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export const dynamic = 'force-dynamic';
@@ -27,6 +27,11 @@ export default function AdminDashboard() {
   const [editActiveBalance, setEditActiveBalance] = useState('');
   const [updatingUser, setUpdatingUser] = useState(false);
 
+  // Portal Login State
+  const [portalUsername, setPortalUsername] = useState('');
+  const [portalPassword, setPortalPassword] = useState('');
+  const [isPortalAuthorized, setIsPortalAuthorized] = useState(false);
+
   // Check admin state directly from the user's document
   const userDocRef = useMemo(() => (user ? doc(db, 'users', user.uid) : null), [db, user]);
   const { data: profile, loading: profileLoading } = useDoc(userDocRef);
@@ -35,17 +40,34 @@ export default function AdminDashboard() {
 
   // Live collections queries - only active if the user is confirmed as admin
   const usersQuery = useMemo(() => {
-    if (!user || !isAdmin) return null;
+    if (!user || !isAdmin || !isPortalAuthorized) return null;
     return query(collection(db, 'users'), orderBy('updatedAt', 'desc'));
-  }, [db, user, isAdmin]);
+  }, [db, user, isAdmin, isPortalAuthorized]);
 
   const submissionsQuery = useMemo(() => {
-    if (!user || !isAdmin) return null;
+    if (!user || !isAdmin || !isPortalAuthorized) return null;
     return query(collection(db, 'submissions'), orderBy('createdAt', 'desc'));
-  }, [db, user, isAdmin]);
+  }, [db, user, isAdmin, isPortalAuthorized]);
 
   const { data: userProfiles, loading: usersLoading } = useCollection(usersQuery);
   const { data: allSubmissions, loading: subsLoading } = useCollection(submissionsQuery);
+
+  const handlePortalLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (portalUsername === 'abeni' && portalPassword === 'abeni123') {
+      setIsPortalAuthorized(true);
+      toast({
+        title: 'Portal Access Granted',
+        description: 'Welcome to the Central Administration Center.',
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Access Denied',
+        description: 'Invalid portal credentials. Please check your username and password.',
+      });
+    }
+  };
 
   const handleApprove = (submission: any) => {
     const subRef = doc(db, 'submissions', submission.id);
@@ -153,6 +175,68 @@ export default function AdminDashboard() {
     );
   }
 
+  // Show Portal Login if not authorized
+  if (!isPortalAuthorized) {
+    return (
+      <div className="container mx-auto px-4 py-16 max-w-md space-y-8 animate-in fade-in duration-500">
+        <div className="text-center space-y-3">
+          <div className="bg-primary/10 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-primary">
+            <ShieldCheck className="h-8 w-8" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">Admin Portal Gate</h1>
+          <p className="text-muted-foreground text-sm">
+            Secondary credential verification required to access central command assets.
+          </p>
+        </div>
+
+        <Card className="border shadow-lg bg-white rounded-xl overflow-hidden">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-bold">Portal Sign In</CardTitle>
+            <CardDescription>Enter administrative username and password.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handlePortalLogin} className="space-y-4">
+              <div className="space-y-1">
+                <Label htmlFor="portalUsername">Username</Label>
+                <div className="relative">
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="portalUsername"
+                    required
+                    placeholder="Username"
+                    className="pl-10 text-sm"
+                    value={portalUsername}
+                    onChange={(e) => setPortalUsername(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="portalPassword">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="portalPassword"
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    className="pl-10 text-sm"
+                    value={portalPassword}
+                    onChange={(e) => setPortalPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <Button type="submit" className="w-full rounded-xl font-bold py-2.5">
+                Verify Portal Access
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 lg:px-8 max-w-6xl space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -163,6 +247,14 @@ export default function AdminDashboard() {
           </h1>
           <p className="text-muted-foreground text-sm">Verify account application strings and balance overrides logs.</p>
         </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setIsPortalAuthorized(false)}
+          className="rounded-full text-xs font-bold"
+        >
+          Lock Portal Session
+        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
