@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useDoc } from '@/firebase';
-import { collection, doc, query, orderBy, setDoc, increment } from 'firebase/firestore';
+import { collection, doc, query, orderBy, setDoc, increment, serverTimestamp } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,13 +11,13 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { Users, Layers, ShieldCheck, Check, X, Eye, DollarSign, Loader2, Lock, User as UserIcon } from 'lucide-react';
+import { Users, Layers, ShieldCheck, Check, X, Eye, DollarSign, Loader2, Lock, User as UserIcon, AlertTriangle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export const dynamic = 'force-dynamic';
 
 export default function AdminDashboard() {
-  const { user } = useUser();
+  const { user, loading: authLoading } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
 
@@ -31,6 +31,7 @@ export default function AdminDashboard() {
   const [portalUsername, setPortalUsername] = useState('');
   const [portalPassword, setPortalPassword] = useState('');
   const [isPortalAuthorized, setIsPortalAuthorized] = useState(false);
+  const [isAuthorizing, setIsAuthorizing] = useState(false);
 
   // Check admin state directly from the user's document
   const userDocRef = useMemo(() => (user ? doc(db, 'users', user.uid) : null), [db, user]);
@@ -38,7 +39,7 @@ export default function AdminDashboard() {
 
   const isAdmin = profile?.isAdmin === true;
 
-  // Live collections queries - only active if the user is confirmed as admin
+  // Live collections queries - only active if authorized
   const usersQuery = useMemo(() => {
     if (!user || !isAdmin || !isPortalAuthorized) return null;
     return query(collection(db, 'users'), orderBy('updatedAt', 'desc'));
@@ -52,19 +53,40 @@ export default function AdminDashboard() {
   const { data: userProfiles, loading: usersLoading } = useCollection(usersQuery);
   const { data: allSubmissions, loading: subsLoading } = useCollection(submissionsQuery);
 
-  const handlePortalLogin = (e: React.FormEvent) => {
+  const handlePortalLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (portalUsername === 'abeni' && portalPassword === 'abeni123') {
-      setIsPortalAuthorized(true);
-      toast({
-        title: 'Portal Access Granted',
-        description: 'Welcome to the Central Administration Center.',
-      });
+      setIsAuthorizing(true);
+      
+      try {
+        // Elevate user to admin status in Firestore if not already
+        if (user && !isAdmin) {
+          const userRef = doc(db, 'users', user.uid);
+          await setDoc(userRef, { 
+            isAdmin: true,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        }
+        
+        setIsPortalAuthorized(true);
+        toast({
+          title: 'Portal Access Granted',
+          description: 'Credentials verified. Admin session initialized.',
+        });
+      } catch (err) {
+        toast({
+          variant: 'destructive',
+          title: 'Elevation Failed',
+          description: 'Could not synchronize administrative permissions with the database.',
+        });
+      } finally {
+        setIsAuthorizing(false);
+      }
     } else {
       toast({
         variant: 'destructive',
         title: 'Access Denied',
-        description: 'Invalid portal credentials. Please check your username and password.',
+        description: 'Invalid portal credentials provided.',
       });
     }
   };
@@ -84,8 +106,8 @@ export default function AdminDashboard() {
         }, { merge: true });
 
         toast({
-          title: 'Submission Approved!',
-          description: `Funds transferred from hold pool to active user pool for ${submission.accountEmail}.`
+          title: 'Submission Approved',
+          description: `Funds transferred to active balance for ${submission.accountEmail}.`
         });
       })
       .catch((error) => {
@@ -112,7 +134,7 @@ export default function AdminDashboard() {
         toast({
           variant: 'destructive',
           title: 'Submission Rejected',
-          description: `Hold balance deducted for failed entry requirement verification.`
+          description: `Hold balance deducted for ${submission.accountEmail}.`
         });
       })
       .catch((error) => {
@@ -133,12 +155,12 @@ export default function AdminDashboard() {
     const dataUpdates = {
       holdBalance: parseFloat(editHoldBalance || '0'),
       activeBalance: parseFloat(editActiveBalance || '0'),
-      updatedAt: new Date().toISOString()
+      updatedAt: serverTimestamp()
     };
 
     setDoc(userRef, dataUpdates, { merge: true })
       .then(() => {
-        toast({ title: 'Balance updated manually by administrator override.' });
+        toast({ title: 'Balance override successful.' });
         setBalanceEditUserId(null);
       })
       .catch((error) => {
@@ -153,7 +175,7 @@ export default function AdminDashboard() {
       });
   };
 
-  if (profileLoading) {
+  if (authLoading || profileLoading) {
     return (
       <div className="flex min-h-[70vh] items-center justify-center">
         <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
@@ -161,16 +183,14 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!user || !isAdmin) {
+  if (!user) {
     return (
       <div className="container mx-auto px-4 py-20 text-center max-w-md space-y-4 animate-in zoom-in-95 duration-500">
-        <div className="bg-destructive/10 text-destructive w-14 h-14 rounded-full flex items-center justify-center mx-auto">
-          <X className="h-6 w-6" />
+        <div className="bg-amber-100 text-amber-600 w-14 h-14 rounded-full flex items-center justify-center mx-auto">
+          <Lock className="h-6 w-6" />
         </div>
-        <h2 className="text-2xl font-extrabold tracking-tight">Access Restricted</h2>
-        <p className="text-muted-foreground text-sm leading-relaxed">
-          You lack security access clearance context attributes required to operate database adjustment parameters.
-        </p>
+        <h2 className="text-2xl font-bold">Authentication Required</h2>
+        <p className="text-muted-foreground text-sm">Please sign in to your staff account to access the administration portal.</p>
       </div>
     );
   }
@@ -185,7 +205,7 @@ export default function AdminDashboard() {
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Admin Portal Gate</h1>
           <p className="text-muted-foreground text-sm">
-            Secondary credential verification required to access central command assets.
+            Secondary credential verification required to access command assets.
           </p>
         </div>
 
@@ -227,8 +247,8 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full rounded-xl font-bold py-2.5">
-                Verify Portal Access
+              <Button type="submit" disabled={isAuthorizing} className="w-full rounded-xl font-bold py-2.5">
+                {isAuthorizing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : 'Verify Portal Access'}
               </Button>
             </form>
           </CardContent>
@@ -245,7 +265,7 @@ export default function AdminDashboard() {
             <ShieldCheck className="h-8 w-8 text-destructive" />
             Central Administration Center
           </h1>
-          <p className="text-muted-foreground text-sm">Verify account application strings and balance overrides logs.</p>
+          <p className="text-muted-foreground text-sm">Reviewing account submissions and balance ledgers.</p>
         </div>
         <Button 
           variant="outline" 
@@ -273,7 +293,7 @@ export default function AdminDashboard() {
           <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
             <CardHeader>
               <CardTitle>Verification Pool</CardTitle>
-              <CardDescription>Approve files to release funds from Hold into client Active liquid balances.</CardDescription>
+              <CardDescription>Review submissions to release funds from Hold into Active balances.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               {subsLoading ? (
@@ -285,12 +305,12 @@ export default function AdminDashboard() {
                   <table className="w-full text-sm text-left">
                     <thead className="bg-muted text-muted-foreground text-xs uppercase font-bold">
                       <tr>
-                        <th className="p-4">Sender Profile</th>
+                        <th className="p-4">Sender</th>
                         <th className="p-4">Target Login</th>
-                        <th className="p-4">Key Data String</th>
-                        <th className="p-4">Visual QR Attachment</th>
-                        <th className="p-4">Status Log</th>
-                        <th className="p-4 text-right">Actions Override</th>
+                        <th className="p-4">Data String</th>
+                        <th className="p-4">QR Attachment</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -300,8 +320,8 @@ export default function AdminDashboard() {
                             <span className="font-semibold block text-xs">{sub.userEmail}</span>
                             <span className="text-[10px] text-muted-foreground font-mono block max-w-[100px] truncate">ID: {sub.userId}</span>
                           </td>
-                          <td className="p-4 font-bold text-foreground">{sub.accountEmail}</td>
-                          <td className="p-4 font-mono text-xs max-w-[120px] truncate">{sub.password}</td>
+                          <td className="p-4 font-bold">{sub.accountEmail}</td>
+                          <td className="p-4 font-mono text-xs">{sub.password}</td>
                           <td className="p-4">
                             {sub.qrCodeUrl ? (
                               <Dialog>
@@ -312,15 +332,15 @@ export default function AdminDashboard() {
                                 </DialogTrigger>
                                 <DialogContent className="max-w-md rounded-2xl">
                                   <DialogHeader>
-                                    <DialogTitle className="text-sm font-bold">QR Image Data - {sub.accountEmail}</DialogTitle>
+                                    <DialogTitle className="text-sm font-bold">QR Attachment - {sub.accountEmail}</DialogTitle>
                                   </DialogHeader>
                                   <div className="p-2 border rounded-xl bg-muted/30">
-                                    <img src={sub.qrCodeUrl} className="w-full h-auto object-contain max-h-[350px]" alt="Account Handle QR" />
+                                    <img src={sub.qrCodeUrl} className="w-full h-auto object-contain max-h-[350px]" alt="Submission QR" />
                                   </div>
                                 </DialogContent>
                               </Dialog>
                             ) : (
-                              <span className="text-xs text-muted-foreground italic">None uploaded</span>
+                              <span className="text-xs text-muted-foreground italic">None</span>
                             )}
                           </td>
                           <td className="p-4">
@@ -340,7 +360,6 @@ export default function AdminDashboard() {
                                   size="sm"
                                   className="h-8 w-8 p-0 rounded-full text-green-600 border-green-200 hover:bg-green-50"
                                   onClick={() => handleApprove(sub)}
-                                  title="Approve Submission"
                                 >
                                   <Check className="h-4 w-4" />
                                 </Button>
@@ -349,7 +368,6 @@ export default function AdminDashboard() {
                                   size="sm"
                                   className="h-8 w-8 p-0 rounded-full text-destructive border-destructive/20 hover:bg-destructive/5"
                                   onClick={() => handleReject(sub)}
-                                  title="Reject Submission"
                                 >
                                   <X className="h-4 w-4" />
                                 </Button>
@@ -362,7 +380,7 @@ export default function AdminDashboard() {
                   </table>
                 </div>
               ) : (
-                <div className="text-center py-16 italic text-muted-foreground">No applications currently loaded in queue.</div>
+                <div className="text-center py-16 italic text-muted-foreground">No applications currently in queue.</div>
               )}
             </CardContent>
           </Card>
@@ -372,7 +390,7 @@ export default function AdminDashboard() {
           <Card className="border shadow-sm rounded-xl overflow-hidden bg-white">
             <CardHeader>
               <CardTitle>User Account Ledger</CardTitle>
-              <CardDescription>Direct state adjustments for hold balances or active parameters.</CardDescription>
+              <CardDescription>Manual adjustments for hold balances or active parameters.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               {usersLoading ? (
@@ -385,7 +403,7 @@ export default function AdminDashboard() {
                     <thead className="bg-muted text-muted-foreground text-xs uppercase font-bold">
                       <tr>
                         <th className="p-4">User</th>
-                        <th className="p-4">Google Verified Mail</th>
+                        <th className="p-4">Verified Mail</th>
                         <th className="p-4">Hold Assets</th>
                         <th className="p-4">Active Liquidity</th>
                         <th className="p-4 text-right">Overrides</th>
@@ -398,7 +416,7 @@ export default function AdminDashboard() {
                             {prof.photoUrl && (
                               <img src={prof.photoUrl} className="w-7 h-7 rounded-full border" alt="" />
                             )}
-                            <span className="font-bold text-foreground block">{prof.displayName || 'Unnamed User'}</span>
+                            <span className="font-bold block">{prof.displayName || 'Unnamed User'}</span>
                           </td>
                           <td className="p-4 text-xs font-mono">{prof.email}</td>
                           <td className="p-4 font-bold text-amber-600">${parseFloat(prof.holdBalance ?? 0).toFixed(2)}</td>
@@ -415,7 +433,7 @@ export default function AdminDashboard() {
                             }}>
                               <DialogTrigger asChild>
                                 <Button variant="outline" size="sm" className="gap-1 h-8 rounded-full">
-                                  <DollarSign className="h-3 w-3" /> Adjust Balances
+                                  <DollarSign className="h-3 w-3" /> Adjust
                                 </Button>
                               </DialogTrigger>
                               <DialogContent className="max-w-sm rounded-2xl">
@@ -444,7 +462,7 @@ export default function AdminDashboard() {
                                     />
                                   </div>
                                   <Button type="submit" disabled={updatingUser} className="w-full rounded-xl font-bold">
-                                    {updatingUser ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Override Assets State'}
+                                    {updatingUser ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Override State'}
                                   </Button>
                                 </form>
                               </DialogContent>
@@ -456,7 +474,7 @@ export default function AdminDashboard() {
                   </table>
                 </div>
               ) : (
-                <div className="text-center py-16 italic text-muted-foreground">No records currently logged in backend collection profiles.</div>
+                <div className="text-center py-16 italic text-muted-foreground">No records currently logged.</div>
               )}
             </CardContent>
           </Card>
